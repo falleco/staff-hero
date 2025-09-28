@@ -9,6 +9,7 @@ Object.entries(TREBLE_CLEF_POSITIONS).forEach(([noteKey, position]) => {
   POSITION_TO_NOTE[position] = { name, octave };
 });
 
+
 // Generate a random note within the treble clef range
 export function generateRandomNote(difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner'): Note {
   // Use the available positions from TREBLE_CLEF_POSITIONS for consistency
@@ -35,7 +36,7 @@ export function generateRandomNote(difficulty: 'beginner' | 'intermediate' | 'ad
     name: noteInfo.name,
     octave: noteInfo.octave,
     staffPosition: randomPosition,
-    requiresLedgerLine: Math.abs(randomPosition) > 4,
+    requiresLedgerLine: randomPosition > 7 || randomPosition < -1,
     symbolId: randomSymbol.id,
   };
 }
@@ -54,21 +55,10 @@ export function getNoteDisplayName(noteName: NoteName, notationSystem: 'letter' 
   return NOTE_MAPPINGS[notationSystem][noteName];
 }
 
-// Generate wrong answer options for a given correct answer
-export function generateWrongOptions(correctAnswer: string[], notationSystem: 'letter' | 'solfege', count: number = 3): string[] {
+// Generate all 7 note options (always show all notes for selection)
+export function generateAllNoteOptions(notationSystem: 'letter' | 'solfege'): string[] {
   const allNotes: NoteName[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-  const wrongOptions: string[] = [];
-  
-  while (wrongOptions.length < count) {
-    const randomNote = allNotes[Math.floor(Math.random() * allNotes.length)];
-    const displayName = getNoteDisplayName(randomNote, notationSystem);
-    
-    if (!correctAnswer.includes(displayName) && !wrongOptions.includes(displayName)) {
-      wrongOptions.push(displayName);
-    }
-  }
-  
-  return wrongOptions;
+  return allNotes.map(note => getNoteDisplayName(note, notationSystem));
 }
 
 // Generate a complete question based on game settings
@@ -79,24 +69,16 @@ export function generateQuestion(settings: GameSettings): Question {
   
   const notes = generateRandomNotes(noteCount, settings.difficulty);
   const correctAnswer = notes.map(note => getNoteDisplayName(note.name, settings.notationSystem));
-  const wrongOptions = generateWrongOptions(correctAnswer, settings.notationSystem);
   
-  // Shuffle options
-  const allOptions = [...correctAnswer, ...wrongOptions];
-  const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
+  // Always show all 7 note options for selection
+  const allOptions = generateAllNoteOptions(settings.notationSystem);
   
-  // Debug logging to help identify issues
-  console.log('Generated question:', {
-    notes: notes.map(n => ({ name: n.name, octave: n.octave, position: n.staffPosition })),
-    correctAnswer,
-    allOptions: shuffledOptions,
-  });
   
   return {
     id: `question_${Date.now()}_${Math.random()}`,
     notes,
     correctAnswer,
-    options: shuffledOptions,
+    options: allOptions,
     answered: false,
   };
 }

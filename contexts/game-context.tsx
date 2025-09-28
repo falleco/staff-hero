@@ -75,6 +75,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const isCorrect = JSON.stringify(action.payload.sort()) === 
                        JSON.stringify(state.currentQuestion.correctAnswer.sort());
       
+      
       const newStreak = isCorrect ? state.streak + 1 : 0;
       const points = isCorrect ? (10 + state.streak * 2) : 0;
       
