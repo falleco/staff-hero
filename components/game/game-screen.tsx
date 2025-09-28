@@ -52,12 +52,25 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
 
-    // Auto-advance to next question after showing feedback
+    // Auto-advance timing based on game mode and correctness
+    const answerIsCorrect = JSON.stringify(answers.sort()) === 
+                           JSON.stringify(gameState.currentQuestion.correctAnswer.sort());
+    
+    let delay = 2000; // Default delay
+    
+    if (gameSettings.gameMode === 'single-note') {
+      if (answerIsCorrect) {
+        delay = 500; // Quick progression for correct answers
+      } else {
+        delay = 3000; // Longer pause for incorrect answers to learn
+      }
+    }
+    
     const timeout = setTimeout(() => {
       setShowFeedback(false);
       nextQuestion();
       generateNewQuestion();
-    }, 2000);
+    }, delay);
     
     setFeedbackTimeout(timeout);
   };
@@ -172,16 +185,31 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
         {/* Feedback and Next Button */}
         {showFeedback && (
           <View style={styles.feedbackContainer}>
-            <ThemedText 
-              style={[
-                styles.feedbackText,
-                { 
-                  color: gameState.currentQuestion.isCorrect ? '#4CAF50' : '#F44336' 
-                }
-              ]}
-            >
-              {gameState.currentQuestion.isCorrect ? 'Correct! 🎉' : 'Try again! 💪'}
-            </ThemedText>
+            {/* Show feedback text only for incorrect answers in single-note mode, or always for other modes */}
+            {(gameSettings.gameMode !== 'single-note' || !gameState.currentQuestion.isCorrect) && (
+              <ThemedText 
+                style={[
+                  styles.feedbackText,
+                  { 
+                    color: gameState.currentQuestion.isCorrect ? '#4CAF50' : '#F44336' 
+                  }
+                ]}
+              >
+                {gameState.currentQuestion.isCorrect ? 'Correct! 🎉' : 'Try again! 💪'}
+              </ThemedText>
+            )}
+            
+            {/* Subtle correct indicator for single-note mode */}
+            {gameSettings.gameMode === 'single-note' && gameState.currentQuestion.isCorrect && (
+              <View style={styles.quickProgressContainer}>
+                <ThemedText style={[styles.subtleFeedbackText, { color: '#4CAF50' }]}>
+                  ✓
+                </ThemedText>
+                <ThemedText style={[styles.quickProgressText, { color: textColor }]}>
+                  Next question...
+                </ThemedText>
+              </View>
+            )}
             
             {!gameState.currentQuestion.isCorrect && (
               <ThemedText style={[styles.correctAnswerText, { color: textColor }]}>
@@ -189,14 +217,17 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
               </ThemedText>
             )}
             
-            <Pressable
-              style={[styles.nextButton, { backgroundColor: tintColor }]}
-              onPress={handleNextQuestion}
-            >
-              <ThemedText style={styles.nextButtonText}>
-                Next Question
-              </ThemedText>
-            </Pressable>
+            {/* Show next button only for incorrect answers in single-note mode, or always for other modes */}
+            {(gameSettings.gameMode !== 'single-note' || !gameState.currentQuestion.isCorrect) && (
+              <Pressable
+                style={[styles.nextButton, { backgroundColor: tintColor }]}
+                onPress={handleNextQuestion}
+              >
+                <ThemedText style={styles.nextButtonText}>
+                  Next Question
+                </ThemedText>
+              </Pressable>
+            )}
           </View>
         )}
       </View>
@@ -260,6 +291,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 10,
+  },
+  subtleFeedbackText: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  quickProgressContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  quickProgressText: {
+    fontSize: 14,
+    opacity: 0.7,
+    fontStyle: 'italic',
   },
   correctAnswerText: {
     fontSize: 16,
