@@ -1,5 +1,7 @@
 import { AnswerButtons } from '@/components/game/answer-buttons';
+import { RhythmHero } from '@/components/game/rhythm-hero';
 import { ScoreDisplay } from '@/components/game/score-display';
+import { SequenceGame } from '@/components/game/sequence-game';
 import { MusicStaff } from '@/components/music/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -102,7 +104,6 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
     );
   };
 
-  const isMultiSelect = gameSettings.gameMode !== 'single-note';
 
   if (!gameState.isGameActive) {
     return (
@@ -140,47 +141,75 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
 
       {/* Game content */}
       <View style={styles.gameContent}>
-        {/* Instructions */}
-        <View style={styles.instructionContainer}>
-          <ThemedText style={[styles.instruction, { color: textColor }]}>
-            {gameSettings.gameMode === 'single-note' 
-              ? 'Identify the note:'
-              : gameSettings.gameMode === 'chord'
-              ? 'Identify all notes in the chord:'
-              : 'Identify the notes in sequence:'
-            }
-          </ThemedText>
-          
-          <ThemedText style={[styles.notationInfo, { color: textColor }]}>
-            Using {gameSettings.notationSystem === 'letter' ? 'Letter' : 'Solfege'} notation
-          </ThemedText>
-        </View>
+        {/* Render different game modes */}
+        {gameSettings.gameMode === 'single-note' && (
+          <>
+            {/* Instructions */}
+            <View style={styles.instructionContainer}>
+              <ThemedText style={[styles.instruction, { color: textColor }]}>
+                Identify the note:
+              </ThemedText>
+              
+              <ThemedText style={[styles.notationInfo, { color: textColor }]}>
+                Using {gameSettings.notationSystem === 'letter' ? 'Letter' : 'Solfege'} notation
+              </ThemedText>
+            </View>
 
-        {/* Music Staff */}
-        <View style={styles.staffContainer}>
-          <MusicStaff
-            notes={gameState.currentQuestion.notes}
-            showFeedback={showFeedback}
-            isCorrect={gameState.currentQuestion.isCorrect}
-            showNoteLabels={gameSettings.showNoteLabels}
-            notationSystem={gameSettings.notationSystem}
-            streakLevel={getStreakLevel(gameState.streak)}
-            width={350}
-            height={180}
-          />
-        </View>
+            {/* Music Staff */}
+            <View style={styles.staffContainer}>
+              <MusicStaff
+                notes={gameState.currentQuestion.notes}
+                showFeedback={showFeedback}
+                isCorrect={gameState.currentQuestion.isCorrect}
+                showNoteLabels={gameSettings.showNoteLabels}
+                notationSystem={gameSettings.notationSystem}
+                streakLevel={getStreakLevel(gameState.streak)}
+                width={350}
+                height={180}
+              />
+            </View>
 
-        {/* Answer Options */}
-        <View style={styles.answersContainer}>
-          <AnswerButtons
-            options={gameState.currentQuestion.options}
-            correctAnswers={gameState.currentQuestion.correctAnswer}
-            isMultiSelect={isMultiSelect}
+            {/* Answer Options */}
+            <View style={styles.answersContainer}>
+              <AnswerButtons
+                options={gameState.currentQuestion.options}
+                correctAnswers={gameState.currentQuestion.correctAnswer}
+                isMultiSelect={false}
+                onAnswerSubmit={handleAnswerSubmit}
+                disabled={gameState.currentQuestion.answered}
+                showFeedback={showFeedback}
+              />
+            </View>
+          </>
+        )}
+
+        {gameSettings.gameMode === 'sequence' && (
+          <SequenceGame
+            question={gameState.currentQuestion}
+            gameSettings={gameSettings}
             onAnswerSubmit={handleAnswerSubmit}
-            disabled={gameState.currentQuestion.answered}
             showFeedback={showFeedback}
+            streakLevel={getStreakLevel(gameState.streak)}
           />
-        </View>
+        )}
+
+        {gameSettings.gameMode === 'rhythm' && (
+          <RhythmHero
+            question={gameState.currentQuestion}
+            gameSettings={gameSettings}
+            onAnswerSubmit={(hitNotes, accuracy) => {
+              // For rhythm mode, success is based on hitting enough notes with good timing
+              const isCorrect = accuracy > 60;
+              if (isCorrect) {
+                handleAnswerSubmit(hitNotes);
+              } else {
+                handleAnswerSubmit([]); // Mark as incorrect
+              }
+            }}
+            showFeedback={showFeedback}
+            streakLevel={getStreakLevel(gameState.streak)}
+          />
+        )}
 
         {/* Feedback and Next Button */}
         {showFeedback && (
@@ -332,5 +361,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     opacity: 0.7,
+  },
+  comingSoonContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  comingSoonText: {
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  comingSoonSubtext: {
+    fontSize: 16,
+    textAlign: 'center',
+    opacity: 0.7,
+    marginBottom: 30,
+  },
+  backButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderWidth: 2,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

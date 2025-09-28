@@ -18,7 +18,7 @@ export interface Note {
 export interface GameSettings {
   notationSystem: NotationSystem;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  gameMode: 'single-note' | 'chord' | 'sequence';
+  gameMode: 'single-note' | 'sequence' | 'rhythm';
   showNoteLabels: boolean; // Helper for beginners
   timeLimit?: number; // in seconds
 }
@@ -42,6 +42,13 @@ export interface Question {
   answered: boolean;
   isCorrect?: boolean;
   userAnswer?: string[];
+  // For sequence mode
+  isSequenceMode?: boolean;
+  userSequence?: string[];
+  // For rhythm mode
+  isRhythmMode?: boolean;
+  noteTimings?: number[]; // When each note should be played (in ms)
+  userTimings?: number[]; // When user actually pressed (in ms)
 }
 
 export interface ScoreHistory {

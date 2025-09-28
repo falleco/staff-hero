@@ -1,7 +1,7 @@
 export interface GameSession {
   id: string;
   date: string;
-  gameMode: 'single-note' | 'chord' | 'sequence';
+  gameMode: 'single-note' | 'sequence' | 'rhythm';
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   notationSystem: 'letter' | 'solfege';
   score: number;
@@ -24,8 +24,8 @@ export interface UserAnalytics {
   favoriteDifficulty: string;
   gamesPerMode: {
     'single-note': number;
-    'chord': number;
     'sequence': number;
+    'rhythm': number;
   };
   gamesPerNotation: {
     'letter': number;

@@ -15,8 +15,8 @@ const defaultAnalytics: UserAnalytics = {
   favoriteDifficulty: 'beginner',
   gamesPerMode: {
     'single-note': 0,
-    'chord': 0,
     'sequence': 0,
+    'rhythm': 0,
   },
   gamesPerNotation: {
     'letter': 0,

@@ -64,8 +64,9 @@ export function generateAllNoteOptions(notationSystem: 'letter' | 'solfege'): st
 // Generate a complete question based on game settings
 export function generateQuestion(settings: GameSettings): Question {
   const noteCount = settings.gameMode === 'single-note' ? 1 : 
-                   settings.gameMode === 'chord' ? Math.floor(Math.random() * 3) + 2 : 
-                   Math.floor(Math.random() * 4) + 2;
+                   settings.gameMode === 'sequence' ? Math.floor(Math.random() * 3) + 2 : // 2-4 notes
+                   settings.gameMode === 'rhythm' ? Math.floor(Math.random() * 4) + 3 : // 3-6 notes
+                   1;
   
   const notes = generateRandomNotes(noteCount, settings.difficulty);
   const correctAnswer = notes.map(note => getNoteDisplayName(note.name, settings.notationSystem));
@@ -80,13 +81,25 @@ export function generateQuestion(settings: GameSettings): Question {
   console.log('  Available options:', allOptions);
   console.log('  Notation system:', settings.notationSystem);
   
-  return {
+  const question: Question = {
     id: `question_${Date.now()}_${Math.random()}`,
     notes,
     correctAnswer,
     options: allOptions,
     answered: false,
   };
+
+  // Add mode-specific properties
+  if (settings.gameMode === 'sequence') {
+    question.isSequenceMode = true;
+    question.userSequence = [];
+  } else if (settings.gameMode === 'rhythm') {
+    question.isRhythmMode = true;
+    question.noteTimings = notes.map((_, index) => (index + 1) * 1000); // Notes every second
+    question.userTimings = [];
+  }
+
+  return question;
 }
 
 // Calculate accuracy percentage

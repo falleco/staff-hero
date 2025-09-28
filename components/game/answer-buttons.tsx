@@ -21,7 +21,6 @@ export function AnswerButtons({
   disabled = false,
   showFeedback = false
 }: AnswerButtonsProps) {
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [animatedValues, setAnimatedValues] = useState<Record<number, Animated.Value>>({});
 
   // Initialize animated values when options change
@@ -58,71 +57,35 @@ export function AnswerButtons({
     // Haptic feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    let newSelectedAnswers: string[];
-
-    if (isMultiSelect) {
-      if (selectedAnswers.includes(answer)) {
-        newSelectedAnswers = selectedAnswers.filter(a => a !== answer);
-      } else {
-        newSelectedAnswers = [...selectedAnswers, answer];
-      }
-      setSelectedAnswers(newSelectedAnswers);
-    } else {
-      newSelectedAnswers = [answer];
-      setSelectedAnswers(newSelectedAnswers);
-      // Auto-submit for single select
-      setTimeout(() => {
-        onAnswerSubmit(newSelectedAnswers);
-      }, 150);
-    }
+    // Always submit immediately (no toggle state)
+    onAnswerSubmit([answer]);
   };
 
-  const handleSubmit = () => {
-    if (selectedAnswers.length === 0) return;
-    onAnswerSubmit(selectedAnswers);
-  };
-
-  const getButtonStyle = (answer: string, index: number) => {
-    const isSelected = selectedAnswers.includes(answer);
-    let backgroundColor = '#f0f0f0';
-    let borderColor = '#ccc';
-    
+  const getButtonStyle = (answer: string) => {
     if (showFeedback) {
       const isCorrect = correctAnswers.includes(answer);
-      const wasSelected = selectedAnswers.includes(answer);
       
       if (isCorrect) {
-        backgroundColor = '#4CAF50';
-        borderColor = '#45a049';
-      } else if (wasSelected) {
-        backgroundColor = '#F44336';
-        borderColor = '#da190b';
+        return {
+          backgroundColor: '#4CAF50',
+          borderColor: '#45a049',
+        };
       }
-    } else if (isSelected) {
-      backgroundColor = tintColor;
-      borderColor = tintColor;
     }
 
     return {
-      ...styles.answerButton,
-      backgroundColor,
-      borderColor,
-      transform: [{ scale: animatedValues[index] }],
+      backgroundColor: '#f0f0f0',
+      borderColor: '#ccc',
     };
   };
 
   const getTextStyle = (answer: string) => {
-    const isSelected = selectedAnswers.includes(answer);
-    
     if (showFeedback) {
       const isCorrect = correctAnswers.includes(answer);
-      const wasSelected = selectedAnswers.includes(answer);
       
-      if (isCorrect || wasSelected) {
+      if (isCorrect) {
         return { ...styles.answerText, color: 'white', fontWeight: '600' as const };
       }
-    } else if (isSelected) {
-      return { ...styles.answerText, color: 'white', fontWeight: '600' as const };
     }
     
     return { ...styles.answerText, color: textColor };
@@ -137,30 +100,32 @@ export function AnswerButtons({
     <View style={styles.container}>
       <View style={styles.optionsGrid}>
         {options.map((option, index) => (
-          <Animated.View key={option} style={getButtonStyle(option, index)}>
+          <Animated.View key={option} style={{ transform: [{ scale: animatedValues[index] }] }}>
             <Pressable
               onPress={() => handleAnswerPress(option, index)}
               disabled={disabled}
-              style={styles.pressable}
+              style={({ pressed }) => [
+                styles.answerButton,
+                getButtonStyle(option),
+                pressed && {
+                  borderColor: tintColor,
+                  borderWidth: 3,
+                  backgroundColor: `${tintColor}20`, // 20% opacity tint
+                }
+              ]}
             >
-              <ThemedText style={getTextStyle(option)}>
-                {option}
-              </ThemedText>
+              {({ pressed }) => (
+                <ThemedText style={[
+                  getTextStyle(option),
+                  pressed && { color: tintColor, fontWeight: '700' }
+                ]}>
+                  {option}
+                </ThemedText>
+              )}
             </Pressable>
           </Animated.View>
         ))}
       </View>
-      
-      {isMultiSelect && selectedAnswers.length > 0 && !showFeedback && (
-        <Pressable
-          style={[styles.submitButton, { backgroundColor: tintColor }]}
-          onPress={handleSubmit}
-        >
-          <ThemedText style={styles.submitText}>
-            Submit Answer{selectedAnswers.length > 1 ? 's' : ''}
-          </ThemedText>
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -202,25 +167,5 @@ const styles = StyleSheet.create({
   answerText: {
     fontSize: 18,
     fontWeight: '500',
-  },
-  submitButton: {
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  submitText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
