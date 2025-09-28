@@ -14,6 +14,14 @@ interface GameScreenProps {
   onGameEnd?: () => void;
 }
 
+// Helper function to determine streak level for animations
+function getStreakLevel(streak: number): number {
+  if (streak === 0) return 0;
+  if (streak < 5) return 1;
+  if (streak < 10) return 2;
+  return 3;
+}
+
 export function GameScreen({ onGameEnd }: GameScreenProps) {
   const { gameState, gameSettings, submitAnswer, nextQuestion, endGame, generateNewQuestion } = useGame();
   const [showFeedback, setShowFeedback] = useState(false);
@@ -143,6 +151,7 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
             isCorrect={gameState.currentQuestion.isCorrect}
             showNoteLabels={gameSettings.showNoteLabels}
             notationSystem={gameSettings.notationSystem}
+            streakLevel={getStreakLevel(gameState.streak)}
             width={350}
             height={180}
           />

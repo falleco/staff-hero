@@ -7,6 +7,8 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
+  withSequence,
   withTiming
 } from 'react-native-reanimated';
 import Svg, { G, Line, Path, Text as SvgText } from 'react-native-svg';
@@ -19,6 +21,7 @@ interface MusicStaffProps {
   isCorrect?: boolean;
   showNoteLabels?: boolean;
   notationSystem?: NotationSystem;
+  streakLevel?: number; // 0 = no streak, 1-3 = dancing levels
 }
 
 export function MusicStaff({ 
@@ -28,7 +31,8 @@ export function MusicStaff({
   showFeedback = false, 
   isCorrect,
   showNoteLabels = true,
-  notationSystem = 'solfege'
+  notationSystem = 'solfege',
+  streakLevel = 0
 }: MusicStaffProps) {
   const textColor = useThemeColor({}, 'text');
   const staffColor = useThemeColor({}, 'text');
@@ -43,7 +47,12 @@ export function MusicStaff({
   // Animation values for note slide-in effect
   const noteAnimationX = useSharedValue(width + 100); // Start off-screen to the right
   
-  // Trigger animation when notes change
+  // Animation values for treble clef dancing
+  const clefDanceRotation = useSharedValue(0);
+  const clefDanceScale = useSharedValue(1);
+  const clefDanceY = useSharedValue(0);
+  
+  // Trigger note animation when notes change
   useEffect(() => {
     // Reset to off-screen position
     noteAnimationX.value = width + 100;
@@ -55,10 +64,88 @@ export function MusicStaff({
     });
   }, [notes, width, noteAnimationX]);
   
+  // Trigger treble clef dancing based on streak level
+  useEffect(() => {
+    if (streakLevel === 0) {
+      // No streak - stop dancing
+      clefDanceRotation.value = withTiming(0, { duration: 300 });
+      clefDanceScale.value = withTiming(1, { duration: 300 });
+      clefDanceY.value = withTiming(0, { duration: 300 });
+    } else if (streakLevel === 1) {
+      // Level 1 - Gentle sway
+      clefDanceRotation.value = withRepeat(
+        withSequence(
+          withTiming(2, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-2, { duration: 1000, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      );
+      clefDanceScale.value = withTiming(1, { duration: 300 });
+      clefDanceY.value = withTiming(0, { duration: 300 });
+    } else if (streakLevel === 2) {
+      // Level 2 - More energetic with scale
+      clefDanceRotation.value = withRepeat(
+        withSequence(
+          withTiming(5, { duration: 600, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-5, { duration: 600, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      );
+      clefDanceScale.value = withRepeat(
+        withSequence(
+          withTiming(1.1, { duration: 600, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0.95, { duration: 600, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        true
+      );
+      clefDanceY.value = withTiming(0, { duration: 300 });
+    } else if (streakLevel >= 3) {
+      // Level 3+ - Full party mode!
+      clefDanceRotation.value = withRepeat(
+        withSequence(
+          withTiming(8, { duration: 400, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-8, { duration: 400, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      );
+      clefDanceScale.value = withRepeat(
+        withSequence(
+          withTiming(1.2, { duration: 400, easing: Easing.inOut(Easing.elastic(1.5)) }),
+          withTiming(0.9, { duration: 400, easing: Easing.inOut(Easing.elastic(1.5)) })
+        ),
+        -1,
+        true
+      );
+      clefDanceY.value = withRepeat(
+        withSequence(
+          withTiming(-3, { duration: 300, easing: Easing.out(Easing.quad) }),
+          withTiming(3, { duration: 300, easing: Easing.out(Easing.quad) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [streakLevel, clefDanceRotation, clefDanceScale, clefDanceY]);
+  
   // Animated style for notes container
   const animatedNotesStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: noteAnimationX.value }],
+    };
+  });
+  
+  // Animated style for dancing treble clef
+  const animatedClefStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateY: clefDanceY.value },
+        { rotate: `${clefDanceRotation.value}deg` },
+        { scale: clefDanceScale.value },
+      ],
     };
   });
   
@@ -185,19 +272,30 @@ export function MusicStaff({
           />
         ))}
         
-        {/* Treble clef */}
-        <G
-          transform={`translate(${clefX - 20}, ${g4LineY - 27}) scale(0.03, 0.03)`}
-        >
+        {/* Note labels (if enabled) */}
+        {renderNoteLabels()}
+      </Svg>
+      
+      {/* Animated Treble Clef */}
+      <Animated.View 
+        style={[
+          styles.clefOverlay,
+          animatedClefStyle,
+          {
+            left: clefX - 20,
+            top: g4LineY - 53,
+            width: 40,
+            height: 85,
+          }
+        ]}
+      >
+        <Svg width={40} height={85} viewBox="0 0 1200 1200">
           <Path
             d={trebleClefPath}
             fill={staffColor}
           />
-        </G>
-
-        {/* Note labels (if enabled) */}
-        {renderNoteLabels()}
-      </Svg>
+        </Svg>
+      </Animated.View>
       
       {/* Animated Notes Overlay */}
       <Animated.View 
@@ -260,5 +358,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+  },
+  clefOverlay: {
+    position: 'absolute',
   },
 });
