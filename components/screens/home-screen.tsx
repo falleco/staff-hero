@@ -1,11 +1,9 @@
-import { GameModeModal } from '@/components/modals/game-mode-modal';
-import { SettingsModal } from '@/components/modals/settings-modal';
 import { ThemedText } from '@/components/themed-text';
 import { useGame } from '@/contexts/game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { GameSettings } from '@/types/music';
 import * as Haptics from 'expo-haptics';
-import React, { useState } from 'react';
+import { router } from 'expo-router';
+import React, { useEffect } from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,28 +14,26 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onStartGame }: HomeScreenProps) {
-  const [showGameModeModal, setShowGameModeModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  
-  const { gameSettings, updateSettings, startGame } = useGame();
+  const { gameSettings, gameState } = useGame();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
 
+  // Listen for game state changes to trigger navigation
+  useEffect(() => {
+    if (gameState.isGameActive) {
+      onStartGame();
+    }
+  }, [gameState.isGameActive, onStartGame]);
+
   const handleStartGamePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setShowGameModeModal(true);
-  };
-
-  const handleGameModeSelect = (gameMode: GameSettings['gameMode']) => {
-    updateSettings({ gameMode });
-    startGame();
-    onStartGame();
+    router.push('/game-modes');
   };
 
   const handleSettingsPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowSettingsModal(true);
+    router.push('/settings');
   };
 
   return (
@@ -141,21 +137,6 @@ export function HomeScreen({ onStartGame }: HomeScreenProps) {
           </ThemedText>
         </View>
       </View>
-
-      {/* Modals */}
-      <GameModeModal
-        visible={showGameModeModal}
-        onClose={() => setShowGameModeModal(false)}
-        onStartGame={handleGameModeSelect}
-        currentSettings={gameSettings}
-      />
-
-      <SettingsModal
-        visible={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-        settings={gameSettings}
-        onUpdateSettings={updateSettings}
-      />
     </SafeAreaView>
   );
 }

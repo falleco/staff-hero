@@ -19,6 +19,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          headerShown: false,
           title: 'Play',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="play.circle.fill" color={color} />,
         }}
@@ -27,6 +28,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Stats',
+          headerShown: false,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
         }}
       />

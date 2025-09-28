@@ -7,7 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useGame } from '@/contexts/game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import * as Haptics from 'expo-haptics';
+import { getAutoAdvanceDelay, getStreakLevel, triggerGameHaptics, validateAnswer } from '@/utils/game-logic';
 import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,13 +16,6 @@ interface GameScreenProps {
   onGameEnd?: () => void;
 }
 
-// Helper function to determine streak level for animations
-function getStreakLevel(streak: number): number {
-  if (streak === 0) return 0;
-  if (streak < 5) return 1;
-  if (streak < 10) return 2;
-  return 3;
-}
 
 export function GameScreen({ onGameEnd }: GameScreenProps) {
   const { gameState, gameSettings, submitAnswer, nextQuestion, endGame, generateNewQuestion } = useGame();
@@ -44,29 +37,12 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
     submitAnswer(answers);
     setShowFeedback(true);
     
-    // Haptic feedback
-    const isCorrect = JSON.stringify(answers.sort()) === 
-                     JSON.stringify(gameState.currentQuestion.correctAnswer.sort());
-    
-    if (isCorrect) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
+    // Use extracted business logic
+    const isCorrect = validateAnswer(answers, gameState.currentQuestion.correctAnswer);
+    triggerGameHaptics(isCorrect);
 
     // Auto-advance timing based on game mode and correctness
-    const answerIsCorrect = JSON.stringify(answers.sort()) === 
-                           JSON.stringify(gameState.currentQuestion.correctAnswer.sort());
-    
-    let delay = 2000; // Default delay
-    
-    if (gameSettings.gameMode === 'single-note') {
-      if (answerIsCorrect) {
-        delay = 500; // Quick progression for correct answers
-      } else {
-        delay = 3000; // Longer pause for incorrect answers to learn
-      }
-    }
+    const delay = getAutoAdvanceDelay(gameSettings.gameMode, isCorrect);
     
     const timeout = setTimeout(() => {
       setShowFeedback(false);

@@ -1,7 +1,17 @@
+/**
+ * Music Utilities
+ * 
+ * Core utilities for music note generation, question creation, and game logic.
+ * This module handles the fundamental music theory and note positioning logic.
+ */
+
 import { GameSettings, Note, NOTE_MAPPINGS, NoteName, Question, TREBLE_CLEF_POSITIONS } from '@/types/music';
 import { DEFAULT_NOTE_SYMBOL, getNoteSymbolsForDifficulty } from '@/types/note-symbols';
 
-// Create a reverse mapping from staff position to note for accurate conversion
+/**
+ * Reverse mapping from staff position to note for accurate conversion
+ * Built dynamically from TREBLE_CLEF_POSITIONS to ensure consistency
+ */
 const POSITION_TO_NOTE: Record<number, { name: NoteName; octave: number }> = {};
 Object.entries(TREBLE_CLEF_POSITIONS).forEach(([noteKey, position]) => {
   const name = noteKey.slice(0, -1) as NoteName;
@@ -10,7 +20,11 @@ Object.entries(TREBLE_CLEF_POSITIONS).forEach(([noteKey, position]) => {
 });
 
 
-// Generate a random note within the treble clef range
+/**
+ * Generates a random note within the treble clef range
+ * @param difficulty - Game difficulty level affecting note range
+ * @returns A randomly generated note with proper staff positioning
+ */
 export function generateRandomNote(difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner'): Note {
   // Use the available positions from TREBLE_CLEF_POSITIONS for consistency
   const availablePositions = Object.values(TREBLE_CLEF_POSITIONS);
@@ -41,7 +55,12 @@ export function generateRandomNote(difficulty: 'beginner' | 'intermediate' | 'ad
   };
 }
 
-// Generate multiple random notes
+/**
+ * Generates multiple random notes for multi-note game modes
+ * @param count - Number of notes to generate
+ * @param difficulty - Game difficulty level
+ * @returns Array of randomly generated notes
+ */
 export function generateRandomNotes(count: number, difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner'): Note[] {
   const notes: Note[] = [];
   for (let i = 0; i < count; i++) {
