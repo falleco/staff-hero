@@ -73,6 +73,12 @@ export function generateQuestion(settings: GameSettings): Question {
   // Always show all 7 note options for selection
   const allOptions = generateAllNoteOptions(settings.notationSystem);
   
+  // Debug logging for question generation
+  console.log('🎵 NEW QUESTION GENERATED:');
+  console.log('  Notes on staff:', notes.map(n => `${n.name}${n.octave} at position ${n.staffPosition}`));
+  console.log('  Expected answer(s):', notes, correctAnswer);
+  console.log('  Available options:', allOptions);
+  console.log('  Notation system:', settings.notationSystem);
   
   return {
     id: `question_${Date.now()}_${Math.random()}`,

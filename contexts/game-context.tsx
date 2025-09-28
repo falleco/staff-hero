@@ -75,7 +75,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const isCorrect = JSON.stringify(action.payload.sort()) === 
                        JSON.stringify(state.currentQuestion.correctAnswer.sort());
       
-      
+      // Comprehensive answer logging
+      console.log('🎯 ANSWER SUBMITTED:');
+      console.log('  Question ID:', state.currentQuestion.id);
+      console.log('  Notes shown:', state.currentQuestion.notes.map(n => `${n.name}${n.octave} at position ${n.staffPosition}`));
+      console.log('  Expected answer:', state.currentQuestion.correctAnswer);
+      console.log('  User selected:', action.payload);
+      console.log('  Result:', isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
+      if (!isCorrect) {
+        console.log('  ❗ Mismatch details:');
+        console.log('    Expected (sorted):', state.currentQuestion.correctAnswer.sort());
+        console.log('    User answer (sorted):', action.payload.sort());
+      }
+      console.log('  Current streak:', state.streak, '→', isCorrect ? state.streak + 1 : 0);
+      console.log('---');
+
       const newStreak = isCorrect ? state.streak + 1 : 0;
       const points = isCorrect ? (10 + state.streak * 2) : 0;
       
@@ -135,6 +149,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const startGame = () => {
+    console.log('🎮 GAME STARTED:');
+    console.log('  Notation system:', gameSettings.notationSystem);
+    console.log('  Difficulty:', gameSettings.difficulty);
+    console.log('  Game mode:', gameSettings.gameMode);
+    console.log('  Show labels:', gameSettings.showNoteLabels);
+    console.log('====================');
     dispatch({ type: 'START_GAME' });
   };
 
@@ -163,6 +183,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       try {
         await addGameSession(session);
+        console.log('🏁 GAME SESSION ENDED:');
+        console.log('  Final score:', gameState.score);
+        console.log('  Max streak:', gameState.maxStreak);
+        console.log('  Accuracy:', accuracy + '%');
+        console.log('  Total questions:', gameState.totalQuestions);
+        console.log('  Correct answers:', gameState.correctAnswers);
+        console.log('  Duration:', Math.floor(duration / 60) + 'm ' + (duration % 60) + 's');
+        console.log('====================');
       } catch (error) {
         console.error('Error saving game session:', error);
       }
@@ -185,6 +213,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const generateNewQuestion = () => {
     const newQuestion = generateQuestion(gameSettings);
+    console.log('🔄 GENERATING NEW QUESTION');
+    console.log('  Game settings:', gameSettings);
     dispatch({ type: 'SET_QUESTION', payload: newQuestion });
   };
 

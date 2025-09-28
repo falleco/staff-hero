@@ -104,21 +104,21 @@ export function MusicStaff({
     if (!showNoteLabels) return null;
 
     const labels: React.ReactElement[] = [];
-    const labelPositions = [-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // Extended staff positions to label
+    const labelPositions = [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]; // Extended staff positions to label
     
     labelPositions.forEach((position) => {
       const noteInfo = STAFF_POSITION_TO_NOTE[position];
       if (noteInfo) {
-        const y = getNoteY(position);
+        const y = getNoteY(position) + staffLineSpacing/2;
         const noteName = NOTE_MAPPINGS[notationSystem][noteInfo.letter];
         
         
         // Check if this position is on a line or space
         // Lines are at odd positions: -7, -5, -3, -1, 1, 3, 5, 7, 9, 11
         // Spaces are at even positions: -6, -4, -2, 0, 2, 4, 6, 8, 10
-        const isOnLine = position % 2 !== 0;
+        const isOnLine = position % 2 === 0;
         const baseX = width - 25; // Right side positioning
-        const x = isOnLine ? baseX : baseX - 15; // Offset spaces to the left
+        const x = (isOnLine ? baseX : baseX - 15) + 15; // Offset spaces to the left
         
         labels.push(
           <SvgText
@@ -183,7 +183,7 @@ export function MusicStaff({
               
               {/* Note symbol */}
               <G
-                transform={`translate(${noteX - noteSymbol.width/2}, ${noteY - noteSymbol.height/2}) scale(0.035, 0.035)`}
+                transform={`translate(${noteX - noteSymbol.width - 11}, ${noteY - noteSymbol.height/2}) scale(0.035, 0.035)`}
               >
                 <Path
                   d={noteSymbol.pathData}
