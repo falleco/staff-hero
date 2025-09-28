@@ -1,7 +1,8 @@
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 interface OptionItem {
   label: string;
@@ -32,95 +33,63 @@ export function SettingOption({
   const tintColor = useThemeColor({}, 'tint');
 
   return (
-    <View style={styles.settingGroup}>
-      <ThemedText style={[styles.settingTitle, { color: textColor }]}>
+    <View className="mb-5">
+      <ThemedText className="text-base font-semibold mb-1" style={{ color: textColor }}>
         {title}
       </ThemedText>
       {subtitle && (
-        <ThemedText style={[styles.settingSubtitle, { color: textColor }]}>
+        <ThemedText className="text-sm opacity-70 mb-3" style={{ color: textColor }}>
           {subtitle}
         </ThemedText>
       )}
-      <View style={styles.optionsContainer}>
-        {options.map((option) => (
-          <Pressable
-            key={option.value}
-            style={({ pressed }) => [
-              styles.optionButton,
-              {
-                backgroundColor: currentValue === option.value ? tintColor : 'transparent',
-                borderColor: currentValue === option.value ? tintColor : '#ccc',
-                borderWidth: pressed ? 3 : 2,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              }
-            ]}
-            onPress={() => onValueChange(option.value)}
-          >
-            <View style={styles.optionContent}>
-              <ThemedText
-                style={[
-                  styles.optionText,
-                  {
-                    color: currentValue === option.value ? 'white' : textColor,
-                    fontWeight: currentValue === option.value ? '600' : '400',
-                  }
-                ]}
-              >
-                {option.label}
-              </ThemedText>
-              {option.description && (
-                <ThemedText
-                  style={[
-                    styles.optionDescription,
-                    {
-                      color: currentValue === option.value ? 'rgba(255,255,255,0.8)' : textColor,
-                      opacity: currentValue === option.value ? 1 : 0.6,
-                    }
-                  ]}
-                >
-                  {option.description}
-                </ThemedText>
+      <View className="gap-2">
+        {options.map((option) => {
+          const isSelected = currentValue === option.value;
+          
+          return (
+            <Pressable
+              key={option.value}
+              className={cn(
+                "p-4 border-2 rounded-xl items-center",
+                isSelected 
+                  ? "border-blue-500 bg-blue-500" 
+                  : "border-gray-300 bg-transparent"
               )}
-            </View>
-          </Pressable>
-        ))}
+              style={({ pressed }) => ({
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+                borderColor: isSelected ? tintColor : '#ccc',
+                backgroundColor: isSelected ? tintColor : 'transparent',
+              })}
+              onPress={() => onValueChange(option.value)}
+            >
+              <View className="gap-1 items-center">
+                <ThemedText
+                  className={cn(
+                    "text-base text-center",
+                    isSelected ? "font-semibold" : "font-normal"
+                  )}
+                  style={{
+                    color: isSelected ? 'white' : textColor,
+                  }}
+                >
+                  {option.label}
+                </ThemedText>
+                {option.description && (
+                  <ThemedText
+                    className="text-sm text-center"
+                    style={{
+                      color: isSelected ? 'rgba(255,255,255,0.8)' : textColor,
+                      opacity: isSelected ? 1 : 0.6,
+                    }}
+                  >
+                    {option.description}
+                  </ThemedText>
+                )}
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  settingGroup: {
-    marginBottom: 20,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  settingSubtitle: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 12,
-  },
-  optionsContainer: {
-    gap: 8,
-  },
-  optionButton: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  optionContent: {
-    gap: 4,
-    alignItems: 'center',
-  },
-  optionText: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  optionDescription: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-});

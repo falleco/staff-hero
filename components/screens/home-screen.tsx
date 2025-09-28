@@ -4,10 +4,8 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { width } = Dimensions.get('window');
 
 interface HomeScreenProps {
   onStartGame: () => void;
@@ -37,235 +35,108 @@ export function HomeScreen({ onStartGame }: HomeScreenProps) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <View style={styles.content}>
-        {/* App Title */}
-        <View style={styles.titleContainer}>
-          <ThemedText style={[styles.appTitle, { color: textColor }]}>
-            🎵 Staff Hero
+    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
+      <View className="flex-1 justify-center items-center p-6">
+        {/* Header */}
+        <View className="items-center mb-12">
+          <ThemedText className="text-5xl font-bold mb-2" style={{ color: textColor }}>
+            🎼 Staff Hero
           </ThemedText>
-          <ThemedText style={[styles.appSubtitle, { color: textColor }]}>
-            Master Music Note Reading
-          </ThemedText>
-        </View>
-
-        {/* Musical Staff Decoration */}
-        <View style={styles.decorationContainer}>
-          <View style={styles.staffLines}>
-            {[0, 1, 2, 3, 4].map((line) => (
-              <View 
-                key={line} 
-                style={[styles.staffLine, { backgroundColor: textColor }]} 
-              />
-            ))}
-          </View>
-          <ThemedText style={[styles.musicNote, { color: tintColor }]}>
-            ♪ ♫ ♪ ♫
+          <ThemedText className="text-lg text-center opacity-80" style={{ color: textColor }}>
+            Master music notation with fun games!
           </ThemedText>
         </View>
 
-        {/* Main Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <Pressable
-            style={[styles.playButton, { backgroundColor: tintColor }]}
-            onPress={handleStartGamePress}
-          >
-            <ThemedText style={styles.playButtonText}>
+        {/* Main Action Button */}
+        <Pressable
+          className="w-full max-w-xs p-6 mb-8 rounded-2xl shadow-lg"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? `${tintColor}CC` : tintColor,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
+          onPress={handleStartGamePress}
+        >
+          <View className="items-center">
+            <ThemedText className="text-2xl font-bold text-white mb-2">
               🎮 Start Playing
             </ThemedText>
-            <ThemedText style={styles.playButtonSubtext}>
+            <ThemedText className="text-base text-white opacity-90 text-center">
               Choose your game mode
             </ThemedText>
-          </Pressable>
+          </View>
+        </Pressable>
 
-          <Pressable
-            style={[styles.settingsButton, { borderColor: textColor }]}
-            onPress={handleSettingsPress}
-          >
-            <ThemedText style={[styles.settingsButtonText, { color: textColor }]}>
+        {/* Settings Button */}
+        <Pressable
+          className="w-full max-w-xs p-4 mb-8 rounded-xl border-2"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? `${tintColor}20` : 'transparent',
+            borderColor: tintColor,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
+          onPress={handleSettingsPress}
+        >
+          <View className="items-center">
+            <ThemedText className="text-lg font-semibold mb-1" style={{ color: tintColor }}>
               ⚙️ Settings
             </ThemedText>
-          </Pressable>
-        </View>
+            <ThemedText className="text-sm opacity-70 text-center" style={{ color: textColor }}>
+              Customize your experience
+            </ThemedText>
+          </View>
+        </Pressable>
 
         {/* Current Settings Preview */}
-        <View style={styles.currentSettingsContainer}>
-          <ThemedText style={[styles.currentSettingsTitle, { color: textColor }]}>
+        <View className="w-full max-w-xs p-4 bg-gray-100 rounded-xl mb-8">
+          <ThemedText className="text-sm font-semibold mb-2 text-center" style={{ color: textColor }}>
             Current Settings
           </ThemedText>
-          <View style={styles.settingsPreview}>
-            <View style={styles.settingItem}>
-              <ThemedText style={[styles.settingLabel, { color: textColor }]}>
-                Notation
-              </ThemedText>
-              <ThemedText style={[styles.settingValue, { color: tintColor }]}>
-                {gameSettings.notationSystem === 'letter' ? 'Letters' : 'Solfege ✨'}
-              </ThemedText>
-            </View>
-            <View style={styles.settingItem}>
-              <ThemedText style={[styles.settingLabel, { color: textColor }]}>
-                Difficulty
-              </ThemedText>
-              <ThemedText style={[styles.settingValue, { color: tintColor }]}>
-                {gameSettings.difficulty.charAt(0).toUpperCase() + gameSettings.difficulty.slice(1)}
-              </ThemedText>
-            </View>
-            <View style={styles.settingItem}>
-              <ThemedText style={[styles.settingLabel, { color: textColor }]}>
-                Note Labels
-              </ThemedText>
-              <ThemedText style={[styles.settingValue, { color: tintColor }]}>
-                {gameSettings.showNoteLabels ? 'Visible ✨' : 'Hidden'}
-              </ThemedText>
-            </View>
+          <View className="gap-1">
+            <ThemedText className="text-xs text-center opacity-70" style={{ color: textColor }}>
+              🎵 {gameSettings.notationSystem === 'letter' ? 'Letters (C, D, E...)' : 'Solfege (Do, Re, Mi...) ✨'}
+            </ThemedText>
+            <ThemedText className="text-xs text-center opacity-70" style={{ color: textColor }}>
+              👁️ Labels {gameSettings.showNoteLabels ? 'Visible ✨' : 'Hidden'}
+            </ThemedText>
+            <ThemedText className="text-xs text-center opacity-70" style={{ color: textColor }}>
+              🎯 {gameSettings.difficulty.charAt(0).toUpperCase() + gameSettings.difficulty.slice(1)}
+            </ThemedText>
           </View>
         </View>
 
         {/* Quick Tips */}
-        <View style={styles.tipsContainer}>
-          <ThemedText style={[styles.tipsTitle, { color: textColor }]}>
+        <View className="w-full max-w-xs">
+          <ThemedText className="text-sm font-semibold mb-2 text-center" style={{ color: textColor }}>
             💡 Quick Tips
           </ThemedText>
-          <ThemedText style={[styles.tipText, { color: textColor }]}>
-            • Build streaks for bonus points
-          </ThemedText>
-          <ThemedText style={[styles.tipText, { color: textColor }]}>
-            • Start with solfege (Do, Re, Mi...)
-          </ThemedText>
-          <ThemedText style={[styles.tipText, { color: textColor }]}>
-            • Practice daily for best results
-          </ThemedText>
+          <View className="gap-2">
+            <View className="flex-row items-start">
+              <ThemedText className="text-xs mr-2" style={{ color: textColor }}>
+                •
+              </ThemedText>
+              <ThemedText className="text-xs flex-1 opacity-80" style={{ color: textColor }}>
+                Start with Solfege (Do, Re, Mi) - it&apos;s great for beginners!
+              </ThemedText>
+            </View>
+            <View className="flex-row items-start">
+              <ThemedText className="text-xs mr-2" style={{ color: textColor }}>
+                •
+              </ThemedText>
+              <ThemedText className="text-xs flex-1 opacity-80" style={{ color: textColor }}>
+                Enable note labels while learning, then turn them off for a challenge
+              </ThemedText>
+            </View>
+            <View className="flex-row items-start">
+              <ThemedText className="text-xs mr-2" style={{ color: textColor }}>
+                •
+              </ThemedText>
+              <ThemedText className="text-xs flex-1 opacity-80" style={{ color: textColor }}>
+                Practice regularly to build muscle memory for note positions
+              </ThemedText>
+            </View>
+          </View>
         </View>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'space-around',
-  },
-  titleContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  appTitle: {
-    fontSize: 36,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  appSubtitle: {
-    fontSize: 18,
-    opacity: 0.8,
-    textAlign: 'center',
-  },
-  decorationContainer: {
-    alignItems: 'center',
-    marginVertical: 30,
-  },
-  staffLines: {
-    width: width * 0.7,
-    height: 60,
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  staffLine: {
-    height: 2,
-    opacity: 0.3,
-  },
-  musicNote: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    gap: 16,
-    marginVertical: 20,
-  },
-  playButton: {
-    paddingVertical: 20,
-    paddingHorizontal: 30,
-    borderRadius: 20,
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  playButtonText: {
-    color: 'white',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  playButtonSubtext: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
-  },
-  settingsButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 30,
-    borderWidth: 2,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  settingsButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  currentSettingsContainer: {
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 16,
-    marginVertical: 10,
-  },
-  currentSettingsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  settingsPreview: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  settingItem: {
-    alignItems: 'center',
-    minWidth: '30%',
-  },
-  settingLabel: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 4,
-  },
-  settingValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  tipsContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  tipsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  tipText: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-});

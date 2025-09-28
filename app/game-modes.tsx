@@ -5,43 +5,44 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { GameSettings } from '@/types/music';
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 export default function GameModesScreen() {
   const { gameSettings, updateSettings, startGame } = useGame();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
 
-  const gameModes = [
+  const gameModes: {
+    mode: GameSettings['gameMode'];
+    title: string;
+    description: string;
+    icon: string;
+  }[] = [
     {
-      mode: 'single-note' as const,
-      title: '🎵 Single Note',
-      description: 'Identify one note at a time - quick and simple',
-      difficulty: 'Beginner Friendly',
-      color: '#4CAF50',
+      mode: 'single-note',
+      title: 'Single Note',
+      description: 'Identify individual notes on the staff. Perfect for beginners!',
+      icon: '🎵'
     },
     {
-      mode: 'sequence' as const,
-      title: '🎼 Note Sequence',
-      description: 'Identify multiple notes in the correct order',
-      difficulty: 'Intermediate',
-      color: '#FF9800',
+      mode: 'sequence',
+      title: 'Note Sequence',
+      description: 'Identify multiple notes in the correct order. Build your skills!',
+      icon: '🎼'
     },
     {
-      mode: 'rhythm' as const,
-      title: '🎸 Rhythm Hero',
-      description: 'Guitar Hero style - tap notes as they move across the staff',
-      difficulty: 'Advanced',
-      color: '#F44336',
-    },
+      mode: 'rhythm',
+      title: 'Rhythm Hero',
+      description: 'Guitar Hero style! Hit notes as they cross the line.',
+      icon: '🎸'
+    }
   ];
 
   const handleModeSelect = (mode: GameSettings['gameMode']) => {
     updateSettings({ gameMode: mode });
     startGame();
-    router.back(); // Navigate back to home, which will trigger game start
+    router.back();
   };
 
   const handleClose = () => {
@@ -49,171 +50,61 @@ export default function GameModesScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader 
         title="Choose Game Mode" 
         onClose={handleClose}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.currentSettings}>
-          <ThemedText style={[styles.settingsTitle, { color: textColor }]}>
+      <ScrollView className="p-5">
+        <View className="mb-8 p-4 bg-gray-100 rounded-xl">
+          <ThemedText className="text-base font-semibold mb-2" style={{ color: textColor }}>
             Current Settings
           </ThemedText>
-          <View style={styles.settingsRow}>
-            <ThemedText style={[styles.settingLabel, { color: textColor }]}>
+          <View className="mb-1">
+            <ThemedText className="text-sm opacity-70" style={{ color: textColor }}>
               Notation: {gameSettings.notationSystem === 'letter' ? 'Letters (C, D, E...)' : 'Solfege (Do, Re, Mi...) ✨'}
             </ThemedText>
           </View>
-          <View style={styles.settingsRow}>
-            <ThemedText style={[styles.settingLabel, { color: textColor }]}>
+          <View className="mb-1">
+            <ThemedText className="text-sm opacity-70" style={{ color: textColor }}>
               Note Labels: {gameSettings.showNoteLabels ? 'Visible ✨' : 'Hidden'}
             </ThemedText>
           </View>
-          <View style={styles.settingsRow}>
-            <ThemedText style={[styles.settingLabel, { color: textColor }]}>
+          <View className="mb-1">
+            <ThemedText className="text-sm opacity-70" style={{ color: textColor }}>
               Difficulty: {gameSettings.difficulty.charAt(0).toUpperCase() + gameSettings.difficulty.slice(1)}
             </ThemedText>
           </View>
         </View>
 
-        <View style={styles.modesContainer}>
+        <View className="gap-4">
           {gameModes.map((gameMode) => (
             <Pressable
               key={gameMode.mode}
-              style={({ pressed }) => [
-                styles.modeCard,
-                { 
-                  borderColor: gameMode.color,
-                  backgroundColor: backgroundColor,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                }
-              ]}
+              className="p-5 border-2 rounded-xl"
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? `${tintColor}20` : 'transparent',
+                borderColor: tintColor,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
               onPress={() => handleModeSelect(gameMode.mode)}
             >
-              <View style={styles.modeHeader}>
-                <ThemedText style={[styles.modeTitle, { color: textColor }]}>
+              <View className="items-center gap-2">
+                <ThemedText className="text-3xl" style={{ color: textColor }}>
+                  {gameMode.icon}
+                </ThemedText>
+                <ThemedText className="text-lg font-bold text-center" style={{ color: textColor }}>
                   {gameMode.title}
                 </ThemedText>
-                <View style={[styles.difficultyBadge, { backgroundColor: gameMode.color }]}>
-                  <ThemedText style={styles.difficultyText}>
-                    {gameMode.difficulty}
-                  </ThemedText>
-                </View>
-              </View>
-              <ThemedText style={[styles.modeDescription, { color: textColor }]}>
-                {gameMode.description}
-              </ThemedText>
-              <View style={styles.startButton}>
-                <ThemedText style={[styles.startButtonText, { color: gameMode.color }]}>
-                  Start Playing →
+                <ThemedText className="text-sm text-center opacity-70" style={{ color: textColor }}>
+                  {gameMode.description}
                 </ThemedText>
               </View>
             </Pressable>
           ))}
         </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.settingsButton, 
-            { 
-              borderColor: tintColor,
-              backgroundColor: pressed ? `${tintColor}10` : 'transparent',
-            }
-          ]}
-          onPress={() => router.push('/settings')}
-        >
-          <ThemedText style={[styles.settingsButtonText, { color: tintColor }]}>
-            ⚙️ Change Settings First
-          </ThemedText>
-        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-  },
-  currentSettings: {
-    marginBottom: 30,
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 12,
-  },
-  settingsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  settingsRow: {
-    marginBottom: 4,
-  },
-  settingLabel: {
-    fontSize: 14,
-    opacity: 0.8,
-  },
-  modesContainer: {
-    gap: 16,
-    marginBottom: 30,
-  },
-  modeCard: {
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 2,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  modeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modeTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  difficultyBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  difficultyText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  modeDescription: {
-    fontSize: 16,
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  startButton: {
-    alignItems: 'flex-end',
-  },
-  startButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  settingsButton: {
-    padding: 16,
-    borderWidth: 1,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  settingsButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

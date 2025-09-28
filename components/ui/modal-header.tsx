@@ -1,7 +1,7 @@
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 interface ModalHeaderProps {
   title: string;
@@ -21,37 +21,15 @@ export function ModalHeader({
   const textColor = useThemeColor({}, 'text');
 
   return (
-    <View style={styles.header}>
-      <ThemedText style={[styles.title, { color: textColor }]}>
+    <View className="flex-row justify-between items-center p-5 pt-6 border-b border-gray-200">
+      <ThemedText className="text-2xl font-bold" style={{ color: textColor }}>
         {title}
       </ThemedText>
-      <Pressable onPress={onClose} style={styles.closeButton}>
-        <ThemedText style={[styles.closeButtonText, { color: textColor }]}>
+      <Pressable onPress={onClose} className="p-2">
+        <ThemedText className="text-xl font-semibold" style={{ color: textColor }}>
           {closeButtonText}
         </ThemedText>
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-});

@@ -1,8 +1,8 @@
 import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Pressable, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { Pressable } from 'react-native';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -13,8 +13,8 @@ interface ButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  className?: string;
+  textClassName?: string;
   hapticFeedback?: boolean;
   icon?: string;
 }
@@ -29,14 +29,11 @@ export function Button({
   variant = 'primary',
   size = 'medium',
   disabled = false,
-  style,
-  textStyle,
+  className,
+  textClassName,
   hapticFeedback = true,
   icon,
 }: ButtonProps) {
-  const tintColor = useThemeColor({}, 'tint');
-  const textColor = useThemeColor({}, 'text');
-
   const handlePress = () => {
     if (disabled) return;
     
@@ -47,159 +44,66 @@ export function Button({
     onPress();
   };
 
-  const getButtonStyle = (pressed: boolean): ViewStyle => {
-    const baseStyle = styles[`${size}Button`];
-    const variantStyle = styles[`${variant}Button`];
-    
-    let dynamicStyle: ViewStyle = {};
-    
-    switch (variant) {
-      case 'primary':
-        dynamicStyle = {
-          backgroundColor: pressed ? `${tintColor}CC` : tintColor,
-          borderColor: tintColor,
-        };
-        break;
-      case 'secondary':
-        dynamicStyle = {
-          backgroundColor: pressed ? `${tintColor}20` : 'transparent',
-          borderColor: tintColor,
-        };
-        break;
-      case 'outline':
-        dynamicStyle = {
-          backgroundColor: pressed ? `${tintColor}10` : 'transparent',
-          borderColor: pressed ? tintColor : textColor,
-        };
-        break;
-      case 'ghost':
-        dynamicStyle = {
-          backgroundColor: pressed ? `${tintColor}10` : 'transparent',
-          borderColor: 'transparent',
-        };
-        break;
-    }
-
-    if (disabled) {
-      dynamicStyle.opacity = 0.5;
-    }
-
-    return {
-      ...baseStyle,
-      ...variantStyle,
-      ...dynamicStyle,
-      transform: [{ scale: pressed ? 0.95 : 1 }],
-      ...style,
-    };
+  // Base classes for all buttons
+  const baseClasses = "items-center justify-center rounded-xl border";
+  
+  // Size classes
+  const sizeClasses = {
+    small: "px-3 py-2 min-w-[60px] rounded-lg",
+    medium: "px-5 py-3 min-w-[80px] rounded-xl", 
+    large: "px-8 py-4 min-w-[120px] rounded-2xl",
   };
 
-  const getTextStyle = (pressed: boolean): TextStyle => {
-    const baseTextStyle = styles[`${size}Text`];
-    
-    let textColorValue = textColor;
-    
-    switch (variant) {
-      case 'primary':
-        textColorValue = 'white';
-        break;
-      case 'secondary':
-        textColorValue = pressed ? 'white' : tintColor;
-        break;
-      case 'outline':
-        textColorValue = pressed ? tintColor : textColor;
-        break;
-      case 'ghost':
-        textColorValue = pressed ? tintColor : textColor;
-        break;
-    }
+  // Variant classes  
+  const variantClasses = {
+    primary: "bg-blue-500 border-blue-500 shadow-md",
+    secondary: "bg-transparent border-blue-500 border-2",
+    outline: "bg-transparent border-gray-300 border",
+    ghost: "bg-transparent border-transparent",
+  };
 
-    return {
-      ...baseTextStyle,
-      color: textColorValue,
-      fontWeight: pressed ? '700' : baseTextStyle.fontWeight,
-      ...textStyle,
-    };
+  // Text size classes
+  const textSizeClasses = {
+    small: "text-sm font-medium",
+    medium: "text-base font-semibold", 
+    large: "text-lg font-bold",
+  };
+
+  // Text color classes
+  const textColorClasses = {
+    primary: "text-white",
+    secondary: "text-blue-500",
+    outline: "text-gray-700",
+    ghost: "text-gray-700",
   };
 
   return (
     <Pressable
       onPress={handlePress}
       disabled={disabled}
-      style={({ pressed }) => getButtonStyle(pressed)}
+      className={cn(
+        baseClasses,
+        sizeClasses[size],
+        variantClasses[variant],
+        disabled && "opacity-50",
+        className
+      )}
+      style={({ pressed }) => ({
+        transform: [{ scale: pressed ? 0.95 : 1 }],
+      })}
     >
       {({ pressed }) => (
-        <ThemedText style={getTextStyle(pressed)}>
+        <ThemedText 
+          className={cn(
+            textSizeClasses[size],
+            textColorClasses[variant],
+            pressed && "font-bold",
+            textClassName
+          )}
+        >
           {icon && `${icon} `}{title}
         </ThemedText>
       )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  // Size variants
-  smallButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 60,
-  },
-  mediumButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 80,
-  },
-  largeButton: {
-    paddingHorizontal: 30,
-    paddingVertical: 16,
-    borderRadius: 16,
-    minWidth: 120,
-  },
-  
-  // Variant base styles
-  primaryButton: {
-    borderWidth: 0,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  secondaryButton: {
-    borderWidth: 2,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  outlineButton: {
-    borderWidth: 1,
-    elevation: 0,
-  },
-  ghostButton: {
-    borderWidth: 0,
-    elevation: 0,
-  },
-  
-  // Text size variants
-  smallText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  mediumText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  largeText: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  
-  // Common styles
-  baseButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

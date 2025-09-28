@@ -6,7 +6,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { NotationSystem } from '@/types/music';
 import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
@@ -25,8 +25,8 @@ export default function SettingsScreen() {
     title: string;
     children: React.ReactNode;
   }) => (
-    <View style={styles.settingSection}>
-      <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
+    <View className="mb-8">
+      <ThemedText className="text-xl font-bold mb-4" style={{ color: textColor }}>
         {title}
       </ThemedText>
       {children}
@@ -34,14 +34,14 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader 
         title="⚙️ Settings" 
         onClose={handleClose}
         closeButtonText="Done"
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView className="p-5">
         <SettingSection title="🎼 Music Notation">
           <SettingOption
             title="Notation System"
@@ -110,27 +110,27 @@ export default function SettingsScreen() {
           />
         </SettingSection>
 
-        <View style={styles.infoSection}>
-          <ThemedText style={[styles.infoTitle, { color: textColor }]}>
+        <View className="mt-5 p-5 bg-gray-100 rounded-xl">
+          <ThemedText className="text-lg font-semibold mb-3" style={{ color: textColor }}>
             💡 Tips
           </ThemedText>
-          <View style={styles.tipItem}>
-            <ThemedText style={[styles.tipText, { color: textColor }]}>
+          <View className="mb-2">
+            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
               • Solfege is great for beginners and ear training
             </ThemedText>
           </View>
-          <View style={styles.tipItem}>
-            <ThemedText style={[styles.tipText, { color: textColor }]}>
+          <View className="mb-2">
+            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
               • Practice regularly to build muscle memory for note positions
             </ThemedText>
           </View>
-          <View style={styles.tipItem}>
-            <ThemedText style={[styles.tipText, { color: textColor }]}>
+          <View className="mb-2">
+            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
               • Higher difficulties include ledger lines above and below the staff
             </ThemedText>
           </View>
-          <View style={styles.tipItem}>
-            <ThemedText style={[styles.tipText, { color: textColor }]}>
+          <View className="mb-2">
+            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
               • Enable note labels when starting out, then turn them off for a challenge
             </ThemedText>
           </View>
@@ -139,38 +139,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-  },
-  settingSection: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  infoSection: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 12,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  tipItem: {
-    marginBottom: 8,
-  },
-  tipText: {
-    fontSize: 14,
-    opacity: 0.8,
-  },
-});

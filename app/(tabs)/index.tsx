@@ -2,7 +2,6 @@ import { GameScreen } from '@/components/game/game-screen';
 import { HomeScreen } from '@/components/screens/home-screen';
 import { ThemedView } from '@/components/themed-view';
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
 
 type AppState = 'home' | 'game';
 
@@ -18,7 +17,7 @@ export default function HomeTab() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView className="flex-1">
       {currentScreen === 'home' ? (
         <HomeScreen onStartGame={handleStartGame} />
       ) : (
@@ -27,9 +26,3 @@ export default function HomeTab() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

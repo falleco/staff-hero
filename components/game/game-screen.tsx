@@ -9,7 +9,7 @@ import { useGame } from '@/contexts/game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { getAutoAdvanceDelay, getStreakLevel, triggerGameHaptics, validateAnswer } from '@/utils/game-logic';
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface GameScreenProps {
@@ -83,9 +83,9 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
 
   if (!gameState.isGameActive) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.title}>Game Not Active</ThemedText>
-        <ThemedText style={styles.subtitle}>
+      <ThemedView className="flex-1 items-center justify-center">
+        <ThemedText className="text-2xl font-bold">Game Not Active</ThemedText>
+        <ThemedText className="text-sm opacity-70">
           Please start a new game to continue
         </ThemedText>
       </ThemedView>
@@ -93,9 +93,9 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       {/* Header with score and controls */}
-      <View style={styles.header}>
+      <View className="flex-row justify-between items-center px-4 py-2 border-b border-gray-200">
         <ScoreDisplay
           score={gameState.score}
           streak={gameState.streak}
@@ -106,33 +106,34 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
         />
         
         <Pressable
-          style={[styles.endButton, { borderColor: textColor }]}
+          className="px-4 py-2 border rounded-lg"
+          style={{ borderColor: textColor }}
           onPress={handleEndGame}
         >
-          <ThemedText style={[styles.endButtonText, { color: textColor }]}>
+          <ThemedText className="text-sm font-medium" style={{ color: textColor }}>
             End Game
           </ThemedText>
         </Pressable>
       </View>
 
       {/* Game content */}
-      <View style={styles.gameContent}>
+      <View className="flex-1">
         {/* Render different game modes */}
         {gameSettings.gameMode === 'single-note' && (
           <>
             {/* Instructions */}
-            <View style={styles.instructionContainer}>
-              <ThemedText style={[styles.instruction, { color: textColor }]}>
+            <View className="px-6 py-4">
+              <ThemedText className="text-xl font-bold text-center mb-2" style={{ color: textColor }}>
                 Identify the note:
               </ThemedText>
               
-              <ThemedText style={[styles.notationInfo, { color: textColor }]}>
+              <ThemedText className="text-sm text-center opacity-70" style={{ color: textColor }}>
                 Using {gameSettings.notationSystem === 'letter' ? 'Letter' : 'Solfege'} notation
               </ThemedText>
             </View>
 
             {/* Music Staff */}
-            <View style={styles.staffContainer}>
+            <View className="flex-1 justify-center items-center px-4">
               <MusicStaff
                 notes={gameState.currentQuestion.notes}
                 showFeedback={showFeedback}
@@ -146,7 +147,7 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
             </View>
 
             {/* Answer Options */}
-            <View style={styles.answersContainer}>
+            <View className="pb-8">
               <AnswerButtons
                 options={gameState.currentQuestion.options}
                 correctAnswers={gameState.currentQuestion.correctAnswer}
@@ -189,16 +190,14 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
 
         {/* Feedback and Next Button */}
         {showFeedback && (
-          <View style={styles.feedbackContainer}>
+          <View className="items-center mt-5 px-6">
             {/* Show feedback text only for incorrect answers in single-note mode, or always for other modes */}
             {(gameSettings.gameMode !== 'single-note' || !gameState.currentQuestion.isCorrect) && (
               <ThemedText 
-                style={[
-                  styles.feedbackText,
-                  { 
-                    color: gameState.currentQuestion.isCorrect ? '#4CAF50' : '#F44336' 
-                  }
-                ]}
+                className="text-xl font-bold mb-2"
+                style={{ 
+                  color: gameState.currentQuestion.isCorrect ? '#4CAF50' : '#F44336' 
+                }}
               >
                 {gameState.currentQuestion.isCorrect ? 'Correct! 🎉' : 'Try again! 💪'}
               </ThemedText>
@@ -206,18 +205,18 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
             
             {/* Subtle correct indicator for single-note mode */}
             {gameSettings.gameMode === 'single-note' && gameState.currentQuestion.isCorrect && (
-              <View style={styles.quickProgressContainer}>
-                <ThemedText style={[styles.subtleFeedbackText, { color: '#4CAF50' }]}>
+              <View className="items-center my-2">
+                <ThemedText className="text-2xl font-bold mb-1" style={{ color: '#4CAF50' }}>
                   ✓
                 </ThemedText>
-                <ThemedText style={[styles.quickProgressText, { color: textColor }]}>
+                <ThemedText className="text-sm opacity-70 italic" style={{ color: textColor }}>
                   Next question...
                 </ThemedText>
               </View>
             )}
             
             {!gameState.currentQuestion.isCorrect && (
-              <ThemedText style={[styles.correctAnswerText, { color: textColor }]}>
+              <ThemedText className="text-base mb-4 text-center" style={{ color: textColor }}>
                 Correct answer: {gameState.currentQuestion.correctAnswer.join(', ')}
               </ThemedText>
             )}
@@ -225,10 +224,11 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
             {/* Show next button only for incorrect answers in single-note mode, or always for other modes */}
             {(gameSettings.gameMode !== 'single-note' || !gameState.currentQuestion.isCorrect) && (
               <Pressable
-                style={[styles.nextButton, { backgroundColor: tintColor }]}
+                className="px-8 py-3 rounded-full"
+                style={{ backgroundColor: tintColor }}
                 onPress={handleNextQuestion}
               >
-                <ThemedText style={styles.nextButtonText}>
+                <ThemedText className="text-white text-base font-semibold">
                   Next Question
                 </ThemedText>
               </Pressable>
@@ -239,131 +239,3 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  endButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderRadius: 8,
-  },
-  endButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  gameContent: {
-    flex: 1,
-    justifyContent: 'space-around',
-  },
-  instructionContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  instruction: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  notationInfo: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    opacity: 0.7,
-  },
-  staffContainer: {
-    alignItems: 'center',
-    marginVertical: 30,
-    minHeight: 180,
-  },
-  answersContainer: {
-    marginVertical: 20,
-  },
-  feedbackContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  feedbackText: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  subtleFeedbackText: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  quickProgressContainer: {
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  quickProgressText: {
-    fontSize: 14,
-    opacity: 0.7,
-    fontStyle: 'italic',
-  },
-  correctAnswerText: {
-    fontSize: 16,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  nextButton: {
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  nextButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  comingSoonContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-  },
-  comingSoonText: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  comingSoonSubtext: {
-    fontSize: 16,
-    textAlign: 'center',
-    opacity: 0.7,
-    marginBottom: 30,
-  },
-  backButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
