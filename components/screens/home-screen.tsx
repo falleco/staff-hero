@@ -103,7 +103,7 @@ export function HomeScreen({ onStartGame }: HomeScreenProps) {
                 Notation
               </ThemedText>
               <ThemedText style={[styles.settingValue, { color: tintColor }]}>
-                {gameSettings.notationSystem === 'letter' ? 'Letters' : 'Solfege'}
+                {gameSettings.notationSystem === 'letter' ? 'Letters' : 'Solfege ✨'}
               </ThemedText>
             </View>
             <View style={styles.settingItem}>
@@ -119,7 +119,7 @@ export function HomeScreen({ onStartGame }: HomeScreenProps) {
                 Note Labels
               </ThemedText>
               <ThemedText style={[styles.settingValue, { color: tintColor }]}>
-                {gameSettings.showNoteLabels ? 'Visible' : 'Hidden'}
+                {gameSettings.showNoteLabels ? 'Visible ✨' : 'Hidden'}
               </ThemedText>
             </View>
           </View>
@@ -134,7 +134,7 @@ export function HomeScreen({ onStartGame }: HomeScreenProps) {
             • Build streaks for bonus points
           </ThemedText>
           <ThemedText style={[styles.tipText, { color: textColor }]}>
-            • Try both notation systems
+            • Start with solfege (Do, Re, Mi...)
           </ThemedText>
           <ThemedText style={[styles.tipText, { color: textColor }]}>
             • Practice daily for best results

@@ -76,7 +76,12 @@ export function GameModeModal({
             </ThemedText>
             <View style={styles.settingsRow}>
               <ThemedText style={[styles.settingLabel, { color: textColor }]}>
-                Notation: {currentSettings.notationSystem === 'letter' ? 'Letters (C, D, E...)' : 'Solfege (Do, Re, Mi...)'}
+                Notation: {currentSettings.notationSystem === 'letter' ? 'Letters (C, D, E...)' : 'Solfege (Do, Re, Mi...) ✨'}
+              </ThemedText>
+            </View>
+            <View style={styles.settingsRow}>
+              <ThemedText style={[styles.settingLabel, { color: textColor }]}>
+                Note Labels: {currentSettings.showNoteLabels ? 'Visible ✨' : 'Hidden'}
               </ThemedText>
             </View>
             <View style={styles.settingsRow}>

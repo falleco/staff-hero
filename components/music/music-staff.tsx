@@ -1,8 +1,14 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { NotationSystem, Note, NOTE_MAPPINGS, STAFF_POSITION_TO_NOTE } from '@/types/music';
 import { DEFAULT_NOTE_SYMBOL, NOTE_SYMBOLS } from '@/types/note-symbols';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from 'react-native-reanimated';
 import Svg, { G, Line, Path, Text as SvgText } from 'react-native-svg';
 
 interface MusicStaffProps {
@@ -21,8 +27,8 @@ export function MusicStaff({
   height = 200, 
   showFeedback = false, 
   isCorrect,
-  showNoteLabels = false,
-  notationSystem = 'letter'
+  showNoteLabels = true,
+  notationSystem = 'solfege'
 }: MusicStaffProps) {
   const textColor = useThemeColor({}, 'text');
   const staffColor = useThemeColor({}, 'text');
@@ -33,6 +39,28 @@ export function MusicStaff({
   const clefX = 20;
   const noteStartX = 80;
   const noteSpacing = 40;
+  
+  // Animation values for note slide-in effect
+  const noteAnimationX = useSharedValue(width + 100); // Start off-screen to the right
+  
+  // Trigger animation when notes change
+  useEffect(() => {
+    // Reset to off-screen position
+    noteAnimationX.value = width + 100;
+    
+    // Animate to final position
+    noteAnimationX.value = withTiming(0, {
+      duration: 800,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [notes, width, noteAnimationX]);
+  
+  // Animated style for notes container
+  const animatedNotesStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: noteAnimationX.value }],
+    };
+  });
   
   // E4 line (bottom line) is the reference point (position -1)
   const e4LineY = staffStartY + (staffLineSpacing * 4); // Bottom line (E4 line)
@@ -60,35 +88,37 @@ export function MusicStaff({
     if (!note.requiresLedgerLine) return null;
     
     const lines = [];
+    console.log('note.staffPosition', note.staffPosition);
     
     // Determine which ledger lines to draw
-    if (note.staffPosition > 7) {
-      // Above staff - draw ledger lines at odd positions (9, 11)
-      for (let i = 9; i <= note.staffPosition; i += 2) {
+    if (note.staffPosition >= 10) {
+      // Above staff - draw ledger lines at odd positions (9, 11, 13, 15)
+      for (let i = 10; i <= note.staffPosition; i += 2) {
         const lineY = getNoteY(i);
         lines.push(
           <Line
             key={`ledger-above-${i}`}
             x1={noteX - 15}
-            y1={lineY}
+            y1={lineY + staffLineSpacing / 2}
             x2={noteX + 15}
-            y2={lineY}
+            y2={lineY + staffLineSpacing / 2}
             stroke={staffColor}
             strokeWidth="1"
           />
         );
       }
-    } else if (note.staffPosition < -1) {
-      // Below staff - draw ledger lines at odd positions (-3, -5, -7)
-      for (let i = -3; i >= note.staffPosition; i -= 2) {
+    } else if (note.staffPosition <= -2) {
+      // Below staff - draw ledger lines at odd positions (-1, -3, -5, -7)
+      for (let i = -2; i >= note.staffPosition; i -= 2) {
+        console.log('bottom line i', i);
         const lineY = getNoteY(i);
         lines.push(
           <Line
             key={`ledger-below-${i}`}
             x1={noteX - 15}
-            y1={lineY}
+            y1={lineY + staffLineSpacing / 2}
             x2={noteX + 15}
-            y2={lineY}
+            y2={lineY + staffLineSpacing / 2}
             stroke={staffColor}
             strokeWidth="1"
           />
@@ -140,6 +170,7 @@ export function MusicStaff({
 
   return (
     <View style={styles.container}>
+      {/* Static Staff and Clef */}
       <Svg width={width} height={height}>
         {/* Staff lines */}
         {[0, 1, 2, 3, 4].map((lineIndex) => (
@@ -156,7 +187,7 @@ export function MusicStaff({
         
         {/* Treble clef */}
         <G
-          transform={`translate(${clefX - 20}, ${g4LineY - 25}) scale(0.03, 0.03)`}
+          transform={`translate(${clefX - 20}, ${g4LineY - 27}) scale(0.03, 0.03)`}
         >
           <Path
             d={trebleClefPath}
@@ -166,46 +197,55 @@ export function MusicStaff({
 
         {/* Note labels (if enabled) */}
         {renderNoteLabels()}
-        
-        {/* Notes and ledger lines */}
-        {notes.map((note, index) => {
-          const noteX = noteStartX + (index * noteSpacing);
-          const noteY = getNoteY(note.staffPosition);
-          
-          
-          // Get the note symbol (fallback to default if not found)
-          const noteSymbol = NOTE_SYMBOLS[note.symbolId || DEFAULT_NOTE_SYMBOL.id] || DEFAULT_NOTE_SYMBOL;
-          
-          return (
-            <React.Fragment key={`note-${index}`}>
-              {/* Ledger lines */}
-              {renderLedgerLines(note, noteX)}
-              
-              {/* Note symbol */}
-              <G
-                transform={`translate(${noteX - noteSymbol.width - 11}, ${noteY - noteSymbol.height/2}) scale(0.035, 0.035)`}
-              >
-                <Path
-                  d={noteSymbol.pathData}
-                  fill={getNoteColor()}
-                />
-              </G>
-              
-              {/* Note stem (if required by the symbol) */}
-              {noteSymbol.stemRequired && (
-                <Line
-                  x1={noteX + noteSymbol.width/2}
-                  y1={noteY}
-                  x2={noteX + noteSymbol.width/2}
-                  y2={noteY - 30}
-                  stroke={getNoteColor()}
-                  strokeWidth="2"
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
       </Svg>
+      
+      {/* Animated Notes Overlay */}
+      <Animated.View 
+        style={[
+          styles.notesOverlay, 
+          animatedNotesStyle,
+          { width, height }
+        ]}
+      >
+        <Svg width={width} height={height}>
+          {notes.map((note, index) => {
+            const noteX = noteStartX + (index * noteSpacing);
+            const noteY = getNoteY(note.staffPosition);
+
+            // Get the note symbol (fallback to default if not found)
+            const noteSymbol = NOTE_SYMBOLS[note.symbolId || DEFAULT_NOTE_SYMBOL.id] || DEFAULT_NOTE_SYMBOL;
+            
+            return (
+              <G key={`note-${index}`}>
+                {/* Ledger lines */}
+                {renderLedgerLines(note, noteX)}
+                
+                {/* Note symbol */}
+                <G
+                  transform={`translate(${noteX - noteSymbol.width - 11}, ${noteY - noteSymbol.height/2}) scale(0.035, 0.035)`}
+                >
+                  <Path
+                    d={noteSymbol.pathData}
+                    fill={getNoteColor()}
+                  />
+                </G>
+                
+                {/* Note stem (if required by the symbol) */}
+                {noteSymbol.stemRequired && (
+                  <Line
+                    x1={noteX + noteSymbol.width/2}
+                    y1={noteY}
+                    x2={noteX + noteSymbol.width/2}
+                    y2={noteY - 30}
+                    stroke={getNoteColor()}
+                    strokeWidth="2"
+                  />
+                )}
+              </G>
+            );
+          })}
+        </Svg>
+      </Animated.View>
     </View>
   );
 }
@@ -215,5 +255,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+  },
+  notesOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
 });

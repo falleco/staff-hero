@@ -129,14 +129,14 @@ export function SettingsModal({
               subtitle="Choose how notes are displayed"
               options={[
                 { 
+                  label: 'Solfege', 
+                  value: 'solfege' as NotationSystem,
+                  description: 'Do, Re, Mi, Fa, Sol, La, Si (Recommended)'
+                },
+                { 
                   label: 'Letter Names', 
                   value: 'letter' as NotationSystem,
                   description: 'C, D, E, F, G, A, B'
-                },
-                { 
-                  label: 'Solfege', 
-                  value: 'solfege' as NotationSystem,
-                  description: 'Do, Re, Mi, Fa, Sol, La, Si'
                 },
               ]}
               currentValue={settings.notationSystem}
@@ -176,14 +176,14 @@ export function SettingsModal({
               subtitle="Show note names on staff lines and spaces"
               options={[
                 { 
+                  label: 'Visible', 
+                  value: true,
+                  description: 'Recommended for beginners - shows note names'
+                },
+                { 
                   label: 'Hidden', 
                   value: false,
                   description: 'Challenge mode - no hints shown'
-                },
-                { 
-                  label: 'Visible', 
-                  value: true,
-                  description: 'Beginner friendly - shows note names'
                 },
               ]}
               currentValue={settings.showNoteLabels}
@@ -197,7 +197,7 @@ export function SettingsModal({
             </ThemedText>
             <View style={styles.tipItem}>
               <ThemedText style={[styles.tipText, { color: textColor }]}>
-                • Start with Letter notation if you&apos;re new to reading music
+                • Solfege is great for beginners and ear training
               </ThemedText>
             </View>
             <View style={styles.tipItem}>

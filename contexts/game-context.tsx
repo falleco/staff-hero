@@ -45,10 +45,10 @@ const initialGameState: GameState = {
 let gameStartTime: number = 0;
 
 const initialGameSettings: GameSettings = {
-  notationSystem: 'letter' as NotationSystem,
+  notationSystem: 'solfege' as NotationSystem,
   difficulty: 'beginner',
   gameMode: 'single-note',
-  showNoteLabels: false, // Default to hidden for challenge
+  showNoteLabels: true, // Default to visible for beginners
 };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
