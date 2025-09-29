@@ -24,7 +24,6 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
   
   const tintColor = useThemeColor({}, 'tint');
   const textColor = useThemeColor({}, 'text');
-  const backgroundColor = useThemeColor({}, 'background');
 
   // Generate new question when game starts or after answering
   useEffect(() => {
@@ -93,9 +92,9 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
   }
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
+    <SafeAreaView className="flex-1 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header with score and controls */}
-      <View className="flex-row justify-between items-center px-4 py-2 border-b border-gray-200">
+      <View className="flex-row justify-between items-center px-4 py-3 bg-black/30 backdrop-blur-sm border-b border-white/10">
         <ScoreDisplay
           score={gameState.score}
           streak={gameState.streak}
@@ -106,12 +105,14 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
         />
         
         <Pressable
-          className="px-4 py-2 border rounded-lg"
-          style={{ borderColor: textColor }}
+          className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl px-4 py-2 border-2 border-white/20 shadow-lg"
+          style={({ pressed }) => ({
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
           onPress={handleEndGame}
         >
-          <ThemedText className="text-sm font-medium" style={{ color: textColor }}>
-            End Game
+          <ThemedText className="text-sm font-bold text-white">
+            END GAME
           </ThemedText>
         </Pressable>
       </View>
@@ -122,14 +123,20 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
         {gameSettings.gameMode === 'single-note' && (
           <>
             {/* Instructions */}
-            <View className="px-6 py-4">
-              <ThemedText className="text-xl font-bold text-center mb-2" style={{ color: textColor }}>
-                Identify the note:
-              </ThemedText>
-              
-              <ThemedText className="text-sm text-center opacity-70" style={{ color: textColor }}>
-                Using {gameSettings.notationSystem === 'letter' ? 'Letter' : 'Solfege'} notation
-              </ThemedText>
+            <View className="px-6 py-6">
+              <View className="bg-black/30 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                <View className="flex-row items-center justify-center mb-2">
+                  <View className="bg-yellow-500/20 rounded-full p-2 mr-2">
+                    <ThemedText className="text-lg">🎯</ThemedText>
+                  </View>
+                  <ThemedText className="text-xl font-black text-white">
+                    IDENTIFY THE NOTE
+                  </ThemedText>
+                </View>
+                <ThemedText className="text-sm text-center text-white/80 font-semibold">
+                  Using {gameSettings.notationSystem === 'letter' ? '🔤 Letter' : '🎵 Solfege'} Notation
+                </ThemedText>
+              </View>
             </View>
 
             {/* Music Staff */}

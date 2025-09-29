@@ -1,5 +1,4 @@
 import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { calculateAccuracy } from '@/utils/music-utils';
 import React from 'react';
 import { Animated, View } from 'react-native';
@@ -23,9 +22,6 @@ export function ScoreDisplay({
   showDetailed = false,
   animateStreak = false
 }: ScoreDisplayProps) {
-  const tintColor = useThemeColor({}, 'tint');
-  const textColor = useThemeColor({}, 'text');
-  const backgroundColor = useThemeColor({}, 'background');
   
   const [streakAnimation] = React.useState(new Animated.Value(1));
   
@@ -47,12 +43,6 @@ export function ScoreDisplay({
   }, [streak, animateStreak, streakAnimation]);
 
   const accuracy = calculateAccuracy(correctAnswers, totalQuestions);
-  const getStreakColor = () => {
-    if (streak >= 10) return '#FF6B35'; // Fire orange
-    if (streak >= 5) return '#F39C12';  // Golden
-    if (streak >= 3) return '#27AE60';  // Green
-    return textColor;
-  };
 
   const getStreakEmoji = () => {
     if (streak >= 10) return '🔥';
@@ -63,16 +53,18 @@ export function ScoreDisplay({
 
   if (showDetailed) {
     return (
-      <View className="bg-white rounded-xl p-4 shadow-md mx-4 mb-4" style={{ backgroundColor }}>
-        <View className="flex-row justify-between items-center mb-3">
-          <ThemedText className="text-2xl font-bold" style={{ color: tintColor }}>
-            Score: {score}
-          </ThemedText>
-          <View className="items-end">
-            <ThemedText className="text-lg font-semibold" style={{ color: textColor }}>
-              {accuracy.toFixed(1)}% Accuracy
+      <View className="bg-black/30 backdrop-blur-sm rounded-2xl p-5 shadow-2xl mx-4 mb-4 border border-white/10">
+        <View className="flex-row justify-between items-center mb-4">
+          <View className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl p-3">
+            <ThemedText className="text-2xl font-black text-white">
+              {score}
             </ThemedText>
-            <ThemedText className="text-sm opacity-70" style={{ color: textColor }}>
+          </View>
+          <View className="items-end">
+            <ThemedText className="text-lg font-bold text-white">
+              {accuracy.toFixed(1)}% ACCURACY
+            </ThemedText>
+            <ThemedText className="text-sm text-white/70 font-semibold">
               {correctAnswers}/{totalQuestions} correct
             </ThemedText>
           </View>
@@ -80,25 +72,27 @@ export function ScoreDisplay({
 
         <View className="flex-row justify-between items-center">
           <Animated.View 
-            className="flex-row items-center"
+            className="flex-row items-center bg-white/10 rounded-xl p-2"
             style={{ transform: [{ scale: streakAnimation }] }}
           >
-            <ThemedText className="text-lg font-bold mr-1" style={{ color: getStreakColor() }}>
-              {getStreakEmoji()} Streak: {streak}
+            <ThemedText className="text-lg font-bold text-white">
+              {getStreakEmoji()} STREAK: {streak}
             </ThemedText>
           </Animated.View>
           
-          <ThemedText className="text-sm opacity-70" style={{ color: textColor }}>
-            Best: {maxStreak}
-          </ThemedText>
+          <View className="bg-white/10 rounded-xl p-2">
+            <ThemedText className="text-sm font-semibold text-white/80">
+              BEST: {maxStreak}
+            </ThemedText>
+          </View>
         </View>
 
         {streak >= 3 && (
-          <View className="mt-2 p-2 bg-yellow-100 rounded-lg">
-            <ThemedText className="text-xs text-center font-medium" style={{ color: textColor }}>
-              {streak >= 10 ? 'ON FIRE! 🔥' : 
-               streak >= 5 ? 'Hot Streak! ⭐' : 
-               'Great streak! ✨'}
+          <View className="mt-3 p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl border border-yellow-500/30">
+            <ThemedText className="text-sm text-center font-bold text-white">
+              {streak >= 10 ? '🔥 ON FIRE! 🔥' : 
+               streak >= 5 ? '⭐ HOT STREAK! ⭐' : 
+               '✨ GREAT STREAK! ✨'}
             </ThemedText>
           </View>
         )}
@@ -108,26 +102,28 @@ export function ScoreDisplay({
 
   // Compact version for in-game display
   return (
-    <View className="flex-row justify-between items-center px-4 py-2">
-      <View className="flex-row items-center gap-4">
-        <ThemedText className="text-lg font-bold" style={{ color: tintColor }}>
+    <View className="flex-row items-center gap-3">
+      <View className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl px-3 py-1">
+        <ThemedText className="text-lg font-black text-white">
           {score}
         </ThemedText>
-        
-        <Animated.View 
-          className="flex-row items-center"
-          style={{ transform: [{ scale: streakAnimation }] }}
-        >
-          <ThemedText className="text-base font-semibold" style={{ color: getStreakColor() }}>
-            {getStreakEmoji()} {streak}
-          </ThemedText>
-        </Animated.View>
       </View>
+      
+      <Animated.View 
+        className="bg-white/10 rounded-xl px-2 py-1"
+        style={{ transform: [{ scale: streakAnimation }] }}
+      >
+        <ThemedText className="text-base font-bold text-white">
+          {getStreakEmoji()} {streak}
+        </ThemedText>
+      </Animated.View>
 
       {totalQuestions > 0 && (
-        <ThemedText className="text-sm opacity-70" style={{ color: textColor }}>
-          {accuracy.toFixed(0)}%
-        </ThemedText>
+        <View className="bg-white/10 rounded-xl px-2 py-1">
+          <ThemedText className="text-sm font-semibold text-white/80">
+            {accuracy.toFixed(0)}%
+          </ThemedText>
+        </View>
       )}
     </View>
   );

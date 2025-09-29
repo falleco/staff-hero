@@ -1,10 +1,11 @@
 import { MusicStaff } from '@/components/music/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import { GameSettings, Question } from '@/types/music';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 interface SequenceGameProps {
   question: Question;
@@ -49,70 +50,52 @@ export function SequenceGame({
   };
 
   const handleReset = () => {
+    if (showFeedback) return;
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setUserSequence([]);
     setCurrentNoteIndex(0);
   };
 
-  const getButtonStyle = (noteName: string) => {
-    if (showFeedback) {
-      const correctSequence = question.correctAnswer;
-      const userIndex = userSequence.indexOf(noteName);
-      const correctIndex = correctSequence.indexOf(noteName);
-      
-      if (userIndex !== -1) {
-        // User selected this note
-        if (userIndex === correctIndex) {
-          return { backgroundColor: '#4CAF50', borderColor: '#45a049' }; // Correct position
-        } else {
-          return { backgroundColor: '#F44336', borderColor: '#da190b' }; // Wrong position
-        }
-      } else if (correctSequence.includes(noteName)) {
-        return { backgroundColor: '#FFC107', borderColor: '#FF8F00' }; // Should have been selected
-      }
-    }
-    
-    return { backgroundColor: '#f0f0f0', borderColor: '#ccc' };
-  };
 
-  const getTextStyle = (noteName: string) => {
-    const isSelected = userSequence.includes(noteName);
-    
-    if (showFeedback) {
-      const correctSequence = question.correctAnswer;
-      const userIndex = userSequence.indexOf(noteName);
-      const correctIndex = correctSequence.indexOf(noteName);
-      
-      if (userIndex !== -1 && (userIndex === correctIndex || correctSequence.includes(noteName))) {
-        return { color: 'white', fontWeight: '600' as const };
-      }
+  const getButtonState = (noteName: string) => {
+    const indexInSequence = userSequence.indexOf(noteName);
+    if (indexInSequence >= 0) {
+      return 'selected';
     }
-    
-    if (isSelected) {
-      return { color: 'white', fontWeight: '600' as const };
-    }
-    
-    return { color: textColor };
+    return 'default';
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       {/* Instructions */}
-      <View style={styles.instructionContainer}>
-        <ThemedText style={[styles.instruction, { color: textColor }]}>
-          Identify the notes in sequence (left to right):
+      <View className="px-6 py-4">
+        <ThemedText className="text-xl font-bold text-center mb-2" style={{ color: textColor }}>
+          Identify the sequence:
         </ThemedText>
-        <ThemedText style={[styles.sequenceProgress, { color: tintColor }]}>
-          {userSequence.length} / {question.notes.length} selected
+        <ThemedText className="text-sm text-center opacity-70 mb-2" style={{ color: textColor }}>
+          Select notes from left to right ({userSequence.length}/{question.notes.length})
         </ThemedText>
+        
+        {/* Progress indicator */}
+        <View className="flex-row justify-center items-center gap-2 mt-2">
+          {question.notes.map((_, index) => (
+            <View
+              key={index}
+              className={cn(
+                "w-3 h-3 rounded-full",
+                index < userSequence.length ? "bg-green-500" : 
+                index === userSequence.length ? "bg-blue-500" : "bg-gray-300"
+              )}
+            />
+          ))}
+        </View>
       </View>
 
       {/* Music Staff */}
-      <View style={styles.staffContainer}>
+      <View className="flex-1 justify-center items-center px-4">
         <MusicStaff
           notes={question.notes}
-          showFeedback={showFeedback}
-          isCorrect={question.isCorrect}
           showNoteLabels={gameSettings.showNoteLabels}
           notationSystem={gameSettings.notationSystem}
           streakLevel={streakLevel}
@@ -121,150 +104,88 @@ export function SequenceGame({
         />
       </View>
 
-      {/* Sequence Display */}
-      <View style={styles.sequenceContainer}>
-        <ThemedText style={[styles.sequenceTitle, { color: textColor }]}>
-          Your sequence:
-        </ThemedText>
-        <View style={styles.sequenceDisplay}>
-          {Array.from({ length: question.notes.length }, (_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.sequenceSlot,
-                {
-                  backgroundColor: userSequence[index] ? tintColor : 'transparent',
-                  borderColor: index === currentNoteIndex ? tintColor : '#ccc',
-                  borderWidth: index === currentNoteIndex ? 2 : 1,
-                }
-              ]}
-            >
-              <ThemedText
-                style={[
-                  styles.sequenceSlotText,
-                  {
-                    color: userSequence[index] ? 'white' : textColor,
-                    opacity: userSequence[index] ? 1 : 0.5,
-                  }
-                ]}
+      {/* Selected sequence display */}
+      {userSequence.length > 0 && (
+        <View className="px-6 py-2">
+          <ThemedText className="text-center text-sm opacity-70 mb-2" style={{ color: textColor }}>
+            Your sequence:
+          </ThemedText>
+          <View className="flex-row justify-center gap-2">
+            {userSequence.map((note, index) => (
+              <View
+                key={index}
+                className="px-3 py-1 bg-green-100 rounded-lg"
               >
-                {userSequence[index] || '?'}
-              </ThemedText>
-            </View>
-          ))}
+                <ThemedText className="text-sm font-medium" style={{ color: textColor }}>
+                  {note}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Answer Options */}
-      <View style={styles.optionsContainer}>
-        <View style={styles.optionsGrid}>
-          {question.options.map((option) => (
+      <View className="pb-8">
+        <View className="flex-row flex-wrap justify-center gap-3 px-4">
+          {question.options.map((option) => {
+            const buttonState = getButtonState(option);
+            const isDisabled = showFeedback || (buttonState === 'selected');
+            
+            return (
+              <Pressable
+                key={option}
+                className={cn(
+                  "px-6 py-3 rounded-xl border-2 min-w-[80px]",
+                  buttonState === 'selected' 
+                    ? "bg-green-500 border-green-500" 
+                    : "bg-transparent border-gray-300"
+                )}
+                style={({ pressed }) => ({
+                  backgroundColor: buttonState === 'selected' ? '#22C55E' :
+                                 pressed && !isDisabled ? `${tintColor}20` : 'transparent',
+                  borderColor: buttonState === 'selected' ? '#22C55E' :
+                              pressed && !isDisabled ? tintColor : '#ccc',
+                  transform: [{ scale: pressed && !isDisabled ? 0.95 : 1 }],
+                  opacity: isDisabled ? 0.7 : 1,
+                })}
+                onPress={() => handleNoteSelect(option)}
+                disabled={isDisabled}
+              >
+                <ThemedText
+                  className={cn(
+                    "text-center text-lg font-semibold",
+                    buttonState === 'selected' ? "text-white" : ""
+                  )}
+                  style={{
+                    color: buttonState === 'selected' ? 'white' : textColor,
+                  }}
+                >
+                  {option}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+        
+        {/* Reset button */}
+        {userSequence.length > 0 && !showFeedback && (
+          <View className="items-center mt-4">
             <Pressable
-              key={option}
-              style={[styles.optionButton, getButtonStyle(option)]}
-              onPress={() => handleNoteSelect(option)}
-              disabled={showFeedback}
+              className="px-4 py-2 border border-gray-400 rounded-lg"
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#f3f4f6' : 'transparent',
+                transform: [{ scale: pressed ? 0.95 : 1 }],
+              })}
+              onPress={handleReset}
             >
-              <ThemedText style={getTextStyle(option)}>
-                {option}
+              <ThemedText className="text-sm font-medium" style={{ color: textColor }}>
+                Reset
               </ThemedText>
             </Pressable>
-          ))}
-        </View>
-
-        {/* Reset Button */}
-        {userSequence.length > 0 && !showFeedback && (
-          <Pressable
-            style={[styles.resetButton, { borderColor: textColor }]}
-            onPress={handleReset}
-          >
-            <ThemedText style={[styles.resetButtonText, { color: textColor }]}>
-              🔄 Reset Sequence
-            </ThemedText>
-          </Pressable>
+          </View>
         )}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  instructionContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  instruction: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  sequenceProgress: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  staffContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
-    minHeight: 180,
-  },
-  sequenceContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  sequenceTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  sequenceDisplay: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
-  sequenceSlot: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  sequenceSlotText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  optionsContainer: {
-    alignItems: 'center',
-  },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 12,
-    marginBottom: 20,
-  },
-  optionButton: {
-    minWidth: 60,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resetButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  resetButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});

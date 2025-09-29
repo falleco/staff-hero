@@ -1,6 +1,4 @@
 import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { cn } from '@/lib/cn';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Pressable, View } from 'react-native';
@@ -22,8 +20,6 @@ export function AnswerButtons({
   disabled = false,
   showFeedback = false
 }: AnswerButtonsProps) {
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
 
   const handleButtonPress = (answer: string) => {
     if (disabled) return;
@@ -33,33 +29,40 @@ export function AnswerButtons({
   };
 
   return (
-    <View className="flex-row flex-wrap justify-center gap-3 p-4">
-      {options.map((option) => (
-        <Pressable
-          key={option}
-          className="px-6 py-3 rounded-xl border-2 min-w-[80px]"
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? `${tintColor}20` : 'transparent',
-            borderColor: pressed ? tintColor : '#ccc',
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-            opacity: disabled ? 0.5 : 1,
-          })}
-          onPress={() => handleButtonPress(option)}
-          disabled={disabled}
-        >
-          <ThemedText
-            className={cn(
-              "text-center text-lg",
-              "font-semibold"
-            )}
-            style={{
-              color: textColor,
-            }}
+    <View className="flex-row flex-wrap justify-center gap-4 p-6">
+      {options.map((option, index) => {
+        const gradients = [
+          'from-blue-500 to-blue-600',
+          'from-green-500 to-green-600', 
+          'from-purple-500 to-purple-600',
+          'from-orange-500 to-orange-600',
+          'from-pink-500 to-pink-600',
+          'from-cyan-500 to-cyan-600',
+          'from-yellow-500 to-yellow-600',
+          'from-red-500 to-red-600'
+        ];
+        
+        return (
+          <Pressable
+            key={option}
+            className="relative overflow-hidden"
+            style={({ pressed }) => ({
+              transform: [{ scale: pressed ? 0.9 : 1 }],
+              opacity: disabled ? 0.5 : 1,
+            })}
+            onPress={() => handleButtonPress(option)}
+            disabled={disabled}
           >
-            {option}
-          </ThemedText>
-        </Pressable>
-      ))}
+            <View className={`bg-gradient-to-r ${gradients[index % gradients.length]} rounded-2xl px-6 py-4 min-w-[80px] shadow-xl border-2 border-white/20`}>
+              <ThemedText className="text-center text-lg font-black text-white">
+                {option}
+              </ThemedText>
+              {/* Shine effect */}
+              <View className="absolute top-1 left-1 right-1 h-4 bg-white/20 rounded-xl opacity-60" />
+            </View>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }

@@ -37,6 +37,14 @@ export default function RootLayout() {
                 title: 'Game Modes'
               }} 
             />
+            <Stack.Screen 
+              name="game" 
+              options={{ 
+                presentation: 'fullScreenModal', 
+                headerShown: false,
+                title: 'Game'
+              }} 
+            />
             <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
           </Stack>
           <StatusBar style="auto" />

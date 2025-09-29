@@ -54,27 +54,27 @@ export function Button({
     large: "px-8 py-4 min-w-[120px] rounded-2xl",
   };
 
-  // Variant classes  
+  // Variant classes - Game UI Style
   const variantClasses = {
-    primary: "bg-blue-500 border-blue-500 shadow-md",
-    secondary: "bg-transparent border-blue-500 border-2",
-    outline: "bg-transparent border-gray-300 border",
-    ghost: "bg-transparent border-transparent",
+    primary: "bg-gradient-to-r from-blue-500 to-purple-600 border-white/20 border-2 shadow-2xl",
+    secondary: "bg-gradient-to-r from-purple-500 to-pink-500 border-white/20 border-2 shadow-xl",
+    outline: "bg-black/20 backdrop-blur-sm border-white/30 border-2",
+    ghost: "bg-white/10 backdrop-blur-sm border-transparent",
   };
 
   // Text size classes
   const textSizeClasses = {
-    small: "text-sm font-medium",
-    medium: "text-base font-semibold", 
-    large: "text-lg font-bold",
+    small: "text-sm font-bold",
+    medium: "text-base font-black", 
+    large: "text-lg font-black",
   };
 
   // Text color classes
   const textColorClasses = {
     primary: "text-white",
-    secondary: "text-blue-500",
-    outline: "text-gray-700",
-    ghost: "text-gray-700",
+    secondary: "text-white",
+    outline: "text-white",
+    ghost: "text-white",
   };
 
   return (

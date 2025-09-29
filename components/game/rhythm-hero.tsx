@@ -6,7 +6,7 @@ import { DEFAULT_NOTE_SYMBOL, NOTE_SYMBOLS } from '@/types/note-symbols';
 import { getNoteDisplayName } from '@/utils/music-utils';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Dimensions, Pressable, View } from 'react-native';
 import Animated, {
     Easing,
     SharedValue,
@@ -227,24 +227,24 @@ export function RhythmHero({
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       {/* Instructions */}
-      <View style={styles.instructionContainer}>
-        <ThemedText style={[styles.instruction, { color: textColor }]}>
+      <View className="px-6 py-4">
+        <ThemedText className="text-lg font-bold text-center mb-3" style={{ color: textColor }}>
           🎸 Rhythm Hero: Hit notes as they cross the target line!
         </ThemedText>
-        <View style={styles.scoreContainer}>
-          <ThemedText style={[styles.scoreText, { color: tintColor }]}>
+        <View className="flex-row justify-between items-center">
+          <ThemedText className="text-base font-semibold" style={{ color: tintColor }}>
             Score: {score}
           </ThemedText>
-          <ThemedText style={[styles.hitText, { color: textColor }]}>
+          <ThemedText className="text-sm" style={{ color: textColor }}>
             Hit: {hitCount} / {question.notes.length}
           </ThemedText>
         </View>
       </View>
 
       {/* Game Area with Staff and Moving Notes */}
-      <View style={styles.gameArea}>
+      <View className="relative flex-1 justify-center items-center px-4">
         {/* Static Staff */}
         <MusicStaff
           notes={[]} // No static notes, they're moving
@@ -256,10 +256,18 @@ export function RhythmHero({
         />
         
         {/* Target Line Overlay */}
-        <View style={[styles.targetLine, { left: targetLineX, backgroundColor: tintColor }]} />
+        <View 
+          className="absolute w-1 h-44 rounded-full"
+          style={{ 
+            left: targetLineX, 
+            backgroundColor: tintColor,
+            top: '50%',
+            marginTop: -88 // Half of height (176/2)
+          }} 
+        />
         
         {/* Moving Notes Overlay */}
-        <View style={styles.movingNotesOverlay}>
+        <View className="absolute inset-0">
           <Svg width={350} height={180}>
             {movingNotes.map((movingNote, index) => {
               // Calculate Y position using same logic as MusicStaff component
@@ -281,8 +289,8 @@ export function RhythmHero({
               return (
                 <Animated.View
                   key={movingNote.id}
+                  className="absolute w-5 h-4 items-center justify-center"
                   style={[
-                    styles.movingNoteContainer,
                     animatedStyle,
                     { top: noteY - 8 }
                   ]}
@@ -304,30 +312,26 @@ export function RhythmHero({
       </View>
 
       {/* Note Hit Buttons */}
-      <View style={styles.buttonContainer}>
-        <ThemedText style={[styles.buttonInstructions, { color: textColor }]}>
+      <View className="pb-8 px-4">
+        <ThemedText className="text-sm text-center mb-2" style={{ color: textColor }}>
           Tap the correct note when it crosses the line:
         </ThemedText>
-        <ThemedText style={[{ color: textColor, fontSize: 12 }]}>
-          Debug: {question.options.length} buttons available
-        </ThemedText>
-        <View style={styles.noteButtons}>
+        <View className="flex-row flex-wrap justify-center gap-3">
           {question.options.map((option) => (
             <Pressable
               key={option}
-              style={({ pressed }) => [
-                styles.noteButton,
-                { 
-                  backgroundColor: pressed ? '#0066CC' : '#007AFF',
-                  borderColor: pressed ? '#fff' : 'transparent',
-                  borderWidth: pressed ? 3 : 0,
-                  transform: [{ scale: pressed ? 0.95 : 1 }],
-                }
-              ]}
+              className="px-6 py-3 rounded-xl min-w-[80px]"
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#0066CC' : '#007AFF',
+                borderColor: pressed ? '#fff' : 'transparent',
+                borderWidth: pressed ? 3 : 0,
+                transform: [{ scale: pressed ? 0.95 : 1 }],
+                opacity: showFeedback ? 0.5 : 1,
+              })}
               onPress={() => handleNoteHit(option)}
               disabled={showFeedback}
             >
-              <ThemedText style={styles.noteButtonText}>
+              <ThemedText className="text-white text-lg font-semibold text-center">
                 {option}
               </ThemedText>
             </Pressable>
@@ -338,103 +342,3 @@ export function RhythmHero({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingBottom: 20,
-  },
-  instructionContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  instruction: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  scoreContainer: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  scoreText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  hitText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  gameArea: {
-    height: 200,
-    marginVertical: 20,
-    position: 'relative',
-    alignItems: 'center',
-  },
-  targetLine: {
-    position: 'absolute',
-    width: 4,
-    height: 160,
-    top: 20,
-    borderRadius: 2,
-    opacity: 0.8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-  },
-  movingNotesOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 350,
-    height: 180,
-  },
-  movingNoteContainer: {
-    position: 'absolute',
-    width: 20,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 12,
-    marginHorizontal: 16,
-  },
-  buttonInstructions: {
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
-    opacity: 0.8,
-  },
-  noteButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  noteButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 12,
-    minWidth: 65,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  noteButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
