@@ -5,13 +5,6 @@ export default function GameLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
-        name="index"
-        options={{
-          presentation: 'fullScreenModal',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="/game/single-note"
         options={{
           presentation: 'fullScreenModal',

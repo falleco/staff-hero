@@ -79,6 +79,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         isGameActive: false,
+        currentQuestion: {
+          id: '',
+          notes: [],
+          correctAnswer: [],
+          options: [],
+          answered: false,
+        },
       };
 
     case 'SUBMIT_ANSWER': {

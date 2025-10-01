@@ -1,22 +1,16 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { View } from 'react-native';
-import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { FlatButton, FlatButtonText } from '../core/flat-button';
 
 interface AnswerButtonsProps {
   options: string[];
-  correctAnswers: string[];
-  isMultiSelect: boolean;
-  onAnswerSubmit: (selectedAnswers: string[]) => void;
+  onAnswerSubmit: (selectedAnswers: string) => void;
   disabled?: boolean;
-  showFeedback?: boolean;
 }
 
 export function AnswerButtons({
   options,
-  correctAnswers,
-  isMultiSelect,
   onAnswerSubmit,
   disabled = false,
 }: AnswerButtonsProps) {
@@ -24,11 +18,11 @@ export function AnswerButtons({
     if (disabled) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onAnswerSubmit([answer]);
+    onAnswerSubmit(answer);
   };
 
   return (
-    <View className="flex-row flex-wrap justify-center gap-4 p-6">
+    <View className="flex-row flex-wrap justify-center gap-3 px-4">
       {options.map((option, index) => {
         return (
           <FlatButton

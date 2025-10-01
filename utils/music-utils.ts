@@ -107,7 +107,7 @@ export function generateQuestion(settings: GameSettings): Question {
     settings.gameMode === 'single-note'
       ? 1
       : settings.gameMode === 'sequence'
-        ? Math.floor(Math.random() * 3) + 2
+        ? Math.floor(Math.random() * 6) + 2
         : // 2-4 notes
           settings.gameMode === 'rhythm'
           ? Math.floor(Math.random() * 4) + 3

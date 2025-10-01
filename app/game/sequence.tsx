@@ -1,6 +1,8 @@
+import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
@@ -9,9 +11,9 @@ import { ScoreDisplay } from '@/components/game/score-display';
 import { MusicStaff } from '@/components/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useGame } from '@/contexts/game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import {
   getAutoAdvanceDelay,
   getStreakLevel,
@@ -32,6 +34,8 @@ export default function SequenceGame() {
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
+  const [userSequence, setUserSequence] = useState<string[]>([]);
+  const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   const { top } = useSafeAreaInsets();
 
   const textColor = useThemeColor({}, 'text');
@@ -42,6 +46,34 @@ export default function SequenceGame() {
       generateNewQuestion();
     }
   }, [gameState.isGameActive, gameState.currentQuestion, generateNewQuestion]);
+
+  // Reset sequence when new question
+  useEffect(() => {
+    setUserSequence([]);
+    setCurrentNoteIndex(0);
+  }, [gameState.currentQuestion.id, gameState.currentQuestion.notes]);
+
+  const handleNoteSelect = (noteName: string) => {
+    if (showFeedback) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    const newSequence = [...userSequence, noteName];
+    setUserSequence(newSequence);
+    setCurrentNoteIndex(currentNoteIndex + 1);
+
+    // If sequence is complete, submit answer
+    if (newSequence.length === gameState.currentQuestion.notes.length) {
+      handleAnswerSubmit(newSequence);
+    }
+  };
+
+  const answerSequence = useMemo(() => {
+    return Object.assign(
+      new Array(gameState.currentQuestion.notes.length).fill(null),
+      userSequence,
+    );
+  }, [gameState.currentQuestion.notes, userSequence]);
 
   const handleAnswerSubmit = (answers: string[]) => {
     submitAnswer(answers);
@@ -66,14 +98,14 @@ export default function SequenceGame() {
     setFeedbackTimeout(timeout);
   };
 
-  const handleNextQuestion = () => {
-    if (feedbackTimeout) {
-      clearTimeout(feedbackTimeout);
-    }
-    setShowFeedback(false);
-    nextQuestion();
-    generateNewQuestion();
+  const handleReset = () => {
+    if (showFeedback) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setUserSequence([]);
+    setCurrentNoteIndex(0);
   };
+
 
   const handleEndGame = () => {
     Alert.alert('End Game', 'Are you sure you want to end the current game?', [
@@ -142,6 +174,40 @@ export default function SequenceGame() {
 
       {/* Game content */}
       <View className="flex-1">
+        {/* Instructions */}
+        <View className="px-6 py-4">
+          <ThemedText
+            className="text-xl font-bold text-center mb-2"
+            style={{ color: textColor }}
+          >
+            Identify the sequence:
+          </ThemedText>
+          <ThemedText
+            className="text-sm text-center opacity-70 mb-2"
+            style={{ color: textColor }}
+          >
+            Select notes from left to right ({userSequence.length}/
+            {gameState.currentQuestion.notes.length})
+          </ThemedText>
+
+          {/* Progress indicator */}
+          <View className="flex-row justify-center items-center gap-2 mt-2">
+            {gameState.currentQuestion.notes.map((note, index) => (
+              <View
+                key={`${note.name}-${index}`}
+                className={cn(
+                  'w-3 h-3 rounded-full',
+                  index < userSequence.length
+                    ? 'bg-green-500'
+                    : index === userSequence.length
+                      ? 'bg-blue-500'
+                      : 'bg-gray-300',
+                )}
+              />
+            ))}
+          </View>
+        </View>
+
         {/* Music Staff */}
         <View className="flex-1 justify-center items-center px-4">
           <MusicStaff
@@ -156,84 +222,53 @@ export default function SequenceGame() {
           />
         </View>
 
+        {/* Selected sequence display */}
+        {answerSequence.length > 0 && (
+          <View className="px-6 py-2">
+            <ThemedText
+              className="text-center text-sm opacity-70 mb-2"
+              style={{ color: textColor }}
+            >
+              Your Answer:
+            </ThemedText>
+            <View className="flex-row justify-center gap-2">
+              {answerSequence.map((note, index) => (
+                <View
+                  key={`selected-${note}-${Date.now()}-${index}`}
+                  className="px-3 py-1 bg-green-100 rounded-lg"
+                >
+                  <ThemedText
+                    className="text-sm font-medium"
+                    style={{ color: '#000' }}
+                  >
+                    {note ?? '?'}
+                  </ThemedText>
+                </View>
+              ))}
+              {/* Reset button */}
+              {userSequence.length > 0 && !showFeedback && (
+                <FlatButton
+                  size="xs"
+                  onPress={handleReset}
+                  className="p-0 m-0 rounded-lg"
+                >
+                  <Image
+                    style={{ width: 16, height: 16 }}
+                    source={require('@/assets/images/hud/close.svg')}
+                  />
+                </FlatButton>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* Answer Options */}
         <View className="pb-8">
           <AnswerButtons
             options={gameState.currentQuestion.options}
-            correctAnswers={gameState.currentQuestion.correctAnswer}
-            isMultiSelect={false}
-            onAnswerSubmit={handleAnswerSubmit}
-            disabled={gameState.currentQuestion.answered}
-            showFeedback={showFeedback}
+            onAnswerSubmit={handleNoteSelect}
           />
         </View>
-
-        {/* Feedback and Next Button */}
-        {showFeedback && (
-          <View className="items-center mt-5 px-6">
-            {/* Show feedback text only for incorrect answers in single-note mode, or always for other modes */}
-            {(gameSettings.gameMode !== 'single-note' ||
-              !gameState.currentQuestion.isCorrect) && (
-              <ThemedText
-                className="text-xl font-bold mb-2"
-                style={{
-                  color: gameState.currentQuestion.isCorrect
-                    ? '#4CAF50'
-                    : '#F44336',
-                }}
-              >
-                {gameState.currentQuestion.isCorrect
-                  ? 'Correct! 🎉'
-                  : 'Try again! 💪'}
-              </ThemedText>
-            )}
-
-            {/* Subtle correct indicator for single-note mode */}
-            {gameSettings.gameMode === 'single-note' &&
-              gameState.currentQuestion.isCorrect && (
-                <View className="items-center my-2">
-                  <ThemedText
-                    className="text-2xl font-bold mb-1"
-                    style={{ color: '#4CAF50' }}
-                  >
-                    ✓
-                  </ThemedText>
-                  <ThemedText
-                    className="text-sm opacity-70 italic"
-                    style={{ color: textColor }}
-                  >
-                    Next question...
-                  </ThemedText>
-                </View>
-              )}
-
-            {!gameState.currentQuestion.isCorrect && (
-              <ThemedText
-                className="text-base mb-4 text-center"
-                style={{ color: textColor }}
-              >
-                Correct answer:{' '}
-                {gameState.currentQuestion.correctAnswer.join(', ')}
-              </ThemedText>
-            )}
-
-            {/* Show next button only for incorrect answers in single-note mode, or always for other modes */}
-            {(gameSettings.gameMode !== 'single-note' ||
-              !gameState.currentQuestion.isCorrect) && (
-              <Button
-                action="primary"
-                variant="solid"
-                size="lg"
-                onPress={handleNextQuestion}
-                className="rounded-full px-8 py-3"
-              >
-                <ButtonText className="text-white text-base font-semibold">
-                  Next Question
-                </ButtonText>
-              </Button>
-            )}
-          </View>
-        )}
       </View>
     </>
   );

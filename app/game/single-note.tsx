@@ -50,13 +50,13 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
     }
   }, [gameState.isGameActive, gameState.currentQuestion, generateNewQuestion]);
 
-  const handleAnswerSubmit = (answers: string[]) => {
-    submitAnswer(answers);
+  const handleAnswerSubmit = (answers: string) => {
+    submitAnswer([answers]);
     setShowFeedback(true);
 
     // Use extracted business logic
     const isCorrect = validateAnswer(
-      answers,
+      [answers],
       gameState.currentQuestion.correctAnswer,
     );
     triggerGameHaptics(isCorrect);
@@ -167,11 +167,8 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
         <View className="pb-8">
           <AnswerButtons
             options={gameState.currentQuestion.options}
-            correctAnswers={gameState.currentQuestion.correctAnswer}
-            isMultiSelect={false}
             onAnswerSubmit={handleAnswerSubmit}
             disabled={gameState.currentQuestion.answered}
-            showFeedback={showFeedback}
           />
         </View>
 

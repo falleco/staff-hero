@@ -2,11 +2,10 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import PopupModal from '@/components/core/popup-modal';
 import { GameModeModal } from '@/modals/game-mode.modal';
 
 export default function HomeTab() {
@@ -24,7 +23,6 @@ export default function HomeTab() {
 
   const handleStartGamePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // setIsGameModeModalVisible(true);
     router.push('/game-modes');
   };
 
