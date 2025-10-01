@@ -24,17 +24,17 @@ export interface UserAnalytics {
   favoriteDifficulty: string;
   gamesPerMode: {
     'single-note': number;
-    'sequence': number;
-    'rhythm': number;
+    sequence: number;
+    rhythm: number;
   };
   gamesPerNotation: {
-    'letter': number;
-    'solfege': number;
+    letter: number;
+    solfege: number;
   };
   gamesPerDifficulty: {
-    'beginner': number;
-    'intermediate': number;
-    'advanced': number;
+    beginner: number;
+    intermediate: number;
+    advanced: number;
   };
   recentSessions: GameSession[];
   achievements: Achievement[];

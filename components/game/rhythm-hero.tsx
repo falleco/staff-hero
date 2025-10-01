@@ -1,20 +1,21 @@
-import { MusicStaff } from '@/components/music/music-staff';
-import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { GameSettings, Note, Question } from '@/types/music';
-import { DEFAULT_NOTE_SYMBOL, NOTE_SYMBOLS } from '@/types/note-symbols';
-import { getNoteDisplayName } from '@/utils/music-utils';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Pressable, View } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import Animated, {
-    Easing,
-    SharedValue,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  Easing,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import Svg, { G, Path } from 'react-native-svg';
+import { MusicStaff } from '@/components/music-staff';
+import { ThemedText } from '@/components/themed-text';
+import { Button, ButtonText } from '@/components/ui/gluestack-button';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import type { GameSettings, Note, Question } from '@/types/music';
+import { DEFAULT_NOTE_SYMBOL, NOTE_SYMBOLS } from '@/types/note-symbols';
+import { getNoteDisplayName } from '@/utils/music-utils';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -42,14 +43,14 @@ export function RhythmHero({
   gameSettings,
   onAnswerSubmit,
   showFeedback,
-  streakLevel
+  streakLevel,
 }: RhythmHeroProps) {
   const [movingNotes, setMovingNotes] = useState<MovingNote[]>([]);
   const [score, setScore] = useState<number>(0);
   const [hitCount, setHitCount] = useState<number>(0);
   const gameTimeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const noteGeneratorRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
+
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
 
@@ -82,22 +83,85 @@ export function RhythmHero({
   const animationOpacity9 = useSharedValue(1);
   const animationOpacity10 = useSharedValue(1);
 
-  const animations = [animationX1, animationX2, animationX3, animationX4, animationX5, animationX6, animationX7, animationX8, animationX9, animationX10];
-  const opacityAnimations = [animationOpacity1, animationOpacity2, animationOpacity3, animationOpacity4, animationOpacity5, animationOpacity6, animationOpacity7, animationOpacity8, animationOpacity9, animationOpacity10];
+  const animations = [
+    animationX1,
+    animationX2,
+    animationX3,
+    animationX4,
+    animationX5,
+    animationX6,
+    animationX7,
+    animationX8,
+    animationX9,
+    animationX10,
+  ];
+  const opacityAnimations = [
+    animationOpacity1,
+    animationOpacity2,
+    animationOpacity3,
+    animationOpacity4,
+    animationOpacity5,
+    animationOpacity6,
+    animationOpacity7,
+    animationOpacity8,
+    animationOpacity9,
+    animationOpacity10,
+  ];
 
   // Pre-create animated styles for all possible notes
-  const animatedStyle1 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX1.value }], opacity: animationOpacity1.value }));
-  const animatedStyle2 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX2.value }], opacity: animationOpacity2.value }));
-  const animatedStyle3 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX3.value }], opacity: animationOpacity3.value }));
-  const animatedStyle4 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX4.value }], opacity: animationOpacity4.value }));
-  const animatedStyle5 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX5.value }], opacity: animationOpacity5.value }));
-  const animatedStyle6 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX6.value }], opacity: animationOpacity6.value }));
-  const animatedStyle7 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX7.value }], opacity: animationOpacity7.value }));
-  const animatedStyle8 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX8.value }], opacity: animationOpacity8.value }));
-  const animatedStyle9 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX9.value }], opacity: animationOpacity9.value }));
-  const animatedStyle10 = useAnimatedStyle(() => ({ transform: [{ translateX: animationX10.value }], opacity: animationOpacity10.value }));
+  const animatedStyle1 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX1.value }],
+    opacity: animationOpacity1.value,
+  }));
+  const animatedStyle2 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX2.value }],
+    opacity: animationOpacity2.value,
+  }));
+  const animatedStyle3 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX3.value }],
+    opacity: animationOpacity3.value,
+  }));
+  const animatedStyle4 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX4.value }],
+    opacity: animationOpacity4.value,
+  }));
+  const animatedStyle5 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX5.value }],
+    opacity: animationOpacity5.value,
+  }));
+  const animatedStyle6 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX6.value }],
+    opacity: animationOpacity6.value,
+  }));
+  const animatedStyle7 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX7.value }],
+    opacity: animationOpacity7.value,
+  }));
+  const animatedStyle8 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX8.value }],
+    opacity: animationOpacity8.value,
+  }));
+  const animatedStyle9 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX9.value }],
+    opacity: animationOpacity9.value,
+  }));
+  const animatedStyle10 = useAnimatedStyle(() => ({
+    transform: [{ translateX: animationX10.value }],
+    opacity: animationOpacity10.value,
+  }));
 
-  const animatedStyles = [animatedStyle1, animatedStyle2, animatedStyle3, animatedStyle4, animatedStyle5, animatedStyle6, animatedStyle7, animatedStyle8, animatedStyle9, animatedStyle10];
+  const animatedStyles = [
+    animatedStyle1,
+    animatedStyle2,
+    animatedStyle3,
+    animatedStyle4,
+    animatedStyle5,
+    animatedStyle6,
+    animatedStyle7,
+    animatedStyle8,
+    animatedStyle9,
+    animatedStyle10,
+  ];
 
   // Start the rhythm game
   useEffect(() => {
@@ -115,25 +179,25 @@ export function RhythmHero({
         if (noteGeneratorRef.current) {
           clearInterval(noteGeneratorRef.current);
         }
-        
+
         // End game after last note has had time to cross
         gameTimeRef.current = setTimeout(() => {
           const accuracy = Math.round((hitCount / question.notes.length) * 100);
           const hitNotes = Array(hitCount).fill('hit'); // Simplified for now
           onAnswerSubmit(hitNotes, accuracy);
         }, noteSpeed + 1000);
-        
+
         return;
       }
 
       const note = question.notes[noteIndex];
       const animationX = animations[noteIndex];
       const animationOpacity = opacityAnimations[noteIndex];
-      
+
       // Reset animations
       animationX.value = screenWidth + 50;
       animationOpacity.value = 1;
-      
+
       const movingNote: MovingNote = {
         id: `${note.name}${note.octave}_${noteIndex}_${Date.now()}`,
         note,
@@ -150,7 +214,7 @@ export function RhythmHero({
         easing: Easing.linear,
       });
 
-      setMovingNotes(prev => [...prev, movingNote]);
+      setMovingNotes((prev) => [...prev, movingNote]);
       noteIndex++;
     };
 
@@ -168,22 +232,22 @@ export function RhythmHero({
         clearInterval(noteGeneratorRef.current);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question.id, showFeedback]);
 
   const handleNoteHit = (noteName: string) => {
     if (showFeedback) return;
 
     const currentTime = Date.now();
-    
+
     // Find notes that are currently near the target line
-    const activeNotes = movingNotes.filter(mn => {
+    const activeNotes = movingNotes.filter((mn) => {
       if (mn.hit || mn.displayName !== noteName) return false;
-      
+
       const elapsedTime = currentTime - mn.startTime;
       const progress = elapsedTime / noteSpeed;
-      const currentX = screenWidth + 50 - (progress * (screenWidth + 150));
-      
+      const currentX = screenWidth + 50 - progress * (screenWidth + 150);
+
       // Check if note is within hitting range of target line
       const distance = Math.abs(currentX - targetLineX);
       return distance <= 50; // 50px hitting zone
@@ -194,24 +258,24 @@ export function RhythmHero({
       const closestNote = activeNotes[0];
       const elapsedTime = currentTime - closestNote.startTime;
       const progress = elapsedTime / noteSpeed;
-      const currentX = screenWidth + 50 - (progress * (screenWidth + 150));
+      const currentX = screenWidth + 50 - progress * (screenWidth + 150);
       const distance = Math.abs(currentX - targetLineX);
-      
+
       // Calculate accuracy based on distance from target
       const accuracy = Math.max(0, 100 - (distance / 50) * 100);
-      
+
       closestNote.hit = true;
       closestNote.accuracy = accuracy;
-      
+
       // Trigger disappearing animation
       closestNote.animationOpacity.value = withTiming(0, {
         duration: 300,
         easing: Easing.out(Easing.quad),
       });
-      
-      setScore(prev => prev + Math.round(accuracy));
-      setHitCount(prev => prev + 1);
-      
+
+      setScore((prev) => prev + Math.round(accuracy));
+      setHitCount((prev) => prev + 1);
+
       // Haptic feedback
       if (accuracy > 80) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -230,11 +294,17 @@ export function RhythmHero({
     <View className="flex-1">
       {/* Instructions */}
       <View className="px-6 py-4">
-        <ThemedText className="text-lg font-bold text-center mb-3" style={{ color: textColor }}>
+        <ThemedText
+          className="text-lg font-bold text-center mb-3"
+          style={{ color: textColor }}
+        >
           🎸 Rhythm Hero: Hit notes as they cross the target line!
         </ThemedText>
         <View className="flex-row justify-between items-center">
-          <ThemedText className="text-base font-semibold" style={{ color: tintColor }}>
+          <ThemedText
+            className="text-base font-semibold"
+            style={{ color: tintColor }}
+          >
             Score: {score}
           </ThemedText>
           <ThemedText className="text-sm" style={{ color: textColor }}>
@@ -254,30 +324,36 @@ export function RhythmHero({
           width={350}
           height={180}
         />
-        
+
         {/* Target Line Overlay */}
-        <View 
+        <View
           className="absolute w-1 h-44 rounded-full"
-          style={{ 
-            left: targetLineX, 
+          style={{
+            left: targetLineX,
             backgroundColor: tintColor,
             top: '50%',
-            marginTop: -88 // Half of height (176/2)
-          }} 
+            marginTop: -88, // Half of height (176/2)
+          }}
         />
-        
+
         {/* Moving Notes Overlay */}
         <View className="absolute inset-0">
           <Svg width={350} height={180}>
             {movingNotes.map((movingNote, index) => {
               // Calculate Y position using same logic as MusicStaff component
               const staffLineSpacing = 12;
-              const staffStartY = 90 / 2 - (staffLineSpacing * 2);
-              const e4LineY = staffStartY + (staffLineSpacing * 4);
-              const noteY = e4LineY - ((movingNote.note.staffPosition + 1) * (staffLineSpacing / 2));
-              const animatedStyle = animatedStyles[index % animatedStyles.length];
-              const noteSymbol = NOTE_SYMBOLS[movingNote.note.symbolId || DEFAULT_NOTE_SYMBOL.id] || DEFAULT_NOTE_SYMBOL;
-              
+              const staffStartY = 90 / 2 - staffLineSpacing * 2;
+              const e4LineY = staffStartY + staffLineSpacing * 4;
+              const noteY =
+                e4LineY -
+                (movingNote.note.staffPosition + 1) * (staffLineSpacing / 2);
+              const animatedStyle =
+                animatedStyles[index % animatedStyles.length];
+              const noteSymbol =
+                NOTE_SYMBOLS[
+                  movingNote.note.symbolId || DEFAULT_NOTE_SYMBOL.id
+                ] || DEFAULT_NOTE_SYMBOL;
+
               // Get note color based on hit status
               const getNoteColor = () => {
                 if (movingNote.hit) {
@@ -290,18 +366,12 @@ export function RhythmHero({
                 <Animated.View
                   key={movingNote.id}
                   className="absolute w-5 h-4 items-center justify-center"
-                  style={[
-                    animatedStyle,
-                    { top: noteY - 8 }
-                  ]}
+                  style={[animatedStyle, { top: noteY - 8 }]}
                 >
                   <Svg width={20} height={16}>
                     {/* Musical note symbol */}
                     <G transform={`translate(-8, -8) scale(0.035, 0.035)`}>
-                      <Path
-                        d={noteSymbol.pathData}
-                        fill={getNoteColor()}
-                      />
+                      <Path d={noteSymbol.pathData} fill={getNoteColor()} />
                     </G>
                   </Svg>
                 </Animated.View>
@@ -313,32 +383,42 @@ export function RhythmHero({
 
       {/* Note Hit Buttons */}
       <View className="pb-8 px-4">
-        <ThemedText className="text-sm text-center mb-2" style={{ color: textColor }}>
+        <ThemedText
+          className="text-sm text-center mb-2"
+          style={{ color: textColor }}
+        >
           Tap the correct note when it crosses the line:
         </ThemedText>
         <View className="flex-row flex-wrap justify-center gap-3">
-          {question.options.map((option) => (
-            <Pressable
-              key={option}
-              className="px-6 py-3 rounded-xl min-w-[80px]"
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#0066CC' : '#007AFF',
-                borderColor: pressed ? '#fff' : 'transparent',
-                borderWidth: pressed ? 3 : 0,
-                transform: [{ scale: pressed ? 0.95 : 1 }],
-                opacity: showFeedback ? 0.5 : 1,
-              })}
-              onPress={() => handleNoteHit(option)}
-              disabled={showFeedback}
-            >
-              <ThemedText className="text-white text-lg font-semibold text-center">
-                {option}
-              </ThemedText>
-            </Pressable>
-          ))}
+          {question.options.map((option, index) => {
+            const actions = [
+              'primary',
+              'positive',
+              'secondary',
+              'default',
+              'negative',
+            ] as const;
+            const action = actions[index % actions.length];
+
+            return (
+              <Button
+                key={option}
+                action={action}
+                variant="solid"
+                size="lg"
+                onPress={() => handleNoteHit(option)}
+                isDisabled={showFeedback}
+                className="px-6 py-3 rounded-xl min-w-[80px]"
+                hapticFeedback={false} // We handle haptics manually
+              >
+                <ButtonText className="text-white text-lg font-semibold text-center">
+                  {option}
+                </ButtonText>
+              </Button>
+            );
+          })}
         </View>
       </View>
     </View>
   );
 }
-

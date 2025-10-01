@@ -1,13 +1,13 @@
+import { router } from 'expo-router';
+import type React from 'react';
+import { ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ModalHeader } from '@/components/ui/modal-header';
 import { SettingOption } from '@/components/ui/setting-option';
 import { useGame } from '@/contexts/game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { NotationSystem } from '@/types/music';
-import { router } from 'expo-router';
-import React from 'react';
-import { ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NotationSystem } from '@/types/music';
 
 export default function SettingsScreen() {
   const { gameSettings, updateSettings } = useGame();
@@ -18,15 +18,18 @@ export default function SettingsScreen() {
     router.back();
   };
 
-  const SettingSection = ({ 
-    title, 
-    children 
+  const SettingSection = ({
+    title,
+    children,
   }: {
     title: string;
     children: React.ReactNode;
   }) => (
     <View className="mb-8">
-      <ThemedText className="text-xl font-bold mb-4" style={{ color: textColor }}>
+      <ThemedText
+        className="text-xl font-bold mb-4"
+        style={{ color: textColor }}
+      >
         {title}
       </ThemedText>
       {children}
@@ -35,8 +38,8 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
-      <ModalHeader 
-        title="⚙️ Settings" 
+      <ModalHeader
+        title="⚙️ Settings"
         onClose={handleClose}
         closeButtonText="Done"
       />
@@ -47,15 +50,15 @@ export default function SettingsScreen() {
             title="Notation System"
             subtitle="Choose how notes are displayed"
             options={[
-              { 
-                label: 'Solfege', 
+              {
+                label: 'Solfege',
                 value: 'solfege' as NotationSystem,
-                description: 'Do, Re, Mi, Fa, Sol, La, Si (Recommended)'
+                description: 'Do, Re, Mi, Fa, Sol, La, Si (Recommended)',
               },
-              { 
-                label: 'Letter Names', 
+              {
+                label: 'Letter Names',
                 value: 'letter' as NotationSystem,
-                description: 'C, D, E, F, G, A, B'
+                description: 'C, D, E, F, G, A, B',
               },
             ]}
             currentValue={gameSettings.notationSystem}
@@ -68,20 +71,20 @@ export default function SettingsScreen() {
             title="Note Range"
             subtitle="Controls which notes appear in the game"
             options={[
-              { 
-                label: 'Beginner', 
+              {
+                label: 'Beginner',
                 value: 'beginner',
-                description: 'C4 to B5 - Basic treble clef range'
+                description: 'C4 to B5 - Basic treble clef range',
               },
-              { 
-                label: 'Intermediate', 
+              {
+                label: 'Intermediate',
                 value: 'intermediate',
-                description: 'C3 to B5 - Extended range with ledger lines'
+                description: 'C3 to B5 - Extended range with ledger lines',
               },
-              { 
-                label: 'Advanced', 
+              {
+                label: 'Advanced',
                 value: 'advanced',
-                description: 'C3 to B6 - Full range with many ledger lines'
+                description: 'C3 to B6 - Full range with many ledger lines',
               },
             ]}
             currentValue={gameSettings.difficulty}
@@ -94,15 +97,15 @@ export default function SettingsScreen() {
             title="Note Labels"
             subtitle="Show note names on staff lines and spaces"
             options={[
-              { 
-                label: 'Visible', 
+              {
+                label: 'Visible',
                 value: true,
-                description: 'Recommended for beginners - shows note names'
+                description: 'Recommended for beginners - shows note names',
               },
-              { 
-                label: 'Hidden', 
+              {
+                label: 'Hidden',
                 value: false,
-                description: 'Challenge mode - no hints shown'
+                description: 'Challenge mode - no hints shown',
               },
             ]}
             currentValue={gameSettings.showNoteLabels}
@@ -111,27 +114,44 @@ export default function SettingsScreen() {
         </SettingSection>
 
         <View className="mt-5 p-5 bg-gray-100 rounded-xl">
-          <ThemedText className="text-lg font-semibold mb-3" style={{ color: textColor }}>
+          <ThemedText
+            className="text-lg font-semibold mb-3"
+            style={{ color: textColor }}
+          >
             💡 Tips
           </ThemedText>
           <View className="mb-2">
-            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
+            <ThemedText
+              className="text-sm opacity-80"
+              style={{ color: textColor }}
+            >
               • Solfege is great for beginners and ear training
             </ThemedText>
           </View>
           <View className="mb-2">
-            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
+            <ThemedText
+              className="text-sm opacity-80"
+              style={{ color: textColor }}
+            >
               • Practice regularly to build muscle memory for note positions
             </ThemedText>
           </View>
           <View className="mb-2">
-            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
-              • Higher difficulties include ledger lines above and below the staff
+            <ThemedText
+              className="text-sm opacity-80"
+              style={{ color: textColor }}
+            >
+              • Higher difficulties include ledger lines above and below the
+              staff
             </ThemedText>
           </View>
           <View className="mb-2">
-            <ThemedText className="text-sm opacity-80" style={{ color: textColor }}>
-              • Enable note labels when starting out, then turn them off for a challenge
+            <ThemedText
+              className="text-sm opacity-80"
+              style={{ color: textColor }}
+            >
+              • Enable note labels when starting out, then turn them off for a
+              challenge
             </ThemedText>
           </View>
         </View>

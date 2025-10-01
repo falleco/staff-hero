@@ -1,15 +1,20 @@
-import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { UserAnalytics } from '@/types/analytics';
-import { clearAnalytics, formatPlayTime, getAnalytics, getStreakEmoji } from '@/utils/analytics-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedText } from '@/components/themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import type { UserAnalytics } from '@/types/analytics';
+import {
+  clearAnalytics,
+  formatPlayTime,
+  getAnalytics,
+  getStreakEmoji,
+} from '@/utils/analytics-storage';
 
 export function AnalyticsScreen() {
   const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
@@ -43,7 +48,7 @@ export function AnalyticsScreen() {
             loadAnalytics();
           },
         },
-      ]
+      ],
     );
   };
 
@@ -71,12 +76,12 @@ export function AnalyticsScreen() {
     );
   }
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    subtitle, 
+  const StatCard = ({
+    title,
+    value,
+    subtitle,
     icon,
-    color = tintColor 
+    color = tintColor,
   }: {
     title: string;
     value: string | number;
@@ -87,7 +92,9 @@ export function AnalyticsScreen() {
     <View style={[styles.statCard, { backgroundColor }]}>
       <View style={styles.statHeader}>
         <ThemedText style={[styles.statIcon, { color }]}>{icon}</ThemedText>
-        <ThemedText style={[styles.statTitle, { color: textColor }]}>{title}</ThemedText>
+        <ThemedText style={[styles.statTitle, { color: textColor }]}>
+          {title}
+        </ThemedText>
       </View>
       <ThemedText style={[styles.statValue, { color }]}>{value}</ThemedText>
       {subtitle && (
@@ -98,18 +105,20 @@ export function AnalyticsScreen() {
     </View>
   );
 
-  const AchievementCard = ({ 
-    achievement 
+  const AchievementCard = ({
+    achievement,
   }: {
     achievement: UserAnalytics['achievements'][0];
   }) => (
-    <View style={[
-      styles.achievementCard, 
-      { 
-        backgroundColor,
-        opacity: achievement.isUnlocked ? 1 : 0.5,
-      }
-    ]}>
+    <View
+      style={[
+        styles.achievementCard,
+        {
+          backgroundColor,
+          opacity: achievement.isUnlocked ? 1 : 0.5,
+        },
+      ]}
+    >
       <ThemedText style={[styles.achievementIcon, { color: tintColor }]}>
         {achievement.icon}
       </ThemedText>
@@ -117,7 +126,9 @@ export function AnalyticsScreen() {
         <ThemedText style={[styles.achievementTitle, { color: textColor }]}>
           {achievement.title}
         </ThemedText>
-        <ThemedText style={[styles.achievementDescription, { color: textColor }]}>
+        <ThemedText
+          style={[styles.achievementDescription, { color: textColor }]}
+        >
           {achievement.description}
         </ThemedText>
         {achievement.isUnlocked && achievement.unlockedAt && (
@@ -129,7 +140,9 @@ export function AnalyticsScreen() {
     </View>
   );
 
-  const unlockedAchievements = analytics.achievements.filter(a => a.isUnlocked).length;
+  const unlockedAchievements = analytics.achievements.filter(
+    (a) => a.isUnlocked,
+  ).length;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
@@ -145,7 +158,9 @@ export function AnalyticsScreen() {
 
         {analytics.totalGamesPlayed === 0 ? (
           <View style={styles.emptyState}>
-            <ThemedText style={[styles.emptyIcon, { color: textColor }]}>🎵</ThemedText>
+            <ThemedText style={[styles.emptyIcon, { color: textColor }]}>
+              🎵
+            </ThemedText>
             <ThemedText style={[styles.emptyTitle, { color: textColor }]}>
               No games played yet
             </ThemedText>
@@ -200,36 +215,74 @@ export function AnalyticsScreen() {
               </ThemedText>
               <View style={styles.preferencesGrid}>
                 <View style={styles.preferenceItem}>
-                  <ThemedText style={[styles.preferenceLabel, { color: textColor }]}>
+                  <ThemedText
+                    style={[styles.preferenceLabel, { color: textColor }]}
+                  >
                     Favorite Mode
                   </ThemedText>
-                  <ThemedText style={[styles.preferenceValue, { color: tintColor }]}>
-                    {analytics.favoriteGameMode.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  <ThemedText
+                    style={[styles.preferenceValue, { color: tintColor }]}
+                  >
+                    {analytics.favoriteGameMode
+                      .replace('-', ' ')
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </ThemedText>
-                  <ThemedText style={[styles.preferenceCount, { color: textColor }]}>
-                    {analytics.gamesPerMode[analytics.favoriteGameMode as keyof typeof analytics.gamesPerMode]} games
+                  <ThemedText
+                    style={[styles.preferenceCount, { color: textColor }]}
+                  >
+                    {
+                      analytics.gamesPerMode[
+                        analytics.favoriteGameMode as keyof typeof analytics.gamesPerMode
+                      ]
+                    }{' '}
+                    games
                   </ThemedText>
                 </View>
                 <View style={styles.preferenceItem}>
-                  <ThemedText style={[styles.preferenceLabel, { color: textColor }]}>
+                  <ThemedText
+                    style={[styles.preferenceLabel, { color: textColor }]}
+                  >
                     Favorite Notation
                   </ThemedText>
-                  <ThemedText style={[styles.preferenceValue, { color: tintColor }]}>
-                    {analytics.favoriteNotation === 'letter' ? 'Letters' : 'Solfege'}
+                  <ThemedText
+                    style={[styles.preferenceValue, { color: tintColor }]}
+                  >
+                    {analytics.favoriteNotation === 'letter'
+                      ? 'Letters'
+                      : 'Solfege'}
                   </ThemedText>
-                  <ThemedText style={[styles.preferenceCount, { color: textColor }]}>
-                    {analytics.gamesPerNotation[analytics.favoriteNotation as keyof typeof analytics.gamesPerNotation]} games
+                  <ThemedText
+                    style={[styles.preferenceCount, { color: textColor }]}
+                  >
+                    {
+                      analytics.gamesPerNotation[
+                        analytics.favoriteNotation as keyof typeof analytics.gamesPerNotation
+                      ]
+                    }{' '}
+                    games
                   </ThemedText>
                 </View>
                 <View style={styles.preferenceItem}>
-                  <ThemedText style={[styles.preferenceLabel, { color: textColor }]}>
+                  <ThemedText
+                    style={[styles.preferenceLabel, { color: textColor }]}
+                  >
                     Favorite Difficulty
                   </ThemedText>
-                  <ThemedText style={[styles.preferenceValue, { color: tintColor }]}>
-                    {analytics.favoriteDifficulty.charAt(0).toUpperCase() + analytics.favoriteDifficulty.slice(1)}
+                  <ThemedText
+                    style={[styles.preferenceValue, { color: tintColor }]}
+                  >
+                    {analytics.favoriteDifficulty.charAt(0).toUpperCase() +
+                      analytics.favoriteDifficulty.slice(1)}
                   </ThemedText>
-                  <ThemedText style={[styles.preferenceCount, { color: textColor }]}>
-                    {analytics.gamesPerDifficulty[analytics.favoriteDifficulty as keyof typeof analytics.gamesPerDifficulty]} games
+                  <ThemedText
+                    style={[styles.preferenceCount, { color: textColor }]}
+                  >
+                    {
+                      analytics.gamesPerDifficulty[
+                        analytics.favoriteDifficulty as keyof typeof analytics.gamesPerDifficulty
+                      ]
+                    }{' '}
+                    games
                   </ThemedText>
                 </View>
               </View>
@@ -238,7 +291,8 @@ export function AnalyticsScreen() {
             {/* Achievements */}
             <View style={styles.section}>
               <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-                🏆 Achievements ({unlockedAchievements}/{analytics.achievements.length})
+                🏆 Achievements ({unlockedAchievements}/
+                {analytics.achievements.length})
               </ThemedText>
               <View style={styles.achievementsContainer}>
                 {analytics.achievements.map((achievement) => (
@@ -257,23 +311,42 @@ export function AnalyticsScreen() {
                   📈 Recent Games
                 </ThemedText>
                 {analytics.recentSessions.slice(0, 5).map((session) => (
-                  <View key={session.id} style={[styles.sessionCard, { backgroundColor }]}>
+                  <View
+                    key={session.id}
+                    style={[styles.sessionCard, { backgroundColor }]}
+                  >
                     <View style={styles.sessionHeader}>
-                      <ThemedText style={[styles.sessionMode, { color: textColor }]}>
-                        {session.gameMode.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} • {session.notationSystem === 'letter' ? 'Letters' : 'Solfege'}
+                      <ThemedText
+                        style={[styles.sessionMode, { color: textColor }]}
+                      >
+                        {session.gameMode
+                          .replace('-', ' ')
+                          .replace(/\b\w/g, (l) => l.toUpperCase())}{' '}
+                        •{' '}
+                        {session.notationSystem === 'letter'
+                          ? 'Letters'
+                          : 'Solfege'}
                       </ThemedText>
-                      <ThemedText style={[styles.sessionDate, { color: textColor }]}>
+                      <ThemedText
+                        style={[styles.sessionDate, { color: textColor }]}
+                      >
                         {new Date(session.date).toLocaleDateString()}
                       </ThemedText>
                     </View>
                     <View style={styles.sessionStats}>
-                      <ThemedText style={[styles.sessionStat, { color: tintColor }]}>
+                      <ThemedText
+                        style={[styles.sessionStat, { color: tintColor }]}
+                      >
                         Score: {session.score}
                       </ThemedText>
-                      <ThemedText style={[styles.sessionStat, { color: textColor }]}>
+                      <ThemedText
+                        style={[styles.sessionStat, { color: textColor }]}
+                      >
                         Accuracy: {session.accuracy}%
                       </ThemedText>
-                      <ThemedText style={[styles.sessionStat, { color: textColor }]}>
+                      <ThemedText
+                        style={[styles.sessionStat, { color: textColor }]}
+                      >
                         Best Streak: {session.maxStreak}
                       </ThemedText>
                     </View>
@@ -288,7 +361,9 @@ export function AnalyticsScreen() {
                 style={[styles.clearButton, { borderColor: '#F44336' }]}
                 onPress={handleClearData}
               >
-                <ThemedText style={[styles.clearButtonText, { color: '#F44336' }]}>
+                <ThemedText
+                  style={[styles.clearButtonText, { color: '#F44336' }]}
+                >
                   🗑️ Clear All Data
                 </ThemedText>
               </Pressable>

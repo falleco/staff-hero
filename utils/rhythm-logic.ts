@@ -1,4 +1,4 @@
-import { Note } from '@/types/music';
+import type { Note } from '@/types/music';
 import { getNoteDisplayName } from './music-utils';
 
 /**
@@ -52,11 +52,11 @@ export function createRhythmNote(
   index: number,
   startTime: number,
   config: RhythmGameConfig,
-  notationSystem: 'letter' | 'solfege'
+  notationSystem: 'letter' | 'solfege',
 ): Omit<RhythmNote, 'id'> {
   const noteStartDelay = index * config.noteInterval;
-  const targetTime = startTime + noteStartDelay + (config.noteSpeed * 0.6); // Target at 60% through animation
-  
+  const targetTime = startTime + noteStartDelay + config.noteSpeed * 0.6; // Target at 60% through animation
+
   return {
     note,
     displayName: getNoteDisplayName(note.name, notationSystem),
@@ -78,11 +78,11 @@ export function calculateNotePosition(
   note: RhythmNote,
   currentTime: number,
   config: RhythmGameConfig,
-  screenWidth: number
+  screenWidth: number,
 ): number {
   const elapsedTime = currentTime - note.startTime;
   const progress = Math.min(1, elapsedTime / config.noteSpeed);
-  return screenWidth + 50 - (progress * (screenWidth + 150));
+  return screenWidth + 50 - progress * (screenWidth + 150);
 }
 
 /**
@@ -92,7 +92,11 @@ export function calculateNotePosition(
  * @param hitZoneSize - Size of hit zone
  * @returns True if note is hittable
  */
-export function isNoteInHitZone(noteX: number, targetLineX: number, hitZoneSize: number): boolean {
+export function isNoteInHitZone(
+  noteX: number,
+  targetLineX: number,
+  hitZoneSize: number,
+): boolean {
   return Math.abs(noteX - targetLineX) <= hitZoneSize;
 }
 
@@ -110,16 +114,16 @@ export function processRhythmHit(
   currentTime: number,
   activeNotes: RhythmNote[],
   config: RhythmGameConfig,
-  screenWidth: number
+  screenWidth: number,
 ): {
   hit: boolean;
   accuracy: number;
   hitNote?: RhythmNote;
 } {
   // Find matching notes in hit zone
-  const hittableNotes = activeNotes.filter(note => {
+  const hittableNotes = activeNotes.filter((note) => {
     if (note.hit || note.displayName !== noteName) return false;
-    
+
     const noteX = calculateNotePosition(note, currentTime, config, screenWidth);
     return isNoteInHitZone(noteX, config.targetLineX, config.hitZoneSize);
   });
@@ -130,13 +134,18 @@ export function processRhythmHit(
 
   // Hit the closest note
   const closestNote = hittableNotes[0];
-  const noteX = calculateNotePosition(closestNote, currentTime, config, screenWidth);
+  const noteX = calculateNotePosition(
+    closestNote,
+    currentTime,
+    config,
+    screenWidth,
+  );
   const distance = Math.abs(noteX - config.targetLineX);
   const accuracy = Math.max(0, 100 - (distance / config.hitZoneSize) * 100);
-  
+
   closestNote.hit = true;
   closestNote.accuracy = accuracy;
-  
+
   return {
     hit: true,
     accuracy,
@@ -155,13 +164,22 @@ export function calculateRhythmScore(notes: RhythmNote[]): {
   averageAccuracy: number;
   perfectHits: number;
 } {
-  const hitNotes = notes.filter(note => note.hit);
-  const totalScore = hitNotes.reduce((sum, note) => sum + Math.round(note.accuracy || 0), 0);
-  const averageAccuracy = hitNotes.length > 0 
-    ? Math.round(hitNotes.reduce((sum, note) => sum + (note.accuracy || 0), 0) / hitNotes.length)
-    : 0;
-  const perfectHits = hitNotes.filter(note => (note.accuracy || 0) > 90).length;
-  
+  const hitNotes = notes.filter((note) => note.hit);
+  const totalScore = hitNotes.reduce(
+    (sum, note) => sum + Math.round(note.accuracy || 0),
+    0,
+  );
+  const averageAccuracy =
+    hitNotes.length > 0
+      ? Math.round(
+          hitNotes.reduce((sum, note) => sum + (note.accuracy || 0), 0) /
+            hitNotes.length,
+        )
+      : 0;
+  const perfectHits = hitNotes.filter(
+    (note) => (note.accuracy || 0) > 90,
+  ).length;
+
   return {
     totalScore,
     hitCount: hitNotes.length,

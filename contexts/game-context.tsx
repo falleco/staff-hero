@@ -1,8 +1,18 @@
-import { GameSession } from '@/types/analytics';
-import { GameSettings, GameState, NotationSystem, Question } from '@/types/music';
+import React, {
+  createContext,
+  type ReactNode,
+  useContext,
+  useReducer,
+} from 'react';
+import type { GameSession } from '@/types/analytics';
+import type {
+  GameSettings,
+  GameState,
+  NotationSystem,
+  Question,
+} from '@/types/music';
 import { addGameSession } from '@/utils/analytics-storage';
 import { generateQuestion } from '@/utils/music-utils';
-import React, { createContext, ReactNode, useContext, useReducer } from 'react';
 
 interface GameContextType {
   gameState: GameState;
@@ -16,7 +26,7 @@ interface GameContextType {
   generateNewQuestion: () => void;
 }
 
-type GameAction = 
+type GameAction =
   | { type: 'UPDATE_SETTINGS'; payload: Partial<GameSettings> }
   | { type: 'START_GAME' }
   | { type: 'END_GAME' }
@@ -42,7 +52,7 @@ const initialGameState: GameState = {
 };
 
 // Track game session for analytics
-let gameStartTime: number = 0;
+let gameStartTime = 0;
 
 const initialGameSettings: GameSettings = {
   notationSystem: 'solfege' as NotationSystem,
@@ -64,35 +74,49 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         totalQuestions: 0,
         correctAnswers: 0,
       };
-    
+
     case 'END_GAME':
       return {
         ...state,
         isGameActive: false,
       };
-    
+
     case 'SUBMIT_ANSWER': {
-      const isCorrect = JSON.stringify(action.payload.sort()) === 
-                       JSON.stringify(state.currentQuestion.correctAnswer.sort());
-      
+      const isCorrect =
+        JSON.stringify(action.payload.sort()) ===
+        JSON.stringify(state.currentQuestion.correctAnswer.sort());
+
       // Comprehensive answer logging
       console.log('🎯 ANSWER SUBMITTED:');
       console.log('  Question ID:', state.currentQuestion.id);
-      console.log('  Notes shown:', state.currentQuestion.notes.map(n => `${n.name}${n.octave} at position ${n.staffPosition}`));
+      console.log(
+        '  Notes shown:',
+        state.currentQuestion.notes.map(
+          (n) => `${n.name}${n.octave} at position ${n.staffPosition}`,
+        ),
+      );
       console.log('  Expected answer:', state.currentQuestion.correctAnswer);
       console.log('  User selected:', action.payload);
       console.log('  Result:', isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
       if (!isCorrect) {
         console.log('  ❗ Mismatch details:');
-        console.log('    Expected (sorted):', state.currentQuestion.correctAnswer.sort());
+        console.log(
+          '    Expected (sorted):',
+          state.currentQuestion.correctAnswer.sort(),
+        );
         console.log('    User answer (sorted):', action.payload.sort());
       }
-      console.log('  Current streak:', state.streak, '→', isCorrect ? state.streak + 1 : 0);
+      console.log(
+        '  Current streak:',
+        state.streak,
+        '→',
+        isCorrect ? state.streak + 1 : 0,
+      );
       console.log('---');
 
       const newStreak = isCorrect ? state.streak + 1 : 0;
-      const points = isCorrect ? (10 + state.streak * 2) : 0;
-      
+      const points = isCorrect ? 10 + state.streak * 2 : 0;
+
       return {
         ...state,
         currentQuestion: {
@@ -108,7 +132,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         correctAnswers: state.correctAnswers + (isCorrect ? 1 : 0),
       };
     }
-    
+
     case 'NEXT_QUESTION':
       return {
         ...state,
@@ -120,19 +144,19 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           answered: false,
         },
       };
-    
+
     case 'SET_QUESTION':
       return {
         ...state,
         currentQuestion: action.payload,
       };
-    
+
     case 'RESET_STREAK':
       return {
         ...state,
         streak: 0,
       };
-    
+
     default:
       return state;
   }
@@ -142,10 +166,11 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
-  const [gameSettings, setGameSettings] = React.useState<GameSettings>(initialGameSettings);
+  const [gameSettings, setGameSettings] =
+    React.useState<GameSettings>(initialGameSettings);
 
   const updateSettings = (settings: Partial<GameSettings>) => {
-    setGameSettings(prev => ({ ...prev, ...settings }));
+    setGameSettings((prev) => ({ ...prev, ...settings }));
   };
 
   const startGame = () => {
@@ -162,9 +187,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // Save game session to analytics before ending
     if (gameState.isGameActive && gameStartTime > 0) {
       const duration = Math.floor((Date.now() - gameStartTime) / 1000);
-      const accuracy = gameState.totalQuestions > 0 
-        ? Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100) 
-        : 0;
+      const accuracy =
+        gameState.totalQuestions > 0
+          ? Math.round(
+              (gameState.correctAnswers / gameState.totalQuestions) * 100,
+            )
+          : 0;
 
       const session: GameSession = {
         id: `session_${Date.now()}`,
@@ -183,14 +211,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       try {
         await addGameSession(session);
-        console.log('🏁 GAME SESSION ENDED:');
-        console.log('  Final score:', gameState.score);
-        console.log('  Max streak:', gameState.maxStreak);
-        console.log('  Accuracy:', accuracy + '%');
-        console.log('  Total questions:', gameState.totalQuestions);
-        console.log('  Correct answers:', gameState.correctAnswers);
-        console.log('  Duration:', Math.floor(duration / 60) + 'm ' + (duration % 60) + 's');
-        console.log('====================');
       } catch (error) {
         console.error('Error saving game session:', error);
       }
@@ -230,11 +250,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     generateNewQuestion,
   };
 
-  return (
-    <GameContext.Provider value={value}>
-      {children}
-    </GameContext.Provider>
-  );
+  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 
 export function useGame() {

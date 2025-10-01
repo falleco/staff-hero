@@ -1,5 +1,5 @@
-import { GameSettings } from '@/types/music';
 import * as Haptics from 'expo-haptics';
+import type { GameSettings } from '@/types/music';
 
 /**
  * Pure functions for game logic - separated from UI components for better testability
@@ -23,13 +23,16 @@ export function getStreakLevel(streak: number): number {
  * @param isCorrect - Whether the answer was correct
  * @returns Delay in milliseconds
  */
-export function getAutoAdvanceDelay(gameMode: GameSettings['gameMode'], isCorrect: boolean): number {
+export function getAutoAdvanceDelay(
+  gameMode: GameSettings['gameMode'],
+  isCorrect: boolean,
+): number {
   const DEFAULT_DELAY = 2000;
-  
+
   if (gameMode === 'single-note') {
     return isCorrect ? 500 : 3000; // Quick for correct, longer for learning
   }
-  
+
   return DEFAULT_DELAY;
 }
 
@@ -39,8 +42,13 @@ export function getAutoAdvanceDelay(gameMode: GameSettings['gameMode'], isCorrec
  * @param correctAnswer - Array of correct notes
  * @returns True if answers match (order independent for non-sequence modes)
  */
-export function validateAnswer(userAnswer: string[], correctAnswer: string[]): boolean {
-  return JSON.stringify(userAnswer.sort()) === JSON.stringify(correctAnswer.sort());
+export function validateAnswer(
+  userAnswer: string[],
+  correctAnswer: string[],
+): boolean {
+  return (
+    JSON.stringify(userAnswer.sort()) === JSON.stringify(correctAnswer.sort())
+  );
 }
 
 /**
@@ -49,9 +57,12 @@ export function validateAnswer(userAnswer: string[], correctAnswer: string[]): b
  * @param correctSequence - Correct note sequence
  * @returns True if sequences match exactly in order
  */
-export function validateSequence(userSequence: string[], correctSequence: string[]): boolean {
+export function validateSequence(
+  userSequence: string[],
+  correctSequence: string[],
+): boolean {
   if (userSequence.length !== correctSequence.length) return false;
-  
+
   return userSequence.every((note, index) => note === correctSequence[index]);
 }
 
@@ -61,7 +72,10 @@ export function validateSequence(userSequence: string[], correctSequence: string
  * @param maxAllowedDiff - Maximum allowed difference for a hit
  * @returns Accuracy percentage (0-100)
  */
-export function calculateRhythmAccuracy(timingDiff: number, maxAllowedDiff: number): number {
+export function calculateRhythmAccuracy(
+  timingDiff: number,
+  maxAllowedDiff: number,
+): number {
   return Math.max(0, 100 - (timingDiff / maxAllowedDiff) * 100);
 }
 
@@ -72,7 +86,11 @@ export function calculateRhythmAccuracy(timingDiff: number, maxAllowedDiff: numb
  * @param tolerance - Acceptable timing tolerance in milliseconds
  * @returns True if hit is within tolerance
  */
-export function isRhythmHitValid(currentTime: number, targetTime: number, tolerance: number): boolean {
+export function isRhythmHitValid(
+  currentTime: number,
+  targetTime: number,
+  tolerance: number,
+): boolean {
   return Math.abs(currentTime - targetTime) <= tolerance;
 }
 
@@ -83,7 +101,11 @@ export function isRhythmHitValid(currentTime: number, targetTime: number, tolera
  * @param accuracy - Accuracy percentage (for rhythm mode)
  * @returns Points to award
  */
-export function calculatePoints(streak: number, basePoints: number = 10, accuracy: number = 100): number {
+export function calculatePoints(
+  streak: number,
+  basePoints = 10,
+  accuracy = 100,
+): number {
   const streakBonus = streak * 2;
   const accuracyMultiplier = accuracy / 100;
   return Math.round((basePoints + streakBonus) * accuracyMultiplier);
@@ -94,7 +116,10 @@ export function calculatePoints(streak: number, basePoints: number = 10, accurac
  * @param isCorrect - Whether the answer was correct
  * @param accuracy - Accuracy percentage (optional, for rhythm mode)
  */
-export function triggerGameHaptics(isCorrect: boolean, accuracy?: number): void {
+export function triggerGameHaptics(
+  isCorrect: boolean,
+  accuracy?: number,
+): void {
   if (isCorrect) {
     if (accuracy !== undefined) {
       // Rhythm mode - different feedback based on accuracy

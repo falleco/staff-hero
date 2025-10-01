@@ -1,134 +1,99 @@
+import { type Href, router } from 'expo-router';
+import React, { useEffect } from 'react';
+import { ScrollView, TouchableWithoutFeedback, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
+import PopupModal from '@/components/core/popup-modal';
 import { ThemedText } from '@/components/themed-text';
+import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { ModalHeader } from '@/components/ui/modal-header';
 import { useGame } from '@/contexts/game-context';
-import { GameSettings } from '@/types/music';
-import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-export default function GameModesScreen() {
-  const { gameSettings, updateSettings, startGame } = useGame();
+import type { GameSettings } from '@/types/music';
 
-  const gameModes: {
-    mode: GameSettings['gameMode'];
-    title: string;
-    description: string;
-    icon: string;
-  }[] = [
-    {
-      mode: 'single-note',
-      title: 'Single Note',
-      description: 'Identify individual notes on the staff. Perfect for beginners!',
-      icon: '🎵'
-    },
-    {
-      mode: 'sequence',
-      title: 'Note Sequence',
-      description: 'Identify multiple notes in the correct order. Build your skills!',
-      icon: '🎼'
-    },
-    {
-      mode: 'rhythm',
-      title: 'Rhythm Hero',
-      description: 'Guitar Hero style! Hit notes as they cross the line.',
-      icon: '🎸'
-    }
-  ];
+const gameModes: {
+  mode: GameSettings['gameMode'];
+  title: string;
+  description: string;
+  icon: string;
+  path: Href;
+}[] = [
+  {
+    mode: 'single-note',
+    title: 'Single Note',
+    description:
+      'Identify individual notes on the staff. Perfect for beginners!',
+    icon: '🎵',
+    path: '/game/single-note',
+  },
+  {
+    mode: 'sequence',
+    title: 'Note Sequence',
+    description:
+      'Identify multiple notes in the correct order. Build your skills!',
+    icon: '🎼',
+    path: '/game/sequence',
+  },
+  {
+    mode: 'rhythm',
+    title: 'Rhythm Hero',
+    description: 'Guitar Hero style! Hit notes as they cross the line.',
+    icon: '🎸',
+    path: '/game/sequence',
+  },
+];
+
+export default function GameModesScreen() {
+  const { updateSettings, startGame } = useGame();
+
+  const opacity = useSharedValue(0);
+
+  const backdropAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value * 0.6,
+  }));
+
+  useEffect(() => {
+    opacity.value = withTiming(1);
+  }, [opacity]);
 
   const handleModeSelect = (mode: GameSettings['gameMode']) => {
+    const gameMode = gameModes.find((gameMode) => gameMode.mode === mode)!;
     updateSettings({ gameMode: mode });
     startGame();
-    router.back();
-    router.push('/game');
-  };
-
-  const handleClose = () => {
-    router.back();
+    router.replace(gameMode.path);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-      <ModalHeader 
-        title="Choose Game Mode" 
-        onClose={handleClose}
-      />
-
-      <ScrollView className="p-5">
-        <View className="mb-8 p-5 bg-black/30 backdrop-blur-sm rounded-2xl border border-white/10">
-          <View className="flex-row items-center justify-center mb-4">
-            <View className="bg-blue-500/20 rounded-full p-2 mr-2">
-              <ThemedText className="text-lg">⚙️</ThemedText>
-            </View>
-            <ThemedText className="text-lg font-bold text-white">
-              CURRENT SETUP
-            </ThemedText>
-          </View>
-          <View className="space-y-2">
-            <View className="flex-row items-center justify-between bg-white/5 rounded-lg p-2">
-              <ThemedText className="text-sm text-white/70 font-medium">Notation</ThemedText>
-              <ThemedText className="text-sm text-white font-semibold">
-                {gameSettings.notationSystem === 'letter' ? '🔤 Letters' : '🎵 Solfege ✨'}
-              </ThemedText>
-            </View>
-            <View className="flex-row items-center justify-between bg-white/5 rounded-lg p-2">
-              <ThemedText className="text-sm text-white/70 font-medium">Labels</ThemedText>
-              <ThemedText className="text-sm text-white font-semibold">
-                {gameSettings.showNoteLabels ? '👁️ Visible ✨' : '🙈 Hidden'}
-              </ThemedText>
-            </View>
-            <View className="flex-row items-center justify-between bg-white/5 rounded-lg p-2">
-              <ThemedText className="text-sm text-white/70 font-medium">Difficulty</ThemedText>
-              <ThemedText className="text-sm text-white font-semibold">
-                🎯 {gameSettings.difficulty.charAt(0).toUpperCase() + gameSettings.difficulty.slice(1)}
-              </ThemedText>
-            </View>
-          </View>
-        </View>
-
-        <View className="space-y-4">
-          {gameModes.map((gameMode, index) => {
-            const gradients = [
-              'from-green-500 to-emerald-600',
-              'from-blue-500 to-cyan-600', 
-              'from-purple-500 to-violet-600'
-            ];
-            
-            return (
-              <Pressable
-                key={gameMode.mode}
-                className="relative overflow-hidden"
-                style={({ pressed }) => ({
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                })}
-                onPress={() => handleModeSelect(gameMode.mode)}
-              >
-                <View className={`bg-gradient-to-r ${gradients[index]} rounded-3xl p-6 shadow-2xl border-4 border-white/20`}>
-                  <View className="items-center">
-                    <View className="bg-white/20 rounded-full p-4 mb-4">
-                      <ThemedText className="text-4xl">
-                        {gameMode.icon}
-                      </ThemedText>
-                    </View>
-                    <ThemedText className="text-2xl font-black text-white mb-2 text-center">
-                      {gameMode.title.toUpperCase()}
-                    </ThemedText>
-                    <ThemedText className="text-base text-white/90 font-semibold text-center">
-                      {gameMode.description}
-                    </ThemedText>
-                  </View>
-                  {/* Shine effect */}
-                  <View className="absolute top-2 left-2 right-2 h-8 bg-white/20 rounded-2xl opacity-50" />
-                  
-                  {/* Play button overlay */}
-                  <View className="absolute top-4 right-4 bg-white/20 rounded-full p-2">
-                    <ThemedText className="text-lg">▶️</ThemedText>
-                  </View>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    // <PopupModal isVisible={true} onDismiss={() => router.back()}>
+    <View className="flex-1 justify-center items-center">
+      <TouchableWithoutFeedback onPress={() => router.back()}>
+        <Animated.View
+          className="absolute top-0 left-0 right-0 bottom-0 bg-black/60 justify-center items-center"
+          style={backdropAnimatedStyle}
+        />
+      </TouchableWithoutFeedback>
+      <View className="space-y-4 bg-red-600 border-2 border-white/20 rounded-3xl p-6">
+        {gameModes.map((gameMode, index) => {
+          return (
+            <FlatButton
+              key={gameMode.mode}
+              size="xl"
+              onPress={() => handleModeSelect(gameMode.mode)}
+              className="relative overflow-hidden rounded-3xl p-6"
+            >
+              <View className="items-center">
+                <FlatButtonText className="text-2xl font-black text-white mb-2 text-center font-boldpixels-medium">
+                  {gameMode.title.toUpperCase()}
+                </FlatButtonText>
+              </View>
+            </FlatButton>
+          );
+        })}
+      </View>
+    </View>
   );
 }

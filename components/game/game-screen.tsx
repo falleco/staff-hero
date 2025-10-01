@@ -1,28 +1,41 @@
+import React, { useEffect, useState } from 'react';
+import { Alert, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnswerButtons } from '@/components/game/answer-buttons';
 import { RhythmHero } from '@/components/game/rhythm-hero';
 import { ScoreDisplay } from '@/components/game/score-display';
 import { SequenceGame } from '@/components/game/sequence-game';
-import { MusicStaff } from '@/components/music/music-staff';
+import { MusicStaff } from '@/components/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useGame } from '@/contexts/game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { getAutoAdvanceDelay, getStreakLevel, triggerGameHaptics, validateAnswer } from '@/utils/game-logic';
-import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  getAutoAdvanceDelay,
+  getStreakLevel,
+  triggerGameHaptics,
+  validateAnswer,
+} from '@/utils/game-logic';
 
 interface GameScreenProps {
   onGameEnd?: () => void;
 }
 
-
 export function GameScreen({ onGameEnd }: GameScreenProps) {
-  const { gameState, gameSettings, submitAnswer, nextQuestion, endGame, generateNewQuestion } = useGame();
+  const {
+    gameState,
+    gameSettings,
+    submitAnswer,
+    nextQuestion,
+    endGame,
+    generateNewQuestion,
+  } = useGame();
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  
-  const tintColor = useThemeColor({}, 'tint');
+  const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
   const textColor = useThemeColor({}, 'text');
 
   // Generate new question when game starts or after answering
@@ -35,20 +48,23 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
   const handleAnswerSubmit = (answers: string[]) => {
     submitAnswer(answers);
     setShowFeedback(true);
-    
+
     // Use extracted business logic
-    const isCorrect = validateAnswer(answers, gameState.currentQuestion.correctAnswer);
+    const isCorrect = validateAnswer(
+      answers,
+      gameState.currentQuestion.correctAnswer,
+    );
     triggerGameHaptics(isCorrect);
 
     // Auto-advance timing based on game mode and correctness
     const delay = getAutoAdvanceDelay(gameSettings.gameMode, isCorrect);
-    
+
     const timeout = setTimeout(() => {
       setShowFeedback(false);
       nextQuestion();
       generateNewQuestion();
     }, delay);
-    
+
     setFeedbackTimeout(timeout);
   };
 
@@ -62,23 +78,18 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
   };
 
   const handleEndGame = () => {
-    Alert.alert(
-      'End Game',
-      'Are you sure you want to end the current game?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'End Game', 
-          style: 'destructive',
-          onPress: () => {
-            endGame();
-            onGameEnd?.();
-          }
-        }
-      ]
-    );
+    Alert.alert('End Game', 'Are you sure you want to end the current game?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'End Game',
+        style: 'destructive',
+        onPress: () => {
+          endGame();
+          onGameEnd?.();
+        },
+      },
+    ]);
   };
-
 
   if (!gameState.isGameActive) {
     return (
@@ -103,18 +114,18 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
           correctAnswers={gameState.correctAnswers}
           animateStreak={showFeedback && gameState.currentQuestion.isCorrect}
         />
-        
-        <Pressable
-          className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl px-4 py-2 border-2 border-white/20 shadow-lg"
-          style={({ pressed }) => ({
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-          })}
+
+        <Button
+          action="negative"
+          variant="solid"
+          size="sm"
           onPress={handleEndGame}
+          className="rounded-xl px-4 py-2"
         >
-          <ThemedText className="text-sm font-bold text-white">
+          <ButtonText className="text-sm font-bold text-white">
             END GAME
-          </ThemedText>
-        </Pressable>
+          </ButtonText>
+        </Button>
       </View>
 
       {/* Game content */}
@@ -122,23 +133,6 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
         {/* Render different game modes */}
         {gameSettings.gameMode === 'single-note' && (
           <>
-            {/* Instructions */}
-            <View className="px-6 py-6">
-              <View className="bg-black/30 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-                <View className="flex-row items-center justify-center mb-2">
-                  <View className="bg-yellow-500/20 rounded-full p-2 mr-2">
-                    <ThemedText className="text-lg">🎯</ThemedText>
-                  </View>
-                  <ThemedText className="text-xl font-black text-white">
-                    IDENTIFY THE NOTE
-                  </ThemedText>
-                </View>
-                <ThemedText className="text-sm text-center text-white/80 font-semibold">
-                  Using {gameSettings.notationSystem === 'letter' ? '🔤 Letter' : '🎵 Solfege'} Notation
-                </ThemedText>
-              </View>
-            </View>
-
             {/* Music Staff */}
             <View className="flex-1 justify-center items-center px-4">
               <MusicStaff
@@ -199,46 +193,65 @@ export function GameScreen({ onGameEnd }: GameScreenProps) {
         {showFeedback && (
           <View className="items-center mt-5 px-6">
             {/* Show feedback text only for incorrect answers in single-note mode, or always for other modes */}
-            {(gameSettings.gameMode !== 'single-note' || !gameState.currentQuestion.isCorrect) && (
-              <ThemedText 
+            {(gameSettings.gameMode !== 'single-note' ||
+              !gameState.currentQuestion.isCorrect) && (
+              <ThemedText
                 className="text-xl font-bold mb-2"
-                style={{ 
-                  color: gameState.currentQuestion.isCorrect ? '#4CAF50' : '#F44336' 
+                style={{
+                  color: gameState.currentQuestion.isCorrect
+                    ? '#4CAF50'
+                    : '#F44336',
                 }}
               >
-                {gameState.currentQuestion.isCorrect ? 'Correct! 🎉' : 'Try again! 💪'}
+                {gameState.currentQuestion.isCorrect
+                  ? 'Correct! 🎉'
+                  : 'Try again! 💪'}
               </ThemedText>
             )}
-            
+
             {/* Subtle correct indicator for single-note mode */}
-            {gameSettings.gameMode === 'single-note' && gameState.currentQuestion.isCorrect && (
-              <View className="items-center my-2">
-                <ThemedText className="text-2xl font-bold mb-1" style={{ color: '#4CAF50' }}>
-                  ✓
-                </ThemedText>
-                <ThemedText className="text-sm opacity-70 italic" style={{ color: textColor }}>
-                  Next question...
-                </ThemedText>
-              </View>
-            )}
-            
+            {gameSettings.gameMode === 'single-note' &&
+              gameState.currentQuestion.isCorrect && (
+                <View className="items-center my-2">
+                  <ThemedText
+                    className="text-2xl font-bold mb-1"
+                    style={{ color: '#4CAF50' }}
+                  >
+                    ✓
+                  </ThemedText>
+                  <ThemedText
+                    className="text-sm opacity-70 italic"
+                    style={{ color: textColor }}
+                  >
+                    Next question...
+                  </ThemedText>
+                </View>
+              )}
+
             {!gameState.currentQuestion.isCorrect && (
-              <ThemedText className="text-base mb-4 text-center" style={{ color: textColor }}>
-                Correct answer: {gameState.currentQuestion.correctAnswer.join(', ')}
+              <ThemedText
+                className="text-base mb-4 text-center"
+                style={{ color: textColor }}
+              >
+                Correct answer:{' '}
+                {gameState.currentQuestion.correctAnswer.join(', ')}
               </ThemedText>
             )}
-            
+
             {/* Show next button only for incorrect answers in single-note mode, or always for other modes */}
-            {(gameSettings.gameMode !== 'single-note' || !gameState.currentQuestion.isCorrect) && (
-              <Pressable
-                className="px-8 py-3 rounded-full"
-                style={{ backgroundColor: tintColor }}
+            {(gameSettings.gameMode !== 'single-note' ||
+              !gameState.currentQuestion.isCorrect) && (
+              <Button
+                action="primary"
+                variant="solid"
+                size="lg"
                 onPress={handleNextQuestion}
+                className="rounded-full px-8 py-3"
               >
-                <ThemedText className="text-white text-base font-semibold">
+                <ButtonText className="text-white text-base font-semibold">
                   Next Question
-                </ThemedText>
-              </Pressable>
+                </ButtonText>
+              </Button>
             )}
           </View>
         )}

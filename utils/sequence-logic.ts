@@ -19,11 +19,11 @@ export interface SequenceState {
 export function addNoteToSequence(
   currentState: SequenceState,
   noteName: string,
-  totalNotes: number
+  totalNotes: number,
 ): SequenceState {
   const newSequence = [...currentState.userSequence, noteName];
   const newIndex = currentState.currentNoteIndex + 1;
-  
+
   return {
     userSequence: newSequence,
     currentNoteIndex: newIndex,
@@ -51,7 +51,7 @@ export function resetSequence(): SequenceState {
  */
 export function validateSequenceWithFeedback(
   userSequence: string[],
-  correctSequence: string[]
+  correctSequence: string[],
 ): {
   isCorrect: boolean;
   correctPositions: number[];
@@ -81,7 +81,9 @@ export function validateSequenceWithFeedback(
   });
 
   return {
-    isCorrect: userSequence.length === correctSequence.length && wrongPositions.length === 0,
+    isCorrect:
+      userSequence.length === correctSequence.length &&
+      wrongPositions.length === 0,
     correctPositions,
     wrongPositions,
     missedNotes,
@@ -100,7 +102,7 @@ export function getSequenceButtonState(
   noteName: string,
   userSequence: string[],
   correctSequence: string[],
-  showFeedback: boolean
+  showFeedback: boolean,
 ): {
   backgroundColor: string;
   borderColor: string;
@@ -109,7 +111,7 @@ export function getSequenceButtonState(
   if (showFeedback) {
     const userIndex = userSequence.indexOf(noteName);
     const correctIndex = correctSequence.indexOf(noteName);
-    
+
     if (userIndex !== -1) {
       // User selected this note
       if (userIndex === correctIndex) {
@@ -118,14 +120,14 @@ export function getSequenceButtonState(
           borderColor: '#45a049',
           textColor: 'white',
         };
-      } else {
-        return {
-          backgroundColor: '#F44336',
-          borderColor: '#da190b',
-          textColor: 'white',
-        };
       }
-    } else if (correctSequence.includes(noteName)) {
+      return {
+        backgroundColor: '#F44336',
+        borderColor: '#da190b',
+        textColor: 'white',
+      };
+    }
+    if (correctSequence.includes(noteName)) {
       return {
         backgroundColor: '#FFC107',
         borderColor: '#FF8F00',
@@ -133,7 +135,7 @@ export function getSequenceButtonState(
       };
     }
   }
-  
+
   return {
     backgroundColor: '#f0f0f0',
     borderColor: '#ccc',

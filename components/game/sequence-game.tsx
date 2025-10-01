@@ -1,11 +1,12 @@
-import { MusicStaff } from '@/components/music/music-staff';
-import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { cn } from '@/lib/cn';
-import { GameSettings, Question } from '@/types/music';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { MusicStaff } from '@/components/music-staff';
+import { ThemedText } from '@/components/themed-text';
+import { Button, ButtonText } from '@/components/ui/gluestack-button';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
+import type { GameSettings, Question } from '@/types/music';
 
 interface SequenceGameProps {
   question: Question;
@@ -20,13 +21,12 @@ export function SequenceGame({
   gameSettings,
   onAnswerSubmit,
   showFeedback,
-  streakLevel
+  streakLevel,
 }: SequenceGameProps) {
   const [userSequence, setUserSequence] = useState<string[]>([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
-  
+
   const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
 
   // Reset sequence when new question
   useEffect(() => {
@@ -38,7 +38,7 @@ export function SequenceGame({
     if (showFeedback) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     const newSequence = [...userSequence, noteName];
     setUserSequence(newSequence);
     setCurrentNoteIndex(currentNoteIndex + 1);
@@ -57,7 +57,6 @@ export function SequenceGame({
     setCurrentNoteIndex(0);
   };
 
-
   const getButtonState = (noteName: string) => {
     const indexInSequence = userSequence.indexOf(noteName);
     if (indexInSequence >= 0) {
@@ -70,22 +69,32 @@ export function SequenceGame({
     <View className="flex-1">
       {/* Instructions */}
       <View className="px-6 py-4">
-        <ThemedText className="text-xl font-bold text-center mb-2" style={{ color: textColor }}>
+        <ThemedText
+          className="text-xl font-bold text-center mb-2"
+          style={{ color: textColor }}
+        >
           Identify the sequence:
         </ThemedText>
-        <ThemedText className="text-sm text-center opacity-70 mb-2" style={{ color: textColor }}>
-          Select notes from left to right ({userSequence.length}/{question.notes.length})
+        <ThemedText
+          className="text-sm text-center opacity-70 mb-2"
+          style={{ color: textColor }}
+        >
+          Select notes from left to right ({userSequence.length}/
+          {question.notes.length})
         </ThemedText>
-        
+
         {/* Progress indicator */}
         <View className="flex-row justify-center items-center gap-2 mt-2">
-          {question.notes.map((_, index) => (
+          {question.notes.map((note, index) => (
             <View
-              key={index}
+              key={note.name}
               className={cn(
-                "w-3 h-3 rounded-full",
-                index < userSequence.length ? "bg-green-500" : 
-                index === userSequence.length ? "bg-blue-500" : "bg-gray-300"
+                'w-3 h-3 rounded-full',
+                index < userSequence.length
+                  ? 'bg-green-500'
+                  : index === userSequence.length
+                    ? 'bg-blue-500'
+                    : 'bg-gray-300',
               )}
             />
           ))}
@@ -107,16 +116,22 @@ export function SequenceGame({
       {/* Selected sequence display */}
       {userSequence.length > 0 && (
         <View className="px-6 py-2">
-          <ThemedText className="text-center text-sm opacity-70 mb-2" style={{ color: textColor }}>
+          <ThemedText
+            className="text-center text-sm opacity-70 mb-2"
+            style={{ color: textColor }}
+          >
             Your sequence:
           </ThemedText>
           <View className="flex-row justify-center gap-2">
             {userSequence.map((note, index) => (
               <View
-                key={index}
+                key={`note-${note}`}
                 className="px-3 py-1 bg-green-100 rounded-lg"
               >
-                <ThemedText className="text-sm font-medium" style={{ color: textColor }}>
+                <ThemedText
+                  className="text-sm font-medium"
+                  style={{ color: textColor }}
+                >
                   {note}
                 </ThemedText>
               </View>
@@ -128,61 +143,55 @@ export function SequenceGame({
       {/* Answer Options */}
       <View className="pb-8">
         <View className="flex-row flex-wrap justify-center gap-3 px-4">
-          {question.options.map((option) => {
+          {question.options.map((option, index) => {
             const buttonState = getButtonState(option);
-            const isDisabled = showFeedback || (buttonState === 'selected');
-            
+            const isDisabled = showFeedback || buttonState === 'selected';
+            const isSelected = buttonState === 'selected';
+
+            const actions = [
+              'primary',
+              'positive',
+              'secondary',
+              'default',
+              'negative',
+            ] as const;
+            const action = isSelected
+              ? 'positive'
+              : actions[index % actions.length];
+
             return (
-              <Pressable
+              <Button
                 key={option}
-                className={cn(
-                  "px-6 py-3 rounded-xl border-2 min-w-[80px]",
-                  buttonState === 'selected' 
-                    ? "bg-green-500 border-green-500" 
-                    : "bg-transparent border-gray-300"
-                )}
-                style={({ pressed }) => ({
-                  backgroundColor: buttonState === 'selected' ? '#22C55E' :
-                                 pressed && !isDisabled ? `${tintColor}20` : 'transparent',
-                  borderColor: buttonState === 'selected' ? '#22C55E' :
-                              pressed && !isDisabled ? tintColor : '#ccc',
-                  transform: [{ scale: pressed && !isDisabled ? 0.95 : 1 }],
-                  opacity: isDisabled ? 0.7 : 1,
-                })}
+                action={action}
+                variant="solid"
+                size="lg"
                 onPress={() => handleNoteSelect(option)}
-                disabled={isDisabled}
+                isDisabled={isDisabled}
+                className="px-6 py-3 rounded-xl min-w-[80px]"
+                hapticFeedback={false} // We handle haptics manually
               >
-                <ThemedText
-                  className={cn(
-                    "text-center text-lg font-semibold",
-                    buttonState === 'selected' ? "text-white" : ""
-                  )}
-                  style={{
-                    color: buttonState === 'selected' ? 'white' : textColor,
-                  }}
-                >
+                <ButtonText className="text-center text-lg font-semibold text-white">
                   {option}
-                </ThemedText>
-              </Pressable>
+                </ButtonText>
+              </Button>
             );
           })}
         </View>
-        
+
         {/* Reset button */}
         {userSequence.length > 0 && !showFeedback && (
           <View className="items-center mt-4">
-            <Pressable
-              className="px-4 py-2 border border-gray-400 rounded-lg"
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-                transform: [{ scale: pressed ? 0.95 : 1 }],
-              })}
+            <Button
+              action="default"
+              variant="outline"
+              size="sm"
               onPress={handleReset}
+              className="px-4 py-2 rounded-lg"
             >
-              <ThemedText className="text-sm font-medium" style={{ color: textColor }}>
+              <ButtonText className="text-sm font-medium text-white">
                 Reset
-              </ThemedText>
-            </Pressable>
+              </ButtonText>
+            </Button>
           </View>
         )}
       </View>

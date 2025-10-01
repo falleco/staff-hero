@@ -1,7 +1,7 @@
-import { ThemedText } from '@/components/themed-text';
-import { calculateAccuracy } from '@/utils/music-utils';
 import React from 'react';
 import { Animated, View } from 'react-native';
+import { ThemedText } from '@/components/themed-text';
+import { calculateAccuracy } from '@/utils/music-utils';
 
 interface ScoreDisplayProps {
   score: number;
@@ -20,11 +20,10 @@ export function ScoreDisplay({
   totalQuestions,
   correctAnswers,
   showDetailed = false,
-  animateStreak = false
+  animateStreak = false,
 }: ScoreDisplayProps) {
-  
   const [streakAnimation] = React.useState(new Animated.Value(1));
-  
+
   React.useEffect(() => {
     if (animateStreak && streak > 0) {
       Animated.sequence([
@@ -71,7 +70,7 @@ export function ScoreDisplay({
         </View>
 
         <View className="flex-row justify-between items-center">
-          <Animated.View 
+          <Animated.View
             className="flex-row items-center bg-white/10 rounded-xl p-2"
             style={{ transform: [{ scale: streakAnimation }] }}
           >
@@ -79,7 +78,7 @@ export function ScoreDisplay({
               {getStreakEmoji()} STREAK: {streak}
             </ThemedText>
           </Animated.View>
-          
+
           <View className="bg-white/10 rounded-xl p-2">
             <ThemedText className="text-sm font-semibold text-white/80">
               BEST: {maxStreak}
@@ -90,9 +89,11 @@ export function ScoreDisplay({
         {streak >= 3 && (
           <View className="mt-3 p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl border border-yellow-500/30">
             <ThemedText className="text-sm text-center font-bold text-white">
-              {streak >= 10 ? '🔥 ON FIRE! 🔥' : 
-               streak >= 5 ? '⭐ HOT STREAK! ⭐' : 
-               '✨ GREAT STREAK! ✨'}
+              {streak >= 10
+                ? '🔥 ON FIRE! 🔥'
+                : streak >= 5
+                  ? '⭐ HOT STREAK! ⭐'
+                  : '✨ GREAT STREAK! ✨'}
             </ThemedText>
           </View>
         )}
@@ -108,8 +109,8 @@ export function ScoreDisplay({
           {score}
         </ThemedText>
       </View>
-      
-      <Animated.View 
+
+      <Animated.View
         className="bg-white/10 rounded-xl px-2 py-1"
         style={{ transform: [{ scale: streakAnimation }] }}
       >

@@ -39,6 +39,15 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/pixelpurl.ttf",
+            "./assets/fonts/tchaikovsky.ttf"
+          ]
+        }
       ]
     ],
     "experiments": {
