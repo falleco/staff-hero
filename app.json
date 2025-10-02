@@ -49,7 +49,8 @@
             "./assets/fonts/tchaikovsky.ttf"
           ]
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -254,7 +254,7 @@ export default function SequenceGame() {
                 >
                   <Image
                     style={{ width: 16, height: 16 }}
-                    source={require('@/assets/images/hud/close.svg')}
+                    source={require('@/assets/images/hud/close.png')}
                   />
                 </FlatButton>
               )}

@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { type Href, router } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ScrollView, TouchableWithoutFeedback, View } from 'react-native';
@@ -68,7 +69,6 @@ export default function GameModesScreen() {
   };
 
   return (
-    // <PopupModal isVisible={true} onDismiss={() => router.back()}>
     <View className="flex-1 justify-center items-center">
       <TouchableWithoutFeedback onPress={() => router.back()}>
         <Animated.View
@@ -76,14 +76,26 @@ export default function GameModesScreen() {
           style={backdropAnimatedStyle}
         />
       </TouchableWithoutFeedback>
-      <View className="space-y-4 bg-red-600 border-2 border-white/20 rounded-3xl p-6">
+      <View className="space-y-4 bg-[#160E22EE] border-2 border-white/20 rounded-3xl p-6 items-center relative">
+        <View className="absolute -top-16 left-0 right-0 justify-center items-center">
+          <Image
+            source={require('@/assets/images/hud/dices_red_512.png')}
+            style={{
+              width: 100,
+              height: 100,
+              marginLeft: 20,
+            }}
+            contentFit="cover"
+            transition={1000}
+          />
+        </View>
         {gameModes.map((gameMode, index) => {
           return (
             <FlatButton
               key={gameMode.mode}
               size="xl"
               onPress={() => handleModeSelect(gameMode.mode)}
-              className="relative overflow-hidden rounded-3xl p-6"
+              className="relative overflow-hidden rounded-3xl px-6"
             >
               <View className="items-center">
                 <FlatButtonText className="text-2xl font-black text-white mb-2 text-center font-boldpixels-medium">

@@ -1,11 +1,11 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { TabBar } from '@/components/tab-bar';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Image } from "expo-image";
+import { Tabs } from "expo-router";
+import React from "react";
+import { TabBar } from "@/components/core/tab-bar";
+import { HapticTab } from "@/components/haptic-tab";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -13,19 +13,19 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
         tabBarButton: HapticTab,
       }}
       tabBar={(props) => <TabBar {...props} />}
     >
       <Tabs.Screen
-        name="luthery"
+        name="explore"
         options={{
+          title: "Stats",
           headerShown: false,
-          title: 'Luthery',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="play.circle.fill" color={color} />
+            <IconSymbol size={28} name="chart.bar.fill" color={color} />
           ),
         }}
       />
@@ -33,19 +33,22 @@ export default function TabLayout() {
         name="index"
         options={{
           headerShown: false,
-          title: 'Play',
+          title: "Play",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="play.circle.fill" color={color} />
+            <Image
+              source={require("@/assets/images/hud/combat_512.png")}
+              className="w-28 h-28"
+            />
           ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="luthery"
         options={{
-          title: 'Stats',
           headerShown: false,
+          title: "Luthery",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="chart.bar.fill" color={color} />
+            <IconSymbol size={28} name="play.circle.fill" color={color} />
           ),
         }}
       />

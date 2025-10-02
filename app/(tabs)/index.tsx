@@ -2,11 +2,11 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { GameModeModal } from '@/modals/game-mode.modal';
 
 export default function HomeTab() {
   const { top } = useSafeAreaInsets();
@@ -16,11 +16,6 @@ export default function HomeTab() {
     router.push('/settings');
   };
 
-  const [isGameModeModalVisible, setIsGameModeModalVisible] = useState(false);
-  const handleGameModeModalDismiss = () => {
-    setIsGameModeModalVisible(false);
-  };
-
   const handleStartGamePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/game-modes');
@@ -28,57 +23,56 @@ export default function HomeTab() {
 
   return (
     <>
-      <GameModeModal
-        isVisible={isGameModeModalVisible}
-        onDismiss={handleGameModeModalDismiss}
+      <Image
+        style={{
+          width: '100%',
+          height: '100%',
+          flex: 1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}
+        source={require('@/assets/images/bgs/city_purple_night.png')}
+        contentFit="cover"
+        transition={1000}
       />
+
       <View
-        className="flex-1 flex-col justify-center items-center p-6"
+        className="flex-1 flex-col justify-center items-center"
         style={{ paddingTop: top }}
       >
-        <LinearGradient
-          colors={['#9F7FFF', '#8055FE']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            flex: 1,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
-        />
-
         <View className="w-full h-auto flex-grow-0 flex-row justify-between items-center">
           <FlatButton
             size="lg"
             onPress={handleSettingsPress}
-            className="p-1 m-1 justify-start flex-col items-center gap-2"
+            className="flex-col items-center"
           >
             <Image
-              style={{ width: 32, height: 32 }}
-              source={require('@/assets/images/hud/cog.svg')}
+              style={{ width: 72, height: 72, marginLeft: -16, marginTop: -12 }}
+              source={require('@/assets/images/hud/settings.png')}
             />
-            <Text className="text-center text-md text-white -mt-2 font-pixelpurl-medium">
+            <Text className="text-center text-md text-white -mt-4 font-pixelpurl-medium -ml-4">
               settings
             </Text>
           </FlatButton>
           <FlatButton
             size="lg"
             onPress={handleSettingsPress}
-            className="p-1 m-1 justify-start flex-col items-center gap-2"
+            className="justify-start flex-col items-center"
           >
             <Image
-              style={{ width: 32, height: 32 }}
-              source={require('@/assets/images/hud/medal.svg')}
+              style={{ width: 48, height: 48, marginTop: 6 }}
+              source={require('@/assets/images/hud/book.png')}
             />
-            <Text className="text-center text-md text-white -mt-2 font-pixelpurl-medium">
+            <Text className="text-center text-md text-white font-pixelpurl-medium">
               challenges
             </Text>
           </FlatButton>
         </View>
-        <View className="flex-grow justify-center items-center">
+        <View className="flex-grow" />
+        <View className="flex-grow-0 justify-center items-center pb-56">
           <FlatButton
             size="xl"
             onPress={handleStartGamePress}
@@ -90,6 +84,10 @@ export default function HomeTab() {
           </FlatButton>
         </View>
       </View>
+      <StatusBar
+        style="light"
+        animated={true}
+      />
     </>
   );
 }
