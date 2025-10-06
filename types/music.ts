@@ -160,6 +160,46 @@ export interface LuthierService {
   type: 'tune' | 'buy' | 'upgrade';
 }
 
+// Equipment system types
+export enum EquipmentCategory {
+  MANTLE = 'mantle',
+  ADORNMENTS = 'adornments',
+  INSTRUMENTS = 'instruments',
+}
+
+export enum EquipmentRarity {
+  COMMON = 'common',
+  RARE = 'rare',
+  EPIC = 'epic',
+  LEGENDARY = 'legendary',
+}
+
+export interface Equipment {
+  id: string;
+  name: string;
+  category: EquipmentCategory;
+  rarity: EquipmentRarity;
+  level: number;
+  bonuses: {
+    scoreBonus: number;
+    accuracyBonus: number;
+    streakBonus: number;
+    specialEffect?: string;
+  };
+  price: number; // Cost in golden note shards
+  upgradePrice: number; // Cost to upgrade
+  icon: string;
+  description: string;
+  isOwned: boolean;
+  isEquipped: boolean;
+}
+
+export interface UserEquipment {
+  mantle: Equipment | null;
+  adornments: Equipment[];
+  instruments: Equipment | null;
+}
+
 // Notation display mappings - each notation system maps Notes enum to display names
 export const NOTATION_MAPPINGS = {
   [NotationSystem.LETTER]: {

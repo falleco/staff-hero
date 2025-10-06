@@ -96,7 +96,7 @@ export default function LuthierTab() {
   );
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor }}>
+    <SafeAreaView className="flex-1 pb-20" style={{ backgroundColor }}>
       <ScrollView
         className="flex-1"
         refreshControl={
