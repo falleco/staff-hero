@@ -1,13 +1,13 @@
-import React, { useEffect } from "react";
-import { Pressable, type PressableProps, Text } from "react-native";
+import React, { useEffect } from 'react';
+import { Pressable, type PressableProps, Text } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-} from "react-native-reanimated";
-import { cn } from "@/lib/cn";
-import { icons } from "../icons";
+} from 'react-native-reanimated';
+import { cn } from '@/lib/cn';
+import { icons } from '../icons';
 
 export interface TabBarButtonProps extends PressableProps {
   isFocused: boolean;
@@ -22,8 +22,8 @@ export const TabBarButton = (props: TabBarButtonProps) => {
 
   useEffect(() => {
     scale.value = withSpring(
-      typeof isFocused === "boolean" ? (isFocused ? 1 : 0) : isFocused,
-      { duration: 350 }
+      typeof isFocused === 'boolean' ? (isFocused ? 1 : 0) : isFocused,
+      { duration: 350 },
     );
   }, [scale, isFocused]);
 
@@ -38,19 +38,23 @@ export const TabBarButton = (props: TabBarButtonProps) => {
   });
 
   return (
-    <Pressable {...props} className={cn("flex-1 justify-between items-center")}>
+    <Pressable {...props} className={cn('flex-1 justify-between items-center')}>
       <Animated.View
         style={[animatedIconStyle]}
         className={cn(
-          "flex-1 border-[#361848] rounded-full w-20 h-20 justify-center items-center ",
+          'flex-1 border-[#361848] rounded-full w-20 h-20 justify-center items-center ',
           props.className,
-          isFocused ? "border-4 bg-[#160E22]" : "border-0"
+          isFocused ? 'border-4 bg-[#160E22]' : 'border-0',
         )}
       >
         {icons[routeName as keyof typeof icons]({
           color,
         })}
-        {isFocused && <Text className="text-white text-xs p-0 -mt-2 font-pixelpurl-medium">{label}</Text>}
+        {isFocused && (
+          <Text className="text-white text-xs p-0 -mt-2 font-pixelpurl-medium">
+            {label}
+          </Text>
+        )}
       </Animated.View>
     </Pressable>
   );

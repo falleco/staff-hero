@@ -1,11 +1,11 @@
-import { Image } from "expo-image";
-import { Tabs } from "expo-router";
-import React from "react";
-import { TabBar } from "@/components/core/tab-bar";
-import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Image } from 'expo-image';
+import { Tabs } from 'expo-router';
+import React from 'react';
+import { TabBar } from '@/components/core/tab-bar';
+import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -13,7 +13,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
       }}
@@ -22,7 +22,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Stats",
+          title: 'Stats',
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="chart.bar.fill" color={color} />
@@ -33,10 +33,10 @@ export default function TabLayout() {
         name="index"
         options={{
           headerShown: false,
-          title: "Play",
+          title: 'Play',
           tabBarIcon: ({ color }) => (
             <Image
-              source={require("@/assets/images/hud/combat_512.png")}
+              source={require('@/assets/images/hud/combat_512.png')}
               className="w-28 h-28"
             />
           ),
@@ -46,7 +46,7 @@ export default function TabLayout() {
         name="luthery"
         options={{
           headerShown: false,
-          title: "Luthery",
+          title: 'Luthery',
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="play.circle.fill" color={color} />
           ),

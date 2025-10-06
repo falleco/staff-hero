@@ -63,7 +63,7 @@ export default function RootLayout() {
               options={{
                 presentation: 'transparentModal',
                 headerShown: false,
-                animation: 'fade'
+                animation: 'fade',
               }}
             />
             <Stack.Screen

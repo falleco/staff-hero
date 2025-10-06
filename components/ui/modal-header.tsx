@@ -1,9 +1,9 @@
-import { Image } from "expo-image";
-import React from "react";
-import { View } from "react-native";
-import { ThemedText } from "@/components/themed-text";
-import { Button, ButtonText } from "@/components/ui/gluestack-button";
-import { FlatButton } from "../core/flat-button";
+import { Image } from 'expo-image';
+import React from 'react';
+import { View } from 'react-native';
+import { ThemedText } from '@/components/themed-text';
+import { Button, ButtonText } from '@/components/ui/gluestack-button';
+import { FlatButton } from '../core/flat-button';
 
 interface ModalHeaderProps {
   title: string;
@@ -23,7 +23,7 @@ export function ModalHeader({ title, onClose }: ModalHeaderProps) {
       <FlatButton size="lg" onPress={onClose} className="p-0 m-0">
         <Image
           style={{ width: 64, height: 64 }}
-          source={require("@/assets/images/hud/close.png")}
+          source={require('@/assets/images/hud/close.png')}
         />
       </FlatButton>
     </View>

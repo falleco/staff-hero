@@ -29,7 +29,7 @@ const PopupModal: React.FC<PopupModalProps> = ({
     if (!isVisible) Keyboard.dismiss();
   }, [isVisible, opacity]);
 
-//   if (!isVisible) return null;
+  //   if (!isVisible) return null;
 
   return (
     <Modal transparent visible={isVisible}>

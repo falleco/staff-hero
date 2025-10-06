@@ -10,7 +10,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { Difficulty, NotationSystem } from '@/types/music';
 
 export default function SettingsScreen() {
-  const { gameSettings, updateSettings } = useGameContext();
+  const { gameSettings } = useGameContext();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
 
@@ -57,8 +57,8 @@ export default function SettingsScreen() {
                 description: 'C, D, E, F, G, A, B',
               },
             ]}
-            currentValue={gameSettings.notationSystem}
-            onValueChange={(value) => updateSettings({ notationSystem: value })}
+            currentValue={gameSettings.gameSettings.notationSystem}
+            onValueChange={(value) => gameSettings.updateNotationSystem(value)}
           />
         </SettingSection>
 
@@ -83,8 +83,8 @@ export default function SettingsScreen() {
                 description: 'C3 to B6 - Full range with many ledger lines',
               },
             ]}
-            currentValue={gameSettings.difficulty}
-            onValueChange={(value) => updateSettings({ difficulty: value })}
+            currentValue={gameSettings.gameSettings.difficulty}
+            onValueChange={(value) => gameSettings.updateDifficulty(value)}
           />
         </SettingSection>
 
@@ -104,8 +104,10 @@ export default function SettingsScreen() {
                 description: 'Challenge mode - no hints shown',
               },
             ]}
-            currentValue={gameSettings.showNoteLabels}
-            onValueChange={(value) => updateSettings({ showNoteLabels: value })}
+            currentValue={gameSettings.gameSettings.showNoteLabels}
+            onValueChange={(value) =>
+              gameSettings.updateSettings({ showNoteLabels: value })
+            }
           />
         </SettingSection>
 

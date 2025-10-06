@@ -20,16 +20,14 @@ import {
   triggerGameHaptics,
   validateAnswer,
 } from '@/utils/game-logic';
+import {
+  convertDisplayNamesToNotes,
+  getNoteDisplayName,
+  isAnswerCorrect,
+} from '@/utils/music-utils';
 
 export default function SequenceGame() {
-  const {
-    gameState,
-    gameSettings,
-    submitAnswer,
-    nextQuestion,
-    endGame,
-    generateNewQuestion,
-  } = useGameContext();
+  const { gameLogic, gameSettings } = useGameContext();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -42,16 +40,26 @@ export default function SequenceGame() {
 
   // Generate new question when game starts or after answering
   useEffect(() => {
-    if (gameState.isGameActive && !gameState.currentQuestion.notes.length) {
-      generateNewQuestion();
+    if (
+      gameLogic.gameState.isGameActive &&
+      !gameLogic.gameState.currentQuestion.notes.length
+    ) {
+      gameLogic.generateNewQuestion(gameSettings.gameSettings);
     }
-  }, [gameState.isGameActive, gameState.currentQuestion, generateNewQuestion]);
+  }, [
+    gameLogic.gameState.isGameActive,
+    gameLogic.gameState.currentQuestion,
+    gameLogic.generateNewQuestion,
+  ]);
 
   // Reset sequence when new question
   useEffect(() => {
     setUserSequence([]);
     setCurrentNoteIndex(0);
-  }, [gameState.currentQuestion.id, gameState.currentQuestion.notes]);
+  }, [
+    gameLogic.gameState.currentQuestion.id,
+    gameLogic.gameState.currentQuestion.notes,
+  ]);
 
   const handleNoteSelect = (noteName: string) => {
     if (showFeedback) return;
@@ -63,36 +71,46 @@ export default function SequenceGame() {
     setCurrentNoteIndex(currentNoteIndex + 1);
 
     // If sequence is complete, submit answer
-    if (newSequence.length === gameState.currentQuestion.notes.length) {
+    if (
+      newSequence.length === gameLogic.gameState.currentQuestion.notes.length
+    ) {
       handleAnswerSubmit(newSequence);
     }
   };
 
   const answerSequence = useMemo(() => {
     return Object.assign(
-      new Array(gameState.currentQuestion.notes.length).fill(null),
+      new Array(gameLogic.gameState.currentQuestion.notes.length).fill(null),
       userSequence,
     );
-  }, [gameState.currentQuestion.notes, userSequence]);
+  }, [gameLogic.gameState.currentQuestion.notes, userSequence]);
 
   const handleAnswerSubmit = (answers: string[]) => {
-    submitAnswer(answers);
+    // Convert display names to Notes enum values
+    const notesAnswer = convertDisplayNamesToNotes(
+      answers,
+      gameSettings.gameSettings.notationSystem,
+    );
+    gameLogic.submitAnswer(notesAnswer);
     setShowFeedback(true);
 
-    // Use extracted business logic
-    const isCorrect = validateAnswer(
-      answers,
-      gameState.currentQuestion.correctAnswer,
+    // Use extracted business logic - compare with actual notes
+    const correctNotes = gameLogic.gameState.currentQuestion.notes.map(
+      (note) => note.name,
     );
+    const isCorrect = validateAnswer(notesAnswer, correctNotes);
     triggerGameHaptics(isCorrect);
 
     // Auto-advance timing based on game mode and correctness
-    const delay = getAutoAdvanceDelay(gameSettings.gameMode, isCorrect);
+    const delay = getAutoAdvanceDelay(
+      gameSettings.gameSettings.gameMode,
+      isCorrect,
+    );
 
     const timeout = setTimeout(() => {
       setShowFeedback(false);
-      nextQuestion();
-      generateNewQuestion();
+      gameLogic.nextQuestion();
+      gameLogic.generateNewQuestion(gameSettings.gameSettings);
     }, delay);
 
     setFeedbackTimeout(timeout);
@@ -113,14 +131,14 @@ export default function SequenceGame() {
         text: 'End Game',
         style: 'destructive',
         onPress: () => {
-          endGame();
+          gameLogic.endGame(gameSettings.gameSettings);
           router.back();
         },
       },
     ]);
   };
 
-  if (!gameState.isGameActive) {
+  if (!gameLogic.gameState.isGameActive) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
         <ThemedText className="text-2xl font-bold">Game Not Active</ThemedText>
@@ -152,12 +170,14 @@ export default function SequenceGame() {
         style={{ paddingTop: top }}
       >
         <ScoreDisplay
-          score={gameState.score}
-          streak={gameState.streak}
-          maxStreak={gameState.maxStreak}
-          totalQuestions={gameState.totalQuestions}
-          correctAnswers={gameState.correctAnswers}
-          animateStreak={showFeedback && gameState.currentQuestion.isCorrect}
+          score={gameLogic.gameState.score}
+          streak={gameLogic.gameState.streak}
+          maxStreak={gameLogic.gameState.maxStreak}
+          totalQuestions={gameLogic.gameState.totalQuestions}
+          correctAnswers={gameLogic.gameState.correctAnswers}
+          animateStreak={
+            showFeedback && isAnswerCorrect(gameLogic.gameState.currentQuestion)
+          }
         />
 
         <FlatButton
@@ -186,12 +206,12 @@ export default function SequenceGame() {
             style={{ color: textColor }}
           >
             Select notes from left to right ({userSequence.length}/
-            {gameState.currentQuestion.notes.length})
+            {gameLogic.gameState.currentQuestion.notes.length})
           </ThemedText>
 
           {/* Progress indicator */}
           <View className="flex-row justify-center items-center gap-2 mt-2">
-            {gameState.currentQuestion.notes.map((note, index) => (
+            {gameLogic.gameState.currentQuestion.notes.map((note, index) => (
               <View
                 key={`${note.name}-${index}`}
                 className={cn(
@@ -210,12 +230,12 @@ export default function SequenceGame() {
         {/* Music Staff */}
         <View className="flex-1 justify-center items-center px-4">
           <MusicStaff
-            notes={gameState.currentQuestion.notes}
+            notes={gameLogic.gameState.currentQuestion.notes}
             showFeedback={showFeedback}
-            isCorrect={gameState.currentQuestion.isCorrect}
-            showNoteLabels={gameSettings.showNoteLabels}
-            notationSystem={gameSettings.notationSystem}
-            streakLevel={getStreakLevel(gameState.streak)}
+            isCorrect={isAnswerCorrect(gameLogic.gameState.currentQuestion)}
+            showNoteLabels={gameSettings.gameSettings.showNoteLabels}
+            notationSystem={gameSettings.gameSettings.notationSystem}
+            streakLevel={getStreakLevel(gameLogic.gameState.streak)}
             width={350}
             height={180}
           />
@@ -264,7 +284,7 @@ export default function SequenceGame() {
         {/* Answer Options */}
         <View className="pb-8">
           <AnswerButtons
-            options={gameState.currentQuestion.options}
+            options={gameLogic.gameState.currentQuestion.options}
             onAnswerSubmit={handleNoteSelect}
           />
         </View>

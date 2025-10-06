@@ -1,253 +1,51 @@
-import React, { createContext, type ReactNode, useReducer } from 'react';
-import type { GameSession } from '@/types/analytics';
-import type { GameSettings, GameState, Question } from '@/types/music';
-import { Difficulty, GameMode, NotationSystem } from '@/types/music';
-import { addGameSession } from '@/utils/analytics-storage';
-import { generateQuestion } from '@/utils/music-utils';
+import React, { createContext, type ReactNode } from 'react';
+import type { UseGameLogicReturn } from '@/hooks/use-game-logic';
+import { useGameLogic } from '@/hooks/use-game-logic';
+import type { UseGameSettingsReturn } from '@/hooks/use-game-settings';
+import { useGameSettings } from '@/hooks/use-game-settings';
 
 interface GameContextType {
-  gameState: GameState;
-  gameSettings: GameSettings;
-  updateSettings: (settings: Partial<GameSettings>) => void;
-  startGame: () => void;
-  endGame: () => void;
-  submitAnswer: (answer: string[]) => void;
-  nextQuestion: () => void;
-  resetStreak: () => void;
-  generateNewQuestion: () => void;
+  gameLogic: UseGameLogicReturn;
+  gameSettings: UseGameSettingsReturn;
 }
 
-type GameAction =
-  | { type: 'UPDATE_SETTINGS'; payload: Partial<GameSettings> }
-  | { type: 'START_GAME' }
-  | { type: 'END_GAME' }
-  | { type: 'SUBMIT_ANSWER'; payload: string[] }
-  | { type: 'NEXT_QUESTION' }
-  | { type: 'RESET_STREAK' }
-  | { type: 'SET_QUESTION'; payload: Question };
-
-const initialGameState: GameState = {
-  score: 0,
-  streak: 0,
-  maxStreak: 0,
-  totalQuestions: 0,
-  correctAnswers: 0,
-  currentQuestion: {
-    id: '',
-    notes: [],
-    correctAnswer: [],
-    options: [],
-    answered: false,
-  },
-  isGameActive: false,
-};
-
-// Track game session for analytics
-let gameStartTime = 0;
-
-const initialGameSettings: GameSettings = {
-  notationSystem: NotationSystem.SOLFEGE,
-  difficulty: Difficulty.BEGINNER,
-  gameMode: GameMode.SINGLE_NOTE,
-  showNoteLabels: true, // Default to visible for beginners
-};
-
-function gameReducer(state: GameState, action: GameAction): GameState {
-  switch (action.type) {
-    case 'START_GAME':
-      gameStartTime = Date.now();
-      return {
-        ...state,
-        isGameActive: true,
-        score: 0,
-        streak: 0,
-        maxStreak: 0,
-        totalQuestions: 0,
-        correctAnswers: 0,
-      };
-
-    case 'END_GAME':
-      return {
-        ...state,
-        isGameActive: false,
-        currentQuestion: {
-          id: '',
-          notes: [],
-          correctAnswer: [],
-          options: [],
-          answered: false,
-        },
-      };
-
-    case 'SUBMIT_ANSWER': {
-      const isCorrect =
-        JSON.stringify(action.payload.sort()) ===
-        JSON.stringify(state.currentQuestion.correctAnswer.sort());
-
-      // Comprehensive answer logging
-      console.log('🎯 ANSWER SUBMITTED:');
-      console.log('  Question ID:', state.currentQuestion.id);
-      console.log(
-        '  Notes shown:',
-        state.currentQuestion.notes.map(
-          (n) => `${n.name}${n.octave} at position ${n.staffPosition}`,
-        ),
-      );
-      console.log('  Expected answer:', state.currentQuestion.correctAnswer);
-      console.log('  User selected:', action.payload);
-      console.log('  Result:', isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
-      if (!isCorrect) {
-        console.log('  ❗ Mismatch details:');
-        console.log(
-          '    Expected (sorted):',
-          state.currentQuestion.correctAnswer.sort(),
-        );
-        console.log('    User answer (sorted):', action.payload.sort());
-      }
-      console.log(
-        '  Current streak:',
-        state.streak,
-        '→',
-        isCorrect ? state.streak + 1 : 0,
-      );
-      console.log('---');
-
-      const newStreak = isCorrect ? state.streak + 1 : 0;
-      const points = isCorrect ? 10 + state.streak * 2 : 0;
-
-      return {
-        ...state,
-        currentQuestion: {
-          ...state.currentQuestion,
-          answered: true,
-          isCorrect,
-          userAnswer: action.payload,
-        },
-        score: state.score + points,
-        streak: newStreak,
-        maxStreak: Math.max(state.maxStreak, newStreak),
-        totalQuestions: state.totalQuestions + 1,
-        correctAnswers: state.correctAnswers + (isCorrect ? 1 : 0),
-      };
-    }
-
-    case 'NEXT_QUESTION':
-      return {
-        ...state,
-        currentQuestion: {
-          id: '',
-          notes: [],
-          correctAnswer: [],
-          options: [],
-          answered: false,
-        },
-      };
-
-    case 'SET_QUESTION':
-      return {
-        ...state,
-        currentQuestion: action.payload,
-      };
-
-    case 'RESET_STREAK':
-      return {
-        ...state,
-        streak: 0,
-      };
-
-    default:
-      return state;
-  }
-}
+/**
+ * Game context that provides access to game logic and settings hooks
+ * This context serves as a centralized provider for game-related functionality
+ */
 
 export const GameContext = createContext<GameContextType | undefined>(
   undefined,
 );
 
+/**
+ * Game provider component that initializes and provides game logic and settings hooks
+ *
+ * This provider creates instances of the game logic and settings hooks and makes them
+ * available through context to all child components. It serves as the single source
+ * of truth for game state and configuration.
+ *
+ * @param children - Child components that need access to game functionality
+ *
+ * @example
+ * ```tsx
+ * function App() {
+ *   return (
+ *     <GameProvider>
+ *       <GameScreen />
+ *       <SettingsScreen />
+ *     </GameProvider>
+ *   );
+ * }
+ * ```
+ */
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
-  const [gameSettings, setGameSettings] =
-    React.useState<GameSettings>(initialGameSettings);
-
-  const updateSettings = (settings: Partial<GameSettings>) => {
-    setGameSettings((prev) => ({ ...prev, ...settings }));
-  };
-
-  const startGame = () => {
-    console.log('🎮 GAME STARTED:');
-    console.log('  Notation system:', gameSettings.notationSystem);
-    console.log('  Difficulty:', gameSettings.difficulty);
-    console.log('  Game mode:', gameSettings.gameMode);
-    console.log('  Show labels:', gameSettings.showNoteLabels);
-    console.log('====================');
-    dispatch({ type: 'START_GAME' });
-  };
-
-  const endGame = async () => {
-    // Save game session to analytics before ending
-    if (gameState.isGameActive && gameStartTime > 0) {
-      const duration = Math.floor((Date.now() - gameStartTime) / 1000);
-      const accuracy =
-        gameState.totalQuestions > 0
-          ? Math.round(
-              (gameState.correctAnswers / gameState.totalQuestions) * 100,
-            )
-          : 0;
-
-      const session: GameSession = {
-        id: `session_${Date.now()}`,
-        date: new Date().toISOString(),
-        gameMode: gameSettings.gameMode,
-        difficulty: gameSettings.difficulty,
-        notationSystem: gameSettings.notationSystem,
-        score: gameState.score,
-        streak: gameState.streak,
-        maxStreak: gameState.maxStreak,
-        totalQuestions: gameState.totalQuestions,
-        correctAnswers: gameState.correctAnswers,
-        accuracy,
-        duration,
-      };
-
-      try {
-        await addGameSession(session);
-      } catch (error) {
-        console.error('Error saving game session:', error);
-      }
-    }
-
-    dispatch({ type: 'END_GAME' });
-  };
-
-  const submitAnswer = (answer: string[]) => {
-    dispatch({ type: 'SUBMIT_ANSWER', payload: answer });
-  };
-
-  const nextQuestion = () => {
-    dispatch({ type: 'NEXT_QUESTION' });
-  };
-
-  const resetStreak = () => {
-    dispatch({ type: 'RESET_STREAK' });
-  };
-
-  const generateNewQuestion = () => {
-    const newQuestion = generateQuestion(gameSettings);
-    console.log('🔄 GENERATING NEW QUESTION');
-    console.log('  Game settings:', gameSettings);
-    dispatch({ type: 'SET_QUESTION', payload: newQuestion });
-  };
+  const gameLogic = useGameLogic();
+  const gameSettings = useGameSettings();
 
   const value: GameContextType = {
-    gameState,
+    gameLogic,
     gameSettings,
-    updateSettings,
-    startGame,
-    endGame,
-    submitAnswer,
-    nextQuestion,
-    resetStreak,
-    generateNewQuestion,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

@@ -39,8 +39,8 @@ export interface Note {
   octave: number;
   // Position on the staff (0 = middle line, negative = below, positive = above)
   staffPosition: number;
-  // Whether the note requires a ledger line
-  requiresLedgerLine: boolean;
+  // Duration of the note (4 = whole note, 2 = half note, 1 = quarter note, etc.)
+  duration: number;
   // Note symbol type (for different note durations)
   symbolId?: string;
 }
@@ -67,16 +67,10 @@ export interface GameState {
 export interface Question {
   id: string;
   notes: Note[];
-  correctAnswer: string[];
   options: string[];
   answered: boolean;
-  isCorrect?: boolean;
-  userAnswer?: string[];
-  // For sequence mode
-  isSequenceMode?: boolean;
-  userSequence?: string[];
+  userAnswer?: Notes[];
   // For rhythm mode
-  isRhythmMode?: boolean;
   noteTimings?: number[]; // When each note should be played (in ms)
   userTimings?: number[]; // When user actually pressed (in ms)
 }
@@ -86,8 +80,8 @@ export interface ScoreHistory {
   score: number;
   streak: number;
   accuracy: number;
-  gameMode: string;
-  difficulty: string;
+  gameMode: GameMode;
+  difficulty: Difficulty;
 }
 
 // Notation display mappings - each notation system maps Notes enum to display names

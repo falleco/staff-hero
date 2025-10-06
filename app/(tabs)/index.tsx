@@ -84,10 +84,7 @@ export default function HomeTab() {
           </FlatButton>
         </View>
       </View>
-      <StatusBar
-        style="light"
-        animated={true}
-      />
+      <StatusBar style="light" animated={true} />
     </>
   );
 }

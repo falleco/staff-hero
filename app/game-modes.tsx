@@ -45,7 +45,7 @@ const gameModes: {
 ];
 
 export default function GameModesScreen() {
-  const { updateSettings, startGame } = useGameContext();
+  const { gameLogic, gameSettings } = useGameContext();
 
   const opacity = useSharedValue(0);
 
@@ -57,10 +57,10 @@ export default function GameModesScreen() {
     opacity.value = withTiming(1);
   }, [opacity]);
 
-  const handleModeSelect = (mode: GameSettings['gameMode']) => {
+  const handleModeSelect = (mode: GameMode) => {
     const gameMode = gameModes.find((gameMode) => gameMode.mode === mode)!;
-    updateSettings({ gameMode: mode });
-    startGame();
+    gameSettings.updateGameMode(mode);
+    gameLogic.startGame(gameSettings.gameSettings);
     router.replace(gameMode.path);
   };
 

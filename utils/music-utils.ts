@@ -53,7 +53,7 @@ export function generateRandomNote(
       name: Notes.C,
       octave: 5,
       staffPosition: 1,
-      requiresLedgerLine: false,
+      duration: DEFAULT_NOTE_SYMBOL.duration,
       symbolId: DEFAULT_NOTE_SYMBOL.id,
     };
   }
@@ -67,7 +67,7 @@ export function generateRandomNote(
     name: noteInfo.name,
     octave: noteInfo.octave,
     staffPosition: randomPosition,
-    requiresLedgerLine: randomPosition > 7 || randomPosition < -1,
+    duration: randomSymbol.duration,
     symbolId: randomSymbol.id,
   };
 }
@@ -95,6 +95,67 @@ export function getNoteDisplayName(
   notationSystem: NotationSystem,
 ): string {
   return NOTATION_MAPPINGS[notationSystem][noteName as Notes];
+}
+
+/**
+ * Converts display string back to Notes enum value
+ * @param displayName - The display name (e.g., "Do", "C")
+ * @param notationSystem - The notation system being used
+ * @returns The corresponding Notes enum value
+ */
+export function getNotesFromDisplayName(
+  displayName: string,
+  notationSystem: NotationSystem,
+): Notes | null {
+  const mapping = NOTATION_MAPPINGS[notationSystem];
+  for (const [note, display] of Object.entries(mapping)) {
+    if (display === displayName) {
+      return note as Notes;
+    }
+  }
+  return null;
+}
+
+/**
+ * Converts array of display strings to Notes enum values
+ * @param displayNames - Array of display names
+ * @param notationSystem - The notation system being used
+ * @returns Array of Notes enum values
+ */
+export function convertDisplayNamesToNotes(
+  displayNames: string[],
+  notationSystem: NotationSystem,
+): Notes[] {
+  return displayNames
+    .map((name) => getNotesFromDisplayName(name, notationSystem))
+    .filter((note): note is Notes => note !== null);
+}
+
+/**
+ * Checks if a staff position requires ledger lines
+ * @param staffPosition - The position on the staff
+ * @returns True if ledger lines are required
+ */
+export function requiresLedgerLines(staffPosition: number): boolean {
+  return Math.abs(staffPosition) > 4;
+}
+
+/**
+ * Calculates if the user's answer is correct by comparing with question notes
+ * @param question - The current question
+ * @returns True if the user's answer matches the expected notes
+ */
+export function isAnswerCorrect(question: Question): boolean {
+  if (!question.userAnswer || question.userAnswer.length === 0) {
+    return false;
+  }
+
+  const correctNotes = question.notes.map((note) => note.name);
+  const userNotes = question.userAnswer;
+
+  return (
+    JSON.stringify(userNotes.sort()) === JSON.stringify(correctNotes.sort())
+  );
 }
 
 // Generate all 7 note options (always show all notes for selection)
@@ -127,9 +188,6 @@ export function generateQuestion(settings: GameSettings): Question {
             1;
 
   const notes = generateRandomNotes(noteCount, settings.difficulty);
-  const correctAnswer = notes.map((note) =>
-    getNoteDisplayName(note.name, settings.notationSystem),
-  );
 
   // Always show all 7 note options for selection
   const allOptions = generateAllNoteOptions(settings.notationSystem);
@@ -140,24 +198,22 @@ export function generateQuestion(settings: GameSettings): Question {
     '  Notes on staff:',
     notes.map((n) => `${n.name}${n.octave} at position ${n.staffPosition}`),
   );
-  console.log('  Expected answer(s):', notes, correctAnswer);
+  console.log(
+    '  Expected answer(s):',
+    notes.map((n) => n.name),
+  );
   console.log('  Available options:', allOptions);
   console.log('  Notation system:', settings.notationSystem);
 
   const question: Question = {
     id: `question_${Date.now()}_${Math.random()}`,
     notes,
-    correctAnswer,
     options: allOptions,
     answered: false,
   };
 
   // Add mode-specific properties
-  if (settings.gameMode === GameMode.SEQUENCE) {
-    question.isSequenceMode = true;
-    question.userSequence = [];
-  } else if (settings.gameMode === GameMode.RHYTHM) {
-    question.isRhythmMode = true;
+  if (settings.gameMode === GameMode.RHYTHM) {
     question.noteTimings = notes.map((_, index) => (index + 1) * 1000); // Notes every second
     question.userTimings = [];
   }
@@ -189,11 +245,6 @@ export function getDifficultyNoteRange(difficulty: Difficulty): {
     default:
       return { minOctave: 4, maxOctave: 5 };
   }
-}
-
-// Check if a staff position requires ledger lines
-export function requiresLedgerLines(staffPosition: number): boolean {
-  return Math.abs(staffPosition) > 4;
 }
 
 // Get the color for visual feedback

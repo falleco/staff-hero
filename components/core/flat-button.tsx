@@ -1,9 +1,9 @@
-import { useAnimatedBounce } from '@/hooks/animations/use-animated-bounce';
-import { cn } from '@/lib/cn';
 import * as Haptics from 'expo-haptics';
 import type React from 'react';
 import { Pressable, type StyleProp, Text, type TextStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { useAnimatedBounce } from '@/hooks/animations/use-animated-bounce';
+import { cn } from '@/lib/cn';
 
 type FlatButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 

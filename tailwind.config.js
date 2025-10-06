@@ -10,12 +10,12 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        "pixelpurl-medium": ["PixelPurl-Medium"],
-        "tchaikovsky-medium": ["Tchaikovsky-Medium"],
-        "pcsenior-medium": ["PCSenior-Medium"],
-        "november-medium": ["November-Medium"],
-        "boldpixels-medium": ["BoldPixels-Medium"],
-        "manaspace-medium": ["Manaspace-Medium"],
+        'pixelpurl-medium': ['PixelPurl-Medium'],
+        'tchaikovsky-medium': ['Tchaikovsky-Medium'],
+        'pcsenior-medium': ['PCSenior-Medium'],
+        'november-medium': ['November-Medium'],
+        'boldpixels-medium': ['BoldPixels-Medium'],
+        'manaspace-medium': ['Manaspace-Medium'],
       },
     },
   },
