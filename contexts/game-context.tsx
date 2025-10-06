@@ -1,8 +1,9 @@
-import React, { createContext, type ReactNode } from 'react';
+import React, { createContext, type ReactNode, useEffect } from 'react';
 import type { UseGameLogicReturn } from '@/hooks/use-game-logic';
 import { useGameLogic } from '@/hooks/use-game-logic';
 import type { UseGameSettingsReturn } from '@/hooks/use-game-settings';
 import { useGameSettings } from '@/hooks/use-game-settings';
+import { useChallenges } from '@/hooks/use-challenges';
 
 interface GameContextType {
   gameLogic: UseGameLogicReturn;
@@ -42,6 +43,12 @@ export const GameContext = createContext<GameContextType | undefined>(
 export function GameProvider({ children }: { children: ReactNode }) {
   const gameLogic = useGameLogic();
   const gameSettings = useGameSettings();
+  const { updateChallengeProgress } = useChallenges();
+
+  // Connect challenge tracking to game logic
+  useEffect(() => {
+    gameLogic.setChallengeProgressCallback(updateChallengeProgress);
+  }, [gameLogic, updateChallengeProgress]);
 
   const value: GameContextType = {
     gameLogic,

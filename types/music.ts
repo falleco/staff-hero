@@ -84,6 +84,82 @@ export interface ScoreHistory {
   difficulty: Difficulty;
 }
 
+// Challenge system types
+export enum ChallengeType {
+  DOMINATE_NOTES = 'dominate-notes',
+  SCORE_POINTS = 'score-points',
+  BATTLE_COUNT = 'battle-count',
+}
+
+export enum ChallengeStatus {
+  AVAILABLE = 'available',
+  IN_PROGRESS = 'in-progress',
+  COMPLETED = 'completed',
+  REDEEMED = 'redeemed',
+}
+
+export interface Challenge {
+  id: string;
+  type: ChallengeType;
+  title: string;
+  description: string;
+  icon: string;
+  requirement: number;
+  progress: number;
+  reward: number; // Golden note shards
+  status: ChallengeStatus;
+  targetRoute?: string; // Where to navigate when user clicks "Go"
+}
+
+export interface UserCurrency {
+  goldenNoteShards: number;
+}
+
+// Instrument system types
+export enum InstrumentType {
+  VIOLIN = 'violin',
+  GUITAR = 'guitar',
+  PIANO = 'piano',
+  FLUTE = 'flute',
+}
+
+export enum InstrumentRarity {
+  COMMON = 'common',
+  RARE = 'rare',
+  EPIC = 'epic',
+  LEGENDARY = 'legendary',
+}
+
+export interface Instrument {
+  id: string;
+  name: string;
+  type: InstrumentType;
+  rarity: InstrumentRarity;
+  level: number;
+  tuning: number; // 0-100, affects accuracy bonus
+  bonuses: {
+    scoreMultiplier: number;
+    accuracyBonus: number;
+    streakBonus: number;
+  };
+  price: number; // Cost in golden note shards
+  upgradePrice: number; // Cost to upgrade
+  tunePrice: number; // Cost to tune
+  icon: string;
+  description: string;
+  isOwned: boolean;
+  isEquipped: boolean;
+}
+
+export interface LuthierService {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  basePrice: number;
+  type: 'tune' | 'buy' | 'upgrade';
+}
+
 // Notation display mappings - each notation system maps Notes enum to display names
 export const NOTATION_MAPPINGS = {
   [NotationSystem.LETTER]: {

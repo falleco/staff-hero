@@ -16,6 +16,11 @@ export default function HomeTab() {
     router.push('/settings');
   };
 
+  const handleChallengesPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/challenges');
+  };
+
   const handleStartGamePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/game-modes');
@@ -59,7 +64,7 @@ export default function HomeTab() {
           </FlatButton>
           <FlatButton
             size="lg"
-            onPress={handleSettingsPress}
+            onPress={handleChallengesPress}
             className="justify-start flex-col items-center"
           >
             <Image

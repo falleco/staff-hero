@@ -20,9 +20,9 @@ export default function TabLayout() {
       tabBar={(props) => <TabBar {...props} />}
     >
       <Tabs.Screen
-        name="explore"
+        name="equipment"
         options={{
-          title: 'Stats',
+          title: 'Bag',
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="chart.bar.fill" color={color} />
@@ -43,10 +43,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="luthery"
+        name="luthier"
         options={{
           headerShown: false,
-          title: 'Luthery',
+          title: 'Luthier',
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="play.circle.fill" color={color} />
           ),

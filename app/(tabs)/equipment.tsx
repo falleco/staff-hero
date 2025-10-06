@@ -1,5 +1,5 @@
 import { AnalyticsScreen } from '@/components/screens/analytics-screen';
 
-export default function AnalyticsTab() {
+export default function EquipmentsTab() {
   return <AnalyticsScreen />;
 }

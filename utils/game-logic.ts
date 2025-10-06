@@ -1,5 +1,4 @@
 import * as Haptics from 'expo-haptics';
-import type { GameSettings } from '@/types/music';
 import { GameMode } from '@/types/music';
 
 /**

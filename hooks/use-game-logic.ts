@@ -1,6 +1,7 @@
 import { useReducer } from 'react';
 import type { GameSession } from '@/types/analytics';
 import type { GameSettings, GameState, Notes, Question } from '@/types/music';
+import { ChallengeType } from '@/types/music';
 import { addGameSession } from '@/utils/analytics-storage';
 import { generateQuestion } from '@/utils/music-utils';
 
@@ -149,6 +150,8 @@ export interface UseGameLogicReturn {
   resetStreak: () => void;
   /** Generate and set a new question based on current settings */
   generateNewQuestion: (gameSettings: GameSettings) => void;
+  /** Set callback for challenge progress updates */
+  setChallengeProgressCallback: (callback: (type: ChallengeType, amount: number) => void) => void;
 }
 
 /**
@@ -181,6 +184,7 @@ export interface UseGameLogicReturn {
  */
 export function useGameLogic(): UseGameLogicReturn {
   const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
+  let challengeProgressCallback: ((type: ChallengeType, amount: number) => void) | null = null;
 
   /**
    * Starts a new game session with the provided settings
@@ -196,6 +200,11 @@ export function useGameLogic(): UseGameLogicReturn {
     console.log('  Show labels:', gameSettings.showNoteLabels);
     console.log('====================');
     dispatch({ type: 'START_GAME' });
+    
+    // Update challenge progress for battle count
+    if (challengeProgressCallback) {
+      challengeProgressCallback(ChallengeType.BATTLE_COUNT, 1);
+    }
   };
 
   /**
@@ -248,6 +257,17 @@ export function useGameLogic(): UseGameLogicReturn {
    */
   const submitAnswer = (answer: Notes[]) => {
     dispatch({ type: 'SUBMIT_ANSWER', payload: answer });
+    
+    // Update challenge progress for score points
+    if (challengeProgressCallback) {
+      const correctNotes = gameState.currentQuestion.notes.map((note) => note.name);
+      const isCorrect = JSON.stringify(answer.sort()) === JSON.stringify(correctNotes.sort());
+      
+      if (isCorrect) {
+        const points = 10 + gameState.streak * 2;
+        challengeProgressCallback(ChallengeType.SCORE_POINTS, points);
+      }
+    }
   };
 
   /**
@@ -277,6 +297,19 @@ export function useGameLogic(): UseGameLogicReturn {
     console.log('🔄 GENERATING NEW QUESTION');
     console.log('  Game settings:', gameSettings);
     dispatch({ type: 'SET_QUESTION', payload: newQuestion });
+    
+    // Update challenge progress for dominate notes (simplified - just playing counts)
+    if (challengeProgressCallback) {
+      challengeProgressCallback(ChallengeType.DOMINATE_NOTES, 1);
+    }
+  };
+
+  /**
+   * Sets the callback function for challenge progress updates
+   * @param callback - Function to call when challenge progress should be updated
+   */
+  const setChallengeProgressCallback = (callback: (type: ChallengeType, amount: number) => void) => {
+    challengeProgressCallback = callback;
   };
 
   return {
@@ -287,5 +320,6 @@ export function useGameLogic(): UseGameLogicReturn {
     nextQuestion,
     resetStreak,
     generateNewQuestion,
+    setChallengeProgressCallback,
   };
 }

@@ -1,4 +1,3 @@
-import { AntDesign, Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 
 export const icons = {
@@ -10,7 +9,7 @@ export const icons = {
       style={{ width: 56, height: 56 }}
     />
   ),
-  explore: (props: any) => (
+  equipment: (props: any) => (
     <Image
       contentFit="cover"
       transition={1000}
@@ -18,9 +17,7 @@ export const icons = {
       style={{ width: 56, height: 56 }}
     />
   ),
-  create: (props: any) => <AntDesign name="pluscircleo" size={26} {...props} />,
-  profile: (props: any) => <AntDesign name="user" size={26} {...props} />,
-  luthery: (props: any) => (
+  luthier: (props: any) => (
     <Image
       contentFit="cover"
       transition={1000}

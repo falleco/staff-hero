@@ -53,9 +53,17 @@ export default function RootLayout() {
             <Stack.Screen
               name="settings"
               options={{
-                presentation: 'modal',
+                presentation: 'card',
+                animation: 'slide_from_left',
                 headerShown: false,
-                title: 'Settings',
+              }}
+            />
+            <Stack.Screen
+              name="challenges"
+              options={{
+                presentation: 'card',
+                headerShown: false,
+                animation: 'slide_from_right',
               }}
             />
             <Stack.Screen
