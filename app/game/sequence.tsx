@@ -11,7 +11,7 @@ import { ScoreDisplay } from '@/components/game/score-display';
 import { MusicStaff } from '@/components/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useGame } from '@/contexts/game-context';
+import { useGameContext } from '@/hooks/use-game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { cn } from '@/lib/cn';
 import {
@@ -29,7 +29,7 @@ export default function SequenceGame() {
     nextQuestion,
     endGame,
     generateNewQuestion,
-  } = useGame();
+  } = useGameContext();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -105,7 +105,6 @@ export default function SequenceGame() {
     setUserSequence([]);
     setCurrentNoteIndex(0);
   };
-
 
   const handleEndGame = () => {
     Alert.alert('End Game', 'Are you sure you want to end the current game?', [

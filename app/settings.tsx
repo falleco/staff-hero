@@ -5,12 +5,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ModalHeader } from '@/components/ui/modal-header';
 import { SettingOption } from '@/components/ui/setting-option';
-import { useGame } from '@/contexts/game-context';
+import { useGameContext } from '@/hooks/use-game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import type { NotationSystem } from '@/types/music';
 
 export default function SettingsScreen() {
-  const { gameSettings, updateSettings } = useGame();
+  const { gameSettings, updateSettings } = useGameContext();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
 
@@ -38,11 +38,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
-      <ModalHeader
-        title="⚙️ Settings"
-        onClose={handleClose}
-        closeButtonText="Done"
-      />
+      <ModalHeader title="⚙️ Settings" onClose={handleClose} />
 
       <ScrollView className="p-5">
         <SettingSection title="🎼 Music Notation">

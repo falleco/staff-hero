@@ -2,10 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, View } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
 import { AnswerButtons } from '@/components/game/answer-buttons';
 import { ScoreDisplay } from '@/components/game/score-display';
@@ -13,7 +10,7 @@ import { MusicStaff } from '@/components/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { useGame } from '@/contexts/game-context';
+import { useGameContext } from '@/hooks/use-game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   getAutoAdvanceDelay,
@@ -34,7 +31,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
     nextQuestion,
     endGame,
     generateNewQuestion,
-  } = useGame();
+  } = useGameContext();
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout

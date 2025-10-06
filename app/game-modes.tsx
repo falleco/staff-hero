@@ -1,19 +1,14 @@
 import { Image } from 'expo-image';
 import { type Href, router } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ScrollView, TouchableWithoutFeedback, View } from 'react-native';
+import { TouchableWithoutFeedback, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import PopupModal from '@/components/core/popup-modal';
-import { ThemedText } from '@/components/themed-text';
-import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { ModalHeader } from '@/components/ui/modal-header';
-import { useGame } from '@/contexts/game-context';
+import { useGameContext } from '@/hooks/use-game-context';
 import type { GameSettings } from '@/types/music';
 
 const gameModes: {
@@ -49,7 +44,7 @@ const gameModes: {
 ];
 
 export default function GameModesScreen() {
-  const { updateSettings, startGame } = useGame();
+  const { updateSettings, startGame } = useGameContext();
 
   const opacity = useSharedValue(0);
 

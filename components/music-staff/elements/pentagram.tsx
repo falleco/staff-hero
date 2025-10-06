@@ -134,6 +134,7 @@ export const Pentagram = ({
                 x={noteX}
                 y={noteY}
                 scale={0.035}
+                onDestroy={() => {}}
               />
             );
           })}
