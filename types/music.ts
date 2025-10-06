@@ -200,6 +200,69 @@ export interface UserEquipment {
   instruments: Equipment | null;
 }
 
+// Settings system types
+export enum SettingActionType {
+  NAVIGATION = 'navigation',
+  TOGGLE = 'toggle',
+  SELECTION = 'selection',
+  ACTION = 'action',
+  EXTERNAL_LINK = 'external-link',
+}
+
+export interface SettingItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  icon: string;
+  actionType: SettingActionType;
+  route?: string; // For navigation
+  options?: { label: string; value: any; description?: string }[]; // For selection
+  currentValue?: any; // Current selected value
+  onPress?: () => void; // For actions
+  externalUrl?: string; // For external links
+  isEnabled?: boolean; // For toggles
+  isDangerous?: boolean; // For danger zone items
+}
+
+export interface SettingSection {
+  id: string;
+  title: string;
+  items: SettingItem[];
+}
+
+export interface AppSettings {
+  // Account
+  username: string;
+  isConnected: boolean;
+  
+  // Gameplay (already exists in GameSettings)
+  
+  // General
+  pushNotifications: {
+    enabled: boolean;
+    challenges: boolean;
+    achievements: boolean;
+    dailyReminders: boolean;
+  };
+  soundAndVibrations: {
+    soundEffects: boolean;
+    music: boolean;
+    hapticFeedback: boolean;
+    volume: number; // 0-100
+  };
+  graphics: {
+    quality: 'low' | 'medium' | 'high';
+    animations: boolean;
+    particleEffects: boolean;
+    frameRate: 30 | 60;
+  };
+  networking: {
+    autoSync: boolean;
+    wifiOnly: boolean;
+    backgroundSync: boolean;
+  };
+}
+
 // Notation display mappings - each notation system maps Notes enum to display names
 export const NOTATION_MAPPINGS = {
   [NotationSystem.LETTER]: {
