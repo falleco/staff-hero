@@ -24,6 +24,7 @@ import {
   getNoteDisplayName,
   isAnswerCorrect,
 } from '@/utils/music-utils';
+import { useNoteAnimations } from '@/hooks/use-note-animations';
 
 interface GameScreenProps {
   onGameEnd?: () => void;
@@ -31,6 +32,14 @@ interface GameScreenProps {
 
 export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
   const { gameLogic, gameSettings } = useGameContext();
+  const {
+    animatedNotes,
+    setNotesWithCreation,
+    triggerDestruction,
+    handleNoteAnimationComplete,
+    isAnimating,
+  } = useNoteAnimations();
+  
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -48,11 +57,16 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
       gameLogic.generateNewQuestion(gameSettings.gameSettings);
     }
   }, [
-    gameLogic.gameState.isGameActive,
-    gameLogic.gameState.currentQuestion,
-    gameLogic.generateNewQuestion,
+    gameLogic,
     gameSettings.gameSettings,
   ]);
+
+  // Update animated notes when question changes
+  useEffect(() => {
+    if (gameLogic.gameState.currentQuestion.notes.length > 0) {
+      setNotesWithCreation(gameLogic.gameState.currentQuestion.notes);
+    }
+  }, [gameLogic.gameState.currentQuestion.notes, setNotesWithCreation]);
 
   const handleAnswerSubmit = (answers: string) => {
     // Convert display name to Notes enum value
@@ -76,10 +90,21 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
       isCorrect,
     );
 
-    const timeout = setTimeout(() => {
+    // Trigger note destruction animation
+    triggerDestruction(isCorrect, () => {
+      // Animation complete - proceed to next question
       setShowFeedback(false);
       gameLogic.nextQuestion();
       gameLogic.generateNewQuestion(gameSettings.gameSettings);
+    });
+
+    const timeout = setTimeout(() => {
+      // Fallback in case animation doesn't complete
+      if (!isAnimating) {
+        setShowFeedback(false);
+        gameLogic.nextQuestion();
+        gameLogic.generateNewQuestion(gameSettings.gameSettings);
+      }
     }, delay);
 
     setFeedbackTimeout(timeout);
@@ -166,7 +191,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
         {/* Music Staff */}
         <View className="flex-1 justify-center items-center px-4">
           <MusicStaff
-            notes={gameLogic.gameState.currentQuestion.notes}
+            notes={animatedNotes}
             showFeedback={showFeedback}
             isCorrect={isAnswerCorrect(gameLogic.gameState.currentQuestion)}
             showNoteLabels={gameSettings.gameSettings.showNoteLabels}
@@ -174,6 +199,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
             streakLevel={getStreakLevel(gameLogic.gameState.streak)}
             width={350}
             height={180}
+            onNoteAnimationComplete={handleNoteAnimationComplete}
           />
         </View>
 

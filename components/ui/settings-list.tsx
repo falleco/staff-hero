@@ -3,12 +3,14 @@ import type React from 'react';
 import { Alert, Pressable, Switch, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import type { SettingItem, SettingSection } from '@/types/music';
 import { SettingActionType } from '@/types/music';
 
 interface SettingsListProps {
   sections: SettingSection[];
   onItemPress?: (item: SettingItem) => void;
+  className?: string;
 }
 
 interface SettingItemRowProps {
@@ -140,12 +142,16 @@ function SettingItemRow({ item, onPress }: SettingItemRowProps) {
  * @param sections - Array of setting sections to display
  * @param onItemPress - Optional callback when an item is pressed
  */
-export function SettingsList({ sections, onItemPress }: SettingsListProps) {
+export function SettingsList({
+  sections,
+  onItemPress,
+  className,
+}: SettingsListProps) {
   const textColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'background');
 
   return (
-    <View className="flex-1">
+    <View className={cn('flex-1', className)}>
       {sections.map((section, sectionIndex) => (
         <View key={section.id} className="mb-6">
           {/* Section Header */}

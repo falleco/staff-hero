@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import type React from 'react';
-import { ScrollView, Alert } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FloatingButton } from '@/components/core/floating-button';
 import { ModalHeader } from '@/components/ui/modal-header';
 import { SettingsList } from '@/components/ui/settings-list';
 import { useAppSettings } from '@/hooks/use-app-settings';
@@ -36,7 +37,7 @@ export default function SettingsScreen() {
         },
       ],
       'plain-text',
-      appSettings.username
+      appSettings.username,
     );
   };
 
@@ -44,14 +45,18 @@ export default function SettingsScreen() {
     await toggleConnection();
     Alert.alert(
       appSettings.isConnected ? 'Disconnected' : 'Connected',
-      appSettings.isConnected 
+      appSettings.isConnected
         ? 'Your progress will no longer be synced'
-        : 'Your progress is now being synced to the cloud'
+        : 'Your progress is now being synced to the cloud',
     );
   };
 
   const handleComingSoon = (feature: string) => {
-    Alert.alert('Coming Soon', `${feature} will be available in a future update!`, [{ text: 'OK' }]);
+    Alert.alert(
+      'Coming Soon',
+      `${feature} will be available in a future update!`,
+      [{ text: 'OK' }],
+    );
   };
 
   const sections: SettingSection[] = [
@@ -123,7 +128,9 @@ export default function SettingsScreen() {
         {
           id: 'push-notifications',
           title: 'Push Notifications',
-          subtitle: appSettings.pushNotifications.enabled ? 'Enabled' : 'Disabled',
+          subtitle: appSettings.pushNotifications.enabled
+            ? 'Enabled'
+            : 'Disabled',
           icon: '🔔',
           actionType: SettingActionType.NAVIGATION,
           route: '/settings/push-notifications',
@@ -147,7 +154,9 @@ export default function SettingsScreen() {
         {
           id: 'networking',
           title: 'Networking',
-          subtitle: appSettings.networking.autoSync ? 'Auto sync enabled' : 'Manual sync only',
+          subtitle: appSettings.networking.autoSync
+            ? 'Auto sync enabled'
+            : 'Manual sync only',
           icon: '🌐',
           actionType: SettingActionType.NAVIGATION,
           route: '/settings/networking',
@@ -238,7 +247,7 @@ export default function SettingsScreen() {
                   style: 'destructive',
                   onPress: () => handleComingSoon('Account deletion'),
                 },
-              ]
+              ],
             );
           },
         },
@@ -248,11 +257,16 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
-      <ModalHeader title="⚙️ Settings" onClose={handleClose} />
-
-      <ScrollView className="flex-1 p-5">
+      <ScrollView className="flex-1 p-5" contentContainerClassName='pb-20'>
         <SettingsList sections={sections} />
       </ScrollView>
+      <View className="absolute bottom-10 right-0 left-0 justify-center items-center p-0 m-0">
+        <FloatingButton
+          size="lg"
+          className="self-center"
+          onPress={handleClose}
+        />
+      </View>
     </SafeAreaView>
   );
 }

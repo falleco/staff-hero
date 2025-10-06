@@ -82,7 +82,7 @@ export default function GameModesScreen() {
               marginLeft: 20,
             }}
             contentFit="cover"
-            transition={1000}
+            // transition={1000}
           />
         </View>
         {gameModes.map((gameMode, index) => {

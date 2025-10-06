@@ -142,7 +142,7 @@ export function InstrumentCard({
 
   return (
     <View
-      className="mb-4 p-4 rounded-xl border border-gray-200"
+      className="mb-4 p-4 rounded-2xl border-2 border-gray-200"
       style={{ backgroundColor: cardBackgroundColor }}
     >
       {/* Header */}

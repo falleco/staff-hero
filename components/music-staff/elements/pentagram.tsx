@@ -18,6 +18,7 @@ interface PentagramProps {
   renderExtras?: () => React.ReactNode;
   scale?: number;
   notes: Note[];
+  onNoteAnimationComplete?: (noteId?: string) => void;
 }
 
 const LINE_COUNT = 5;
@@ -39,6 +40,7 @@ export const Pentagram = ({
   renderExtras,
   scale = 1,
   notes = [],
+  onNoteAnimationComplete,
 }: PentagramProps) => {
   const baseLineY = height / 2 - lineSpacing * 2;
 
@@ -129,12 +131,15 @@ export const Pentagram = ({
 
             return (
               <SemibreveNote
-                key={`note-${noteX}-${noteY}`}
+                key={note.noteId || `note-${noteX}-${noteY}`}
                 color={color}
                 x={noteX}
                 y={noteY}
                 scale={0.035}
-                onDestroy={() => {}}
+                state={note.state}
+                animation={note.animation}
+                noteId={note.noteId}
+                onAnimationComplete={onNoteAnimationComplete}
               />
             );
           })}

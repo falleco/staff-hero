@@ -55,6 +55,7 @@ export function generateRandomNote(
       staffPosition: 1,
       duration: DEFAULT_NOTE_SYMBOL.duration,
       symbolId: DEFAULT_NOTE_SYMBOL.id,
+      noteId: `C5_1_${Date.now()}_${Math.random()}`,
     };
   }
 
@@ -69,6 +70,7 @@ export function generateRandomNote(
     staffPosition: randomPosition,
     duration: randomSymbol.duration,
     symbolId: randomSymbol.id,
+    noteId: `${noteInfo.name}${noteInfo.octave}_${randomPosition}_${Date.now()}_${Math.random()}`,
   };
 }
 

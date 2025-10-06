@@ -19,6 +19,7 @@ interface MusicStaffProps {
   showNoteLabels?: boolean;
   notationSystem?: NotationSystem;
   streakLevel?: number; // 0 = no streak, 1-3 = dancing levels
+  onNoteAnimationComplete?: (noteId?: string) => void;
 }
 
 export function MusicStaff({
@@ -28,6 +29,7 @@ export function MusicStaff({
   showNoteLabels = true,
   notationSystem = NotationSystem.SOLFEGE,
   streakLevel = 0,
+  onNoteAnimationComplete,
 }: MusicStaffProps) {
   const staffColor = useThemeColor({}, 'text');
 
@@ -101,6 +103,7 @@ export function MusicStaff({
         color={staffColor}
         renderExtras={renderNoteLabels}
         notes={notes}
+        onNoteAnimationComplete={onNoteAnimationComplete}
       />
     </View>
   );

@@ -12,6 +12,7 @@ import { MusicStaff } from '@/components/music-staff';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useGameContext } from '@/hooks/use-game-context';
+import { useNoteAnimations } from '@/hooks/use-note-animations';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { cn } from '@/lib/cn';
 import {
@@ -28,6 +29,15 @@ import {
 
 export default function SequenceGame() {
   const { gameLogic, gameSettings } = useGameContext();
+  const {
+    animatedNotes,
+    setNotesWithCreation,
+    triggerSequenceNoteFeedback,
+    highlightNoteAtIndex,
+    handleNoteAnimationComplete,
+    isAnimating,
+  } = useNoteAnimations();
+
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -51,6 +61,13 @@ export default function SequenceGame() {
     gameLogic.gameState.currentQuestion,
     gameLogic.generateNewQuestion,
   ]);
+
+  // Update animated notes when question changes
+  useEffect(() => {
+    if (gameLogic.gameState.currentQuestion.notes.length > 0) {
+      setNotesWithCreation(gameLogic.gameState.currentQuestion.notes);
+    }
+  }, [gameLogic.gameState.currentQuestion.notes, setNotesWithCreation]);
 
   // Reset sequence when new question
   useEffect(() => {
@@ -100,6 +117,9 @@ export default function SequenceGame() {
     );
     const isCorrect = validateAnswer(notesAnswer, correctNotes);
     triggerGameHaptics(isCorrect);
+
+    // Trigger individual note feedback for sequence mode
+    triggerSequenceNoteFeedback(notesAnswer, correctNotes);
 
     // Auto-advance timing based on game mode and correctness
     const delay = getAutoAdvanceDelay(
@@ -230,7 +250,7 @@ export default function SequenceGame() {
         {/* Music Staff */}
         <View className="flex-1 justify-center items-center px-4">
           <MusicStaff
-            notes={gameLogic.gameState.currentQuestion.notes}
+            notes={animatedNotes}
             showFeedback={showFeedback}
             isCorrect={isAnswerCorrect(gameLogic.gameState.currentQuestion)}
             showNoteLabels={gameSettings.gameSettings.showNoteLabels}
@@ -238,6 +258,7 @@ export default function SequenceGame() {
             streakLevel={getStreakLevel(gameLogic.gameState.streak)}
             width={350}
             height={180}
+            onNoteAnimationComplete={handleNoteAnimationComplete}
           />
         </View>
 

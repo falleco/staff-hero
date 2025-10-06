@@ -1,10 +1,12 @@
 import type React from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import type { Challenge } from '@/types/music';
 import { ChallengeStatus } from '@/types/music';
+import { FlatButton, FlatButtonText } from '../core/flat-button';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -27,15 +29,9 @@ export function ChallengeCard({
   onStart,
   onRedeem,
 }: ChallengeCardProps) {
-  const cardBackgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const primaryColor = useThemeColor({}, 'tint');
-
-  const progressPercentage = Math.min(
-    (challenge.progress / challenge.requirement) * 100,
-    100,
-  );
 
   const getStatusColor = () => {
     switch (challenge.status) {
@@ -99,10 +95,14 @@ export function ChallengeCard({
   const isActionDisabled = challenge.status === ChallengeStatus.REDEEMED;
 
   return (
-    <View
-      className="mb-4 p-4 rounded-xl border border-gray-200"
-      style={{ backgroundColor: cardBackgroundColor }}
-    >
+    <View className="mb-8 p-4 rounded-2xl border-2 border-gray-200 bg-white">
+      <View className="absolute top-0 right-5 left-40">
+        <View className="bg-red-400 rounded-3xl border-2 px-2 border-black/20 -mt-4 w-[100px] text-center items-center self-end">
+          <ThemedText className="text-sm font-pixelpurl-medium text-white">
+            Progress: {challenge.progress}/{challenge.requirement}
+          </ThemedText>
+        </View>
+      </View>
       {/* Header */}
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center flex-1">
@@ -155,44 +155,20 @@ export function ChallengeCard({
         {challenge.description}
       </ThemedText>
 
-      {/* Progress Bar */}
-      {challenge.status !== ChallengeStatus.AVAILABLE && (
-        <View className="mb-3">
-          <View className="flex-row justify-between items-center mb-2">
-            <ThemedText className="text-sm" style={{ color: textColor }}>
-              Progress
-            </ThemedText>
-            <ThemedText
-              className="text-sm"
-              style={{ color: secondaryTextColor }}
-            >
-              {challenge.progress} / {challenge.requirement}
-            </ThemedText>
-          </View>
-          <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <View
-              className="h-full rounded-full"
-              style={{
-                backgroundColor: getStatusColor(),
-                width: `${progressPercentage}%`,
-              }}
-            />
-          </View>
-        </View>
-      )}
-
       {/* Action Button */}
-      <Button
+      <FlatButton
         size="sm"
-        variant={
-          challenge.status === ChallengeStatus.COMPLETED ? 'solid' : 'outline'
-        }
+        className={cn(
+          'w-full max-w-sm rounded-2xl px-2 py-1 border-purple-400 bg-purple-800 text-[#ffffff] border-4',
+          challenge.status === ChallengeStatus.COMPLETED ? 'border-green' : '',
+        )}
         onPress={handleActionPress}
         isDisabled={isActionDisabled}
-        className={isActionDisabled ? 'opacity-50' : ''}
       >
-        <ButtonText>{getActionButtonText()}</ButtonText>
-      </Button>
+        <FlatButtonText className="text-xl text-[#ffffff] font-boldpixels-medium">
+          {getActionButtonText()}
+        </FlatButtonText>
+      </FlatButton>
     </View>
   );
 }

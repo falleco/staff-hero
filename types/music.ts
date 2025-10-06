@@ -34,6 +34,28 @@ export enum Difficulty {
   ADVANCED = 'advanced',
 }
 
+// Note animation and state types
+export enum NoteState {
+  IDLE = 'idle',
+  HIGHLIGHTED = 'highlighted',
+  CORRECT = 'correct',
+  INCORRECT = 'incorrect',
+  DESTROYING = 'destroying',
+  DESTROYED = 'destroyed',
+}
+
+export enum NoteAnimationType {
+  CREATION = 'creation',
+  DESTRUCTION = 'destruction',
+  FEEDBACK = 'feedback',
+}
+
+export interface NoteAnimation {
+  type: NoteAnimationType;
+  isCorrect?: boolean;
+  onComplete?: () => void;
+}
+
 export interface Note {
   name: NoteName;
   octave: number;
@@ -43,6 +65,12 @@ export interface Note {
   duration: number;
   // Note symbol type (for different note durations)
   symbolId?: string;
+  // Note state for animations and feedback
+  state?: NoteState;
+  // Animation to trigger
+  animation?: NoteAnimation;
+  // Unique identifier for tracking individual notes
+  noteId?: string;
 }
 
 export interface GameSettings {

@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import type React from 'react';
 import { useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
@@ -11,14 +12,12 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { EquipmentCategory } from '@/types/music';
 
 export default function EquipmentTab() {
-  const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const primaryColor = useThemeColor({}, 'tint');
 
   const { currency, addGoldenShards } = useChallenges();
   const {
-    equipment,
     userEquipment,
     getEquipmentByCategory,
     buyEquipment,
@@ -110,280 +109,295 @@ export default function EquipmentTab() {
   };
 
   return (
-    <SafeAreaView className="flex-1  pb-20" style={{ backgroundColor }}>
-      <ScrollView className="flex-1">
-        {/* Header */}
-        <View className="p-5 pb-3">
-          <View className="flex-row items-center justify-between mb-4">
-            <View>
-              <ThemedText
-                className="text-3xl font-bold"
-                style={{ color: textColor }}
-              >
-                ⚔️ Equipment
-              </ThemedText>
-              <ThemedText
-                className="text-sm"
-                style={{ color: secondaryTextColor }}
-              >
-                Enhance your musical abilities with powerful gear
-              </ThemedText>
-            </View>
-
-            {/* Currency Display */}
-            <View className="items-end">
-              <View className="flex-row items-center">
-                <ThemedText className="text-lg mr-1">✨</ThemedText>
+    <>
+      <LinearGradient
+        colors={['#9F7FFF', '#8055FE']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{
+          flex: 1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}
+      />
+      <SafeAreaView className="flex-1 ">
+        <ScrollView className="flex-1" contentContainerClassName="pb-24">
+          {/* Header */}
+          <View className="p-5 pb-3">
+            <View className="flex-row items-center justify-between mb-4">
+              <View>
                 <ThemedText
-                  className="text-xl font-bold"
-                  style={{ color: primaryColor }}
+                  className="text-3xl font-bold"
+                  style={{ color: textColor }}
                 >
-                  {currency.goldenNoteShards}
+                  ⚔️ Equipment
+                </ThemedText>
+                <ThemedText
+                  className="text-sm"
+                  style={{ color: secondaryTextColor }}
+                >
+                  Enhance your musical abilities with powerful gear
                 </ThemedText>
               </View>
-              <ThemedText
-                className="text-xs"
-                style={{ color: secondaryTextColor }}
-              >
-                Golden Shards
-              </ThemedText>
-            </View>
-          </View>
 
-          {/* Total Bonuses Display */}
-          <View className="p-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-            <ThemedText className="text-lg font-bold text-black mb-2">
-              ⚡ Total Equipment Bonuses
-            </ThemedText>
-            <View className="flex-row justify-between">
-              <View className="items-center">
-                <ThemedText className="text-2xl font-bold text-black">
-                  +{totalBonuses.scoreBonus}
-                </ThemedText>
-                <ThemedText className="text-xs text-black opacity-80">
-                  Score
-                </ThemedText>
-              </View>
-              <View className="items-center">
-                <ThemedText className="text-2xl font-bold text-black">
-                  +{totalBonuses.accuracyBonus}%
-                </ThemedText>
-                <ThemedText className="text-xs text-black opacity-80">
-                  Accuracy
-                </ThemedText>
-              </View>
-              <View className="items-center">
-                <ThemedText className="text-2xl font-bold text-black">
-                  +{totalBonuses.streakBonus}
-                </ThemedText>
-                <ThemedText className="text-xs text-black opacity-80">
-                  Streak
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-
-          {/* Category Navigation */}
-          <View className="flex-row bg-gray-100 rounded-lg p-1">
-            {Object.values(EquipmentCategory).map((category) => (
-              <Button
-                key={category}
-                size="sm"
-                variant={activeCategory === category ? 'solid' : 'outline'}
-                onPress={() => setActiveCategory(category)}
-                className="flex-1 mx-1"
-              >
-                <ButtonText>
-                  {getCategoryIcon(category)} {getCategoryName(category)}
-                </ButtonText>
-              </Button>
-            ))}
-          </View>
-        </View>
-
-        {/* Currently Equipped in Category */}
-        <View className="px-5 pb-3">
-          <ThemedText
-            className="text-lg font-bold mb-3"
-            style={{ color: textColor }}
-          >
-            🎵 Currently Equipped
-          </ThemedText>
-
-          {activeCategory === EquipmentCategory.MANTLE &&
-            userEquipment.mantle && (
-              <View className="p-3 rounded-lg border-2 border-green-500 bg-green-50 mb-3">
+              {/* Currency Display */}
+              <View className="items-end">
                 <View className="flex-row items-center">
-                  <ThemedText className="text-xl mr-2">
-                    {userEquipment.mantle.icon}
-                  </ThemedText>
-                  <View className="flex-1">
-                    <ThemedText
-                      className="font-semibold"
-                      style={{ color: textColor }}
-                    >
-                      {userEquipment.mantle.name}
-                    </ThemedText>
-                    <ThemedText
-                      className="text-xs"
-                      style={{ color: secondaryTextColor }}
-                    >
-                      Level {userEquipment.mantle.level}
-                    </ThemedText>
-                  </View>
-                </View>
-              </View>
-            )}
-
-          {activeCategory === EquipmentCategory.INSTRUMENTS &&
-            userEquipment.instruments && (
-              <View className="p-3 rounded-lg border-2 border-green-500 bg-green-50 mb-3">
-                <View className="flex-row items-center">
-                  <ThemedText className="text-xl mr-2">
-                    {userEquipment.instruments.icon}
-                  </ThemedText>
-                  <View className="flex-1">
-                    <ThemedText
-                      className="font-semibold"
-                      style={{ color: textColor }}
-                    >
-                      {userEquipment.instruments.name}
-                    </ThemedText>
-                    <ThemedText
-                      className="text-xs"
-                      style={{ color: secondaryTextColor }}
-                    >
-                      Level {userEquipment.instruments.level}
-                    </ThemedText>
-                  </View>
-                </View>
-              </View>
-            )}
-
-          {activeCategory === EquipmentCategory.ADORNMENTS &&
-            userEquipment.adornments.length > 0 && (
-              <View className="mb-3">
-                {userEquipment.adornments.map((adornment) => (
-                  <View
-                    key={adornment.id}
-                    className="p-3 rounded-lg border-2 border-green-500 bg-green-50 mb-2"
+                  <ThemedText className="text-lg mr-1">✨</ThemedText>
+                  <ThemedText
+                    className="text-xl font-bold"
+                    style={{ color: primaryColor }}
                   >
-                    <View className="flex-row items-center">
-                      <ThemedText className="text-xl mr-2">
-                        {adornment.icon}
-                      </ThemedText>
-                      <View className="flex-1">
-                        <ThemedText
-                          className="font-semibold"
-                          style={{ color: textColor }}
-                        >
-                          {adornment.name}
-                        </ThemedText>
-                        <ThemedText
-                          className="text-xs"
-                          style={{ color: secondaryTextColor }}
-                        >
-                          Level {adornment.level}
-                        </ThemedText>
-                      </View>
-                    </View>
-                  </View>
-                ))}
+                    {currency.goldenNoteShards}
+                  </ThemedText>
+                </View>
+                <ThemedText
+                  className="text-xs"
+                  style={{ color: secondaryTextColor }}
+                >
+                  Golden Shards
+                </ThemedText>
               </View>
-            )}
-
-          {((activeCategory === EquipmentCategory.MANTLE &&
-            !userEquipment.mantle) ||
-            (activeCategory === EquipmentCategory.INSTRUMENTS &&
-              !userEquipment.instruments) ||
-            (activeCategory === EquipmentCategory.ADORNMENTS &&
-              userEquipment.adornments.length === 0)) && (
-            <View className="p-4 rounded-lg bg-gray-100 mb-3">
-              <ThemedText
-                className="text-center"
-                style={{ color: secondaryTextColor }}
-              >
-                No {getCategoryName(activeCategory).toLowerCase()} equipped
-              </ThemedText>
             </View>
-          )}
-        </View>
 
-        {/* Equipment List */}
-        <View className="px-5">
-          <ThemedText
-            className="text-lg font-bold mb-3"
-            style={{ color: textColor }}
-          >
-            {getCategoryIcon(activeCategory)} {getCategoryName(activeCategory)}{' '}
-            ({categoryEquipment.length})
-          </ThemedText>
-
-          {categoryEquipment.length === 0 ? (
-            <View className="p-8 items-center">
-              <ThemedText className="text-6xl mb-4">
-                {getCategoryIcon(activeCategory)}
+            {/* Total Bonuses Display */}
+            <View className="p-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+              <ThemedText className="text-lg font-bold text-black mb-2">
+                ⚡ Total Equipment Bonuses
               </ThemedText>
-              <ThemedText
-                className="text-lg font-semibold mb-2"
-                style={{ color: textColor }}
-              >
-                No {getCategoryName(activeCategory)} Available
-              </ThemedText>
-              <ThemedText
-                className="text-sm text-center"
-                style={{ color: secondaryTextColor }}
-              >
-                Check back later for new{' '}
-                {getCategoryName(activeCategory).toLowerCase()}!
-              </ThemedText>
+              <View className="flex-row justify-between">
+                <View className="items-center">
+                  <ThemedText className="text-2xl font-bold text-black">
+                    +{totalBonuses.scoreBonus}
+                  </ThemedText>
+                  <ThemedText className="text-xs text-black opacity-80">
+                    Score
+                  </ThemedText>
+                </View>
+                <View className="items-center">
+                  <ThemedText className="text-2xl font-bold text-black">
+                    +{totalBonuses.accuracyBonus}%
+                  </ThemedText>
+                  <ThemedText className="text-xs text-black opacity-80">
+                    Accuracy
+                  </ThemedText>
+                </View>
+                <View className="items-center">
+                  <ThemedText className="text-2xl font-bold text-black">
+                    +{totalBonuses.streakBonus}
+                  </ThemedText>
+                  <ThemedText className="text-xs text-black opacity-80">
+                    Streak
+                  </ThemedText>
+                </View>
+              </View>
             </View>
-          ) : (
-            categoryEquipment.map((item) => (
-              <EquipmentCard
-                key={item.id}
-                equipment={item}
-                currency={currency}
-                onBuy={handleBuyEquipment}
-                onUpgrade={handleUpgradeEquipment}
-                onEquip={handleEquipItem}
-                onUnequip={handleUnequipItem}
-              />
-            ))
-          )}
-        </View>
 
-        {/* Debug Section */}
-        {__DEV__ && (
-          <View className="p-5 mt-5 border-t border-gray-200">
+            {/* Category Navigation */}
+            <View className="flex-row bg-gray-100 rounded-lg p-1">
+              {Object.values(EquipmentCategory).map((category) => (
+                <Button
+                  key={category}
+                  size="sm"
+                  variant={activeCategory === category ? 'solid' : 'outline'}
+                  onPress={() => setActiveCategory(category)}
+                  className="flex-1 mx-1"
+                >
+                  <ButtonText>
+                    {getCategoryIcon(category)} {getCategoryName(category)}
+                  </ButtonText>
+                </Button>
+              ))}
+            </View>
+          </View>
+
+          {/* Currently Equipped in Category */}
+          <View className="px-5 pb-3">
             <ThemedText
               className="text-lg font-bold mb-3"
               style={{ color: textColor }}
             >
-              Debug Actions
+              🎵 Currently Equipped
             </ThemedText>
-            <View className="flex-row space-x-2">
-              <Button
-                variant="outline"
-                onPress={handleResetEquipment}
-                className="flex-1"
-              >
-                <ButtonText>Reset Equipment</ButtonText>
-              </Button>
-              <Button
-                variant="outline"
-                onPress={() => addGoldenShards(100)}
-                className="flex-1"
-              >
-                <ButtonText>Add 100 Shards</ButtonText>
-              </Button>
-            </View>
-          </View>
-        )}
 
-        {/* Bottom Spacing */}
-        <View className="h-8" />
-      </ScrollView>
-    </SafeAreaView>
+            {activeCategory === EquipmentCategory.MANTLE &&
+              userEquipment.mantle && (
+                <View className="p-3 rounded-lg border-2 border-green-500 bg-green-50 mb-3">
+                  <View className="flex-row items-center">
+                    <ThemedText className="text-xl mr-2">
+                      {userEquipment.mantle.icon}
+                    </ThemedText>
+                    <View className="flex-1">
+                      <ThemedText
+                        className="font-semibold"
+                        style={{ color: textColor }}
+                      >
+                        {userEquipment.mantle.name}
+                      </ThemedText>
+                      <ThemedText
+                        className="text-xs"
+                        style={{ color: secondaryTextColor }}
+                      >
+                        Level {userEquipment.mantle.level}
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+            {activeCategory === EquipmentCategory.INSTRUMENTS &&
+              userEquipment.instruments && (
+                <View className="p-3 rounded-lg border-2 border-green-500 bg-green-50 mb-3">
+                  <View className="flex-row items-center">
+                    <ThemedText className="text-xl mr-2">
+                      {userEquipment.instruments.icon}
+                    </ThemedText>
+                    <View className="flex-1">
+                      <ThemedText
+                        className="font-semibold"
+                        style={{ color: textColor }}
+                      >
+                        {userEquipment.instruments.name}
+                      </ThemedText>
+                      <ThemedText
+                        className="text-xs"
+                        style={{ color: secondaryTextColor }}
+                      >
+                        Level {userEquipment.instruments.level}
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+            {activeCategory === EquipmentCategory.ADORNMENTS &&
+              userEquipment.adornments.length > 0 && (
+                <View className="mb-3">
+                  {userEquipment.adornments.map((adornment) => (
+                    <View
+                      key={adornment.id}
+                      className="p-3 rounded-lg border-2 border-green-500 bg-green-50 mb-2"
+                    >
+                      <View className="flex-row items-center">
+                        <ThemedText className="text-xl mr-2">
+                          {adornment.icon}
+                        </ThemedText>
+                        <View className="flex-1">
+                          <ThemedText
+                            className="font-semibold"
+                            style={{ color: textColor }}
+                          >
+                            {adornment.name}
+                          </ThemedText>
+                          <ThemedText
+                            className="text-xs"
+                            style={{ color: secondaryTextColor }}
+                          >
+                            Level {adornment.level}
+                          </ThemedText>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+            {((activeCategory === EquipmentCategory.MANTLE &&
+              !userEquipment.mantle) ||
+              (activeCategory === EquipmentCategory.INSTRUMENTS &&
+                !userEquipment.instruments) ||
+              (activeCategory === EquipmentCategory.ADORNMENTS &&
+                userEquipment.adornments.length === 0)) && (
+              <View className="p-4 rounded-lg bg-gray-100 mb-3">
+                <ThemedText
+                  className="text-center"
+                  style={{ color: secondaryTextColor }}
+                >
+                  No {getCategoryName(activeCategory).toLowerCase()} equipped
+                </ThemedText>
+              </View>
+            )}
+          </View>
+
+          {/* Equipment List */}
+          <View className="px-5">
+            <ThemedText
+              className="text-lg font-bold mb-3"
+              style={{ color: textColor }}
+            >
+              {getCategoryIcon(activeCategory)}{' '}
+              {getCategoryName(activeCategory)} ({categoryEquipment.length})
+            </ThemedText>
+
+            {categoryEquipment.length === 0 ? (
+              <View className="p-8 items-center">
+                <ThemedText className="text-6xl mb-4">
+                  {getCategoryIcon(activeCategory)}
+                </ThemedText>
+                <ThemedText
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: textColor }}
+                >
+                  No {getCategoryName(activeCategory)} Available
+                </ThemedText>
+                <ThemedText
+                  className="text-sm text-center"
+                  style={{ color: secondaryTextColor }}
+                >
+                  Check back later for new{' '}
+                  {getCategoryName(activeCategory).toLowerCase()}!
+                </ThemedText>
+              </View>
+            ) : (
+              categoryEquipment.map((item) => (
+                <EquipmentCard
+                  key={item.id}
+                  equipment={item}
+                  currency={currency}
+                  onBuy={handleBuyEquipment}
+                  onUpgrade={handleUpgradeEquipment}
+                  onEquip={handleEquipItem}
+                  onUnequip={handleUnequipItem}
+                />
+              ))
+            )}
+          </View>
+
+          {/* Debug Section */}
+          {__DEV__ && (
+            <View className="p-5 mt-5 border-t border-gray-200">
+              <ThemedText
+                className="text-lg font-bold mb-3"
+                style={{ color: textColor }}
+              >
+                Debug Actions
+              </ThemedText>
+              <View className="flex-row space-x-2">
+                <Button
+                  variant="outline"
+                  onPress={handleResetEquipment}
+                  className="flex-1"
+                >
+                  <ButtonText>Reset Equipment</ButtonText>
+                </Button>
+                <Button
+                  variant="outline"
+                  onPress={() => addGoldenShards(100)}
+                  className="flex-1"
+                >
+                  <ButtonText>Add 100 Shards</ButtonText>
+                </Button>
+              </View>
+            </View>
+          )}
+
+          {/* Bottom Spacing */}
+          <View className="h-8" />
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 }
