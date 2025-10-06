@@ -1,16 +1,7 @@
-import React, {
-  createContext,
-  type ReactNode,
-  useContext,
-  useReducer,
-} from 'react';
+import React, { createContext, type ReactNode, useReducer } from 'react';
 import type { GameSession } from '@/types/analytics';
-import type {
-  GameSettings,
-  GameState,
-  NotationSystem,
-  Question,
-} from '@/types/music';
+import type { GameSettings, GameState, Question } from '@/types/music';
+import { Difficulty, GameMode, NotationSystem } from '@/types/music';
 import { addGameSession } from '@/utils/analytics-storage';
 import { generateQuestion } from '@/utils/music-utils';
 
@@ -55,9 +46,9 @@ const initialGameState: GameState = {
 let gameStartTime = 0;
 
 const initialGameSettings: GameSettings = {
-  notationSystem: 'solfege' as NotationSystem,
-  difficulty: 'beginner',
-  gameMode: 'single-note',
+  notationSystem: NotationSystem.SOLFEGE,
+  difficulty: Difficulty.BEGINNER,
+  gameMode: GameMode.SINGLE_NOTE,
   showNoteLabels: true, // Default to visible for beginners
 };
 
@@ -169,7 +160,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
   }
 }
 
-export const GameContext = createContext<GameContextType | undefined>(undefined);
+export const GameContext = createContext<GameContextType | undefined>(
+  undefined,
+);
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [gameState, dispatch] = useReducer(gameReducer, initialGameState);

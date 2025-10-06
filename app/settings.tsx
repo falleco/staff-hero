@@ -7,7 +7,7 @@ import { ModalHeader } from '@/components/ui/modal-header';
 import { SettingOption } from '@/components/ui/setting-option';
 import { useGameContext } from '@/hooks/use-game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import type { NotationSystem } from '@/types/music';
+import { Difficulty, NotationSystem } from '@/types/music';
 
 export default function SettingsScreen() {
   const { gameSettings, updateSettings } = useGameContext();
@@ -48,12 +48,12 @@ export default function SettingsScreen() {
             options={[
               {
                 label: 'Solfege',
-                value: 'solfege' as NotationSystem,
+                value: NotationSystem.SOLFEGE,
                 description: 'Do, Re, Mi, Fa, Sol, La, Si (Recommended)',
               },
               {
                 label: 'Letter Names',
-                value: 'letter' as NotationSystem,
+                value: NotationSystem.LETTER,
                 description: 'C, D, E, F, G, A, B',
               },
             ]}
@@ -69,17 +69,17 @@ export default function SettingsScreen() {
             options={[
               {
                 label: 'Beginner',
-                value: 'beginner',
+                value: Difficulty.BEGINNER,
                 description: 'C4 to B5 - Basic treble clef range',
               },
               {
                 label: 'Intermediate',
-                value: 'intermediate',
+                value: Difficulty.INTERMEDIATE,
                 description: 'C3 to B5 - Extended range with ledger lines',
               },
               {
                 label: 'Advanced',
-                value: 'advanced',
+                value: Difficulty.ADVANCED,
                 description: 'C3 to B6 - Full range with many ledger lines',
               },
             ]}

@@ -12,6 +12,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useGameContext } from '@/hooks/use-game-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { GameMode } from '@/types/music';
 import {
   getAutoAdvanceDelay,
   getStreakLevel,
@@ -173,7 +174,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
         {false && showFeedback && (
           <View className="items-center mt-5 px-6">
             {/* Show feedback text only for incorrect answers in single-note mode, or always for other modes */}
-            {(gameSettings.gameMode !== 'single-note' ||
+            {(gameSettings.gameMode !== GameMode.SINGLE_NOTE ||
               !gameState.currentQuestion.isCorrect) && (
               <ThemedText
                 className="text-xl font-bold mb-2"
@@ -190,7 +191,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
             )}
 
             {/* Subtle correct indicator for single-note mode */}
-            {gameSettings.gameMode === 'single-note' &&
+            {gameSettings.gameMode === GameMode.SINGLE_NOTE &&
               gameState.currentQuestion.isCorrect && (
                 <View className="items-center my-2">
                   <ThemedText
@@ -219,7 +220,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
             )}
 
             {/* Show next button only for incorrect answers in single-note mode, or always for other modes */}
-            {(gameSettings.gameMode !== 'single-note' ||
+            {(gameSettings.gameMode !== GameMode.SINGLE_NOTE ||
               !gameState.currentQuestion.isCorrect) && (
               <Button
                 action="primary"

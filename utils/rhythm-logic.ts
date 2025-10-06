@@ -1,4 +1,4 @@
-import type { Note } from '@/types/music';
+import type { Difficulty, NotationSystem, Note } from '@/types/music';
 import { getNoteDisplayName } from './music-utils';
 
 /**
@@ -52,7 +52,7 @@ export function createRhythmNote(
   index: number,
   startTime: number,
   config: RhythmGameConfig,
-  notationSystem: 'letter' | 'solfege',
+  notationSystem: NotationSystem,
 ): Omit<RhythmNote, 'id'> {
   const noteStartDelay = index * config.noteInterval;
   const targetTime = startTime + noteStartDelay + config.noteSpeed * 0.6; // Target at 60% through animation

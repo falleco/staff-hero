@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import type { GameSettings } from '@/types/music';
+import { GameMode } from '@/types/music';
 
 /**
  * Pure functions for game logic - separated from UI components for better testability
@@ -24,12 +25,12 @@ export function getStreakLevel(streak: number): number {
  * @returns Delay in milliseconds
  */
 export function getAutoAdvanceDelay(
-  gameMode: GameSettings['gameMode'],
+  gameMode: GameMode,
   isCorrect: boolean,
 ): number {
   const DEFAULT_DELAY = 2000;
 
-  if (gameMode === 'single-note') {
+  if (gameMode === GameMode.SINGLE_NOTE) {
     return isCorrect ? 500 : 3000; // Quick for correct, longer for learning
   }
 

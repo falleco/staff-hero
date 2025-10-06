@@ -4,6 +4,7 @@ import {
   type GameSession,
   type UserAnalytics,
 } from '@/types/analytics';
+import { Difficulty, GameMode, NotationSystem } from '@/types/music';
 
 const ANALYTICS_KEY = '@staff_hero_analytics';
 const SESSIONS_KEY = '@staff_hero_sessions';
@@ -14,22 +15,22 @@ const defaultAnalytics: UserAnalytics = {
   bestStreak: 0,
   averageAccuracy: 0,
   totalPlayTime: 0,
-  favoriteGameMode: 'single-note',
-  favoriteNotation: 'letter',
-  favoriteDifficulty: 'beginner',
+  favoriteGameMode: GameMode.SINGLE_NOTE,
+  favoriteNotation: NotationSystem.LETTER,
+  favoriteDifficulty: Difficulty.BEGINNER,
   gamesPerMode: {
-    'single-note': 0,
-    sequence: 0,
-    rhythm: 0,
+    [GameMode.SINGLE_NOTE]: 0,
+    [GameMode.SEQUENCE]: 0,
+    [GameMode.RHYTHM]: 0,
   },
   gamesPerNotation: {
-    letter: 0,
-    solfege: 0,
+    [NotationSystem.LETTER]: 0,
+    [NotationSystem.SOLFEGE]: 0,
   },
   gamesPerDifficulty: {
-    beginner: 0,
-    intermediate: 0,
-    advanced: 0,
+    [Difficulty.BEGINNER]: 0,
+    [Difficulty.INTERMEDIATE]: 0,
+    [Difficulty.ADVANCED]: 0,
   },
   recentSessions: [],
   achievements: [...ACHIEVEMENTS],
@@ -158,8 +159,8 @@ function checkAndUnlockAchievements(
 
   // Notation master (played both systems)
   if (
-    analytics.gamesPerNotation.letter > 0 &&
-    analytics.gamesPerNotation.solfege > 0
+    analytics.gamesPerNotation[NotationSystem.LETTER] > 0 &&
+    analytics.gamesPerNotation[NotationSystem.SOLFEGE] > 0
   ) {
     unlockAchievement(analytics, 'notation_master', now);
   }

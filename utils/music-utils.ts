@@ -6,10 +6,14 @@
  */
 
 import {
+  Difficulty,
+  GameMode,
   type GameSettings,
-  NOTE_MAPPINGS,
+  NOTATION_MAPPINGS,
+  type NotationSystem,
   type Note,
   type NoteName,
+  Notes,
   type Question,
   TREBLE_CLEF_POSITIONS,
 } from '@/types/music';
@@ -22,9 +26,9 @@ import {
  * Reverse mapping from staff position to note for accurate conversion
  * Built dynamically from TREBLE_CLEF_POSITIONS to ensure consistency
  */
-const POSITION_TO_NOTE: Record<number, { name: NoteName; octave: number }> = {};
+const POSITION_TO_NOTE: Record<number, { name: Notes; octave: number }> = {};
 Object.entries(TREBLE_CLEF_POSITIONS).forEach(([noteKey, position]) => {
-  const name = noteKey.slice(0, -1) as NoteName;
+  const name = noteKey.slice(0, -1) as Notes;
   const octave = Number.parseInt(noteKey.slice(-1));
   POSITION_TO_NOTE[position] = { name, octave };
 });
@@ -35,7 +39,7 @@ Object.entries(TREBLE_CLEF_POSITIONS).forEach(([noteKey, position]) => {
  * @returns A randomly generated note with proper staff positioning
  */
 export function generateRandomNote(
-  difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner',
+  difficulty: Difficulty = Difficulty.BEGINNER,
 ): Note {
   // Use the available positions from TREBLE_CLEF_POSITIONS for consistency
   const availablePositions = Object.values(TREBLE_CLEF_POSITIONS);
@@ -46,7 +50,7 @@ export function generateRandomNote(
   if (!noteInfo) {
     // Fallback to a safe note
     return {
-      name: 'C',
+      name: Notes.C,
       octave: 5,
       staffPosition: 1,
       requiresLedgerLine: false,
@@ -76,7 +80,7 @@ export function generateRandomNote(
  */
 export function generateRandomNotes(
   count: number,
-  difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner',
+  difficulty: Difficulty = Difficulty.BEGINNER,
 ): Note[] {
   const notes: Note[] = [];
   for (let i = 0; i < count; i++) {
@@ -88,28 +92,36 @@ export function generateRandomNotes(
 // Convert note name to display string based on notation system
 export function getNoteDisplayName(
   noteName: NoteName,
-  notationSystem: 'letter' | 'solfege',
+  notationSystem: NotationSystem,
 ): string {
-  return NOTE_MAPPINGS[notationSystem][noteName];
+  return NOTATION_MAPPINGS[notationSystem][noteName as Notes];
 }
 
 // Generate all 7 note options (always show all notes for selection)
 export function generateAllNoteOptions(
-  notationSystem: 'letter' | 'solfege',
+  notationSystem: NotationSystem,
 ): string[] {
-  const allNotes: NoteName[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-  return allNotes.map((note) => getNoteDisplayName(note, notationSystem));
+  const allNotes: Notes[] = [
+    Notes.C,
+    Notes.D,
+    Notes.E,
+    Notes.F,
+    Notes.G,
+    Notes.A,
+    Notes.B,
+  ];
+  return allNotes.map((note) => NOTATION_MAPPINGS[notationSystem][note]);
 }
 
 // Generate a complete question based on game settings
 export function generateQuestion(settings: GameSettings): Question {
   const noteCount =
-    settings.gameMode === 'single-note'
+    settings.gameMode === GameMode.SINGLE_NOTE
       ? 1
-      : settings.gameMode === 'sequence'
+      : settings.gameMode === GameMode.SEQUENCE
         ? Math.floor(Math.random() * 6) + 2
         : // 2-4 notes
-          settings.gameMode === 'rhythm'
+          settings.gameMode === GameMode.RHYTHM
           ? Math.floor(Math.random() * 4) + 3
           : // 3-6 notes
             1;
@@ -141,10 +153,10 @@ export function generateQuestion(settings: GameSettings): Question {
   };
 
   // Add mode-specific properties
-  if (settings.gameMode === 'sequence') {
+  if (settings.gameMode === GameMode.SEQUENCE) {
     question.isSequenceMode = true;
     question.userSequence = [];
-  } else if (settings.gameMode === 'rhythm') {
+  } else if (settings.gameMode === GameMode.RHYTHM) {
     question.isRhythmMode = true;
     question.noteTimings = notes.map((_, index) => (index + 1) * 1000); // Notes every second
     question.userTimings = [];
@@ -163,15 +175,16 @@ export function calculateAccuracy(
 }
 
 // Get difficulty-based note range
-export function getDifficultyNoteRange(
-  difficulty: 'beginner' | 'intermediate' | 'advanced',
-): { minOctave: number; maxOctave: number } {
+export function getDifficultyNoteRange(difficulty: Difficulty): {
+  minOctave: number;
+  maxOctave: number;
+} {
   switch (difficulty) {
-    case 'beginner':
+    case Difficulty.BEGINNER:
       return { minOctave: 4, maxOctave: 5 }; // C4 to B5
-    case 'intermediate':
+    case Difficulty.INTERMEDIATE:
       return { minOctave: 3, maxOctave: 5 }; // C3 to B5
-    case 'advanced':
+    case Difficulty.ADVANCED:
       return { minOctave: 3, maxOctave: 6 }; // C3 to B6
     default:
       return { minOctave: 4, maxOctave: 5 };

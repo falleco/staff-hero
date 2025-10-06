@@ -1,3 +1,5 @@
+import type { Difficulty } from './music';
+
 export interface NoteSymbol {
   id: string;
   name: string;
@@ -60,7 +62,7 @@ export const NOTE_SYMBOLS: Record<string, NoteSymbol> = {
 
 // Get available note symbols based on difficulty
 export function getNoteSymbolsForDifficulty(
-  difficulty: 'beginner' | 'intermediate' | 'advanced',
+  difficulty: Difficulty,
 ): NoteSymbol[] {
   const symbols = Object.values(NOTE_SYMBOLS);
   return symbols;

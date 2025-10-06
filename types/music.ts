@@ -1,8 +1,38 @@
-export type NoteName = 'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B';
+// Musical notes enum
+export enum Notes {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+  D = 'D',
+  E = 'E',
+  F = 'F',
+  G = 'G',
+}
+
+// Legacy type alias for backward compatibility during transition
+export type NoteName = Notes;
 
 export type SolfegeName = 'Do' | 'Re' | 'Mi' | 'Fa' | 'Sol' | 'La' | 'Si';
 
-export type NotationSystem = 'letter' | 'solfege';
+// Notation system enum
+export enum NotationSystem {
+  LETTER = 'letter',
+  SOLFEGE = 'solfege',
+}
+
+// Game mode enum
+export enum GameMode {
+  SINGLE_NOTE = 'single-note',
+  SEQUENCE = 'sequence',
+  RHYTHM = 'rhythm',
+}
+
+// Difficulty enum
+export enum Difficulty {
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  ADVANCED = 'advanced',
+}
 
 export interface Note {
   name: NoteName;
@@ -17,8 +47,8 @@ export interface Note {
 
 export interface GameSettings {
   notationSystem: NotationSystem;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  gameMode: 'single-note' | 'sequence' | 'rhythm';
+  difficulty: Difficulty;
+  gameMode: GameMode;
   showNoteLabels: boolean; // Helper for beginners
   timeLimit?: number; // in seconds
 }
@@ -60,9 +90,31 @@ export interface ScoreHistory {
   difficulty: string;
 }
 
-// Mapping for note names in different notation systems
+// Notation display mappings - each notation system maps Notes enum to display names
+export const NOTATION_MAPPINGS = {
+  [NotationSystem.LETTER]: {
+    [Notes.A]: 'A',
+    [Notes.B]: 'B',
+    [Notes.C]: 'C',
+    [Notes.D]: 'D',
+    [Notes.E]: 'E',
+    [Notes.F]: 'F',
+    [Notes.G]: 'G',
+  },
+  [NotationSystem.SOLFEGE]: {
+    [Notes.A]: 'La',
+    [Notes.B]: 'Si',
+    [Notes.C]: 'Do',
+    [Notes.D]: 'Re',
+    [Notes.E]: 'Mi',
+    [Notes.F]: 'Fa',
+    [Notes.G]: 'Sol',
+  },
+} as const;
+
+// Legacy mapping for backward compatibility during transition
 export const NOTE_MAPPINGS: Record<NotationSystem, Record<NoteName, string>> = {
-  letter: {
+  [NotationSystem.LETTER]: {
     C: 'C',
     D: 'D',
     E: 'E',
@@ -71,7 +123,7 @@ export const NOTE_MAPPINGS: Record<NotationSystem, Record<NoteName, string>> = {
     A: 'A',
     B: 'B',
   },
-  solfege: {
+  [NotationSystem.SOLFEGE]: {
     C: 'Do',
     D: 'Re',
     E: 'Mi',
@@ -116,34 +168,34 @@ export const TREBLE_CLEF_POSITIONS: Record<string, number> = {
 // Staff position to note name mapping for labels (consistent with TREBLE_CLEF_POSITIONS)
 export const STAFF_POSITION_TO_NOTE: Record<
   number,
-  { letter: NoteName; octave: number }
+  { letter: Notes; octave: number }
 > = {
   // 3 ledger lines above staff
-  14: { letter: 'E', octave: 6 }, // E6 - 2nd ledger line above
-  13: { letter: 'D', octave: 6 }, // D6- Space above 2nd ledger line
-  12: { letter: 'C', octave: 6 }, // C6 - 2nd ledger line above
-  11: { letter: 'B', octave: 5 }, // B5 - Space above 2nd ledger line
-  10: { letter: 'A', octave: 5 }, // A5 - 21st ledger line above
-  9: { letter: 'G', octave: 5 }, // G5 - Space above 1st ledger line
+  14: { letter: Notes.E, octave: 6 }, // E6 - 2nd ledger line above
+  13: { letter: Notes.D, octave: 6 }, // D6- Space above 2nd ledger line
+  12: { letter: Notes.C, octave: 6 }, // C6 - 2nd ledger line above
+  11: { letter: Notes.B, octave: 5 }, // B5 - Space above 2nd ledger line
+  10: { letter: Notes.A, octave: 5 }, // A5 - 21st ledger line above
+  9: { letter: Notes.G, octave: 5 }, // G5 - Space above 1st ledger line
 
   // Main staff (traditional treble clef)
-  8: { letter: 'F', octave: 5 }, // F5 - 5th line (top line) - Fa
-  7: { letter: 'E', octave: 5 }, // E5 - 4th space - Mi
-  6: { letter: 'D', octave: 5 }, // D5 - 4th line - Re
-  5: { letter: 'C', octave: 5 }, // C5 - 3rd space - Do
-  4: { letter: 'B', octave: 4 }, // B4 - 3rd line - Si
-  3: { letter: 'A', octave: 4 }, // A4 - 2nd space - La
-  2: { letter: 'G', octave: 4 }, // G4 - 2nd line - Sol (treble clef reference)
-  1: { letter: 'F', octave: 4 }, // F4 - 1st space - Fa
-  0: { letter: 'E', octave: 4 }, // E4 - 1st line (bottom line) - Mi ← BOTTOM LINE!
+  8: { letter: Notes.F, octave: 5 }, // F5 - 5th line (top line) - Fa
+  7: { letter: Notes.E, octave: 5 }, // E5 - 4th space - Mi
+  6: { letter: Notes.D, octave: 5 }, // D5 - 4th line - Re
+  5: { letter: Notes.C, octave: 5 }, // C5 - 3rd space - Do
+  4: { letter: Notes.B, octave: 4 }, // B4 - 3rd line - Si
+  3: { letter: Notes.A, octave: 4 }, // A4 - 2nd space - La
+  2: { letter: Notes.G, octave: 4 }, // G4 - 2nd line - Sol (treble clef reference)
+  1: { letter: Notes.F, octave: 4 }, // F4 - 1st space - Fa
+  0: { letter: Notes.E, octave: 4 }, // E4 - 1st line (bottom line) - Mi ← BOTTOM LINE!
 
   // 3 ledger lines below staff
-  [-1]: { letter: 'D', octave: 4 }, // D4 - Space below staff
-  [-2]: { letter: 'C', octave: 4 }, // C4 - 1st ledger line below (middle C)
-  [-3]: { letter: 'B', octave: 3 }, // B3 - Space below 1st ledger line
-  [-4]: { letter: 'A', octave: 3 }, // A3 - 2nd ledger line below
-  [-5]: { letter: 'G', octave: 3 }, // G3 - Space below 2nd ledger line
-  [-6]: { letter: 'F', octave: 3 }, // F3 - 3rd ledger line below
+  [-1]: { letter: Notes.D, octave: 4 }, // D4 - Space below staff
+  [-2]: { letter: Notes.C, octave: 4 }, // C4 - 1st ledger line below (middle C)
+  [-3]: { letter: Notes.B, octave: 3 }, // B3 - Space below 1st ledger line
+  [-4]: { letter: Notes.A, octave: 3 }, // A3 - 2nd ledger line below
+  [-5]: { letter: Notes.G, octave: 3 }, // G3 - Space below 2nd ledger line
+  [-6]: { letter: Notes.F, octave: 3 }, // F3 - 3rd ledger line below
 };
 
 export const STAFF_LINE_COUNT = 5;

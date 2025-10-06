@@ -4,7 +4,7 @@ import { Text as SvgText } from 'react-native-svg';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   NOTE_MAPPINGS,
-  type NotationSystem,
+  NotationSystem,
   type Note,
   STAFF_POSITION_TO_NOTE,
 } from '@/types/music';
@@ -26,7 +26,7 @@ export function MusicStaff({
   width = 300,
   height = 200,
   showNoteLabels = true,
-  notationSystem = 'solfege',
+  notationSystem = NotationSystem.SOLFEGE,
   streakLevel = 0,
 }: MusicStaffProps) {
   const staffColor = useThemeColor({}, 'text');

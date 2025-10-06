@@ -10,16 +10,17 @@ import Animated, {
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
 import { useGameContext } from '@/hooks/use-game-context';
 import type { GameSettings } from '@/types/music';
+import { GameMode } from '@/types/music';
 
 const gameModes: {
-  mode: GameSettings['gameMode'];
+  mode: GameMode;
   title: string;
   description: string;
   icon: string;
   path: Href;
 }[] = [
   {
-    mode: 'single-note',
+    mode: GameMode.SINGLE_NOTE,
     title: 'Single Note',
     description:
       'Identify individual notes on the staff. Perfect for beginners!',
@@ -27,7 +28,7 @@ const gameModes: {
     path: '/game/single-note',
   },
   {
-    mode: 'sequence',
+    mode: GameMode.SEQUENCE,
     title: 'Note Sequence',
     description:
       'Identify multiple notes in the correct order. Build your skills!',
@@ -35,7 +36,7 @@ const gameModes: {
     path: '/game/sequence',
   },
   {
-    mode: 'rhythm',
+    mode: GameMode.RHYTHM,
     title: 'Rhythm Hero',
     description: 'Guitar Hero style! Hit notes as they cross the line.',
     icon: '🎸',

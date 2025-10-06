@@ -1,9 +1,11 @@
+import { Difficulty, GameMode, NotationSystem } from './music';
+
 export interface GameSession {
   id: string;
   date: string;
-  gameMode: 'single-note' | 'sequence' | 'rhythm';
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  notationSystem: 'letter' | 'solfege';
+  gameMode: GameMode;
+  difficulty: Difficulty;
+  notationSystem: NotationSystem;
   score: number;
   streak: number;
   maxStreak: number;
@@ -23,18 +25,18 @@ export interface UserAnalytics {
   favoriteNotation: string;
   favoriteDifficulty: string;
   gamesPerMode: {
-    'single-note': number;
-    sequence: number;
-    rhythm: number;
+    [GameMode.SINGLE_NOTE]: number;
+    [GameMode.SEQUENCE]: number;
+    [GameMode.RHYTHM]: number;
   };
   gamesPerNotation: {
-    letter: number;
-    solfege: number;
+    [NotationSystem.LETTER]: number;
+    [NotationSystem.SOLFEGE]: number;
   };
   gamesPerDifficulty: {
-    beginner: number;
-    intermediate: number;
-    advanced: number;
+    [Difficulty.BEGINNER]: number;
+    [Difficulty.INTERMEDIATE]: number;
+    [Difficulty.ADVANCED]: number;
   };
   recentSessions: GameSession[];
   achievements: Achievement[];
