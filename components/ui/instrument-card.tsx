@@ -1,13 +1,16 @@
 import type React from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, type StyleProp, View, type ViewStyle } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { cn } from '@/lib/cn';
 import type { Instrument, UserCurrency } from '@/types/music';
 import { InstrumentRarity } from '@/types/music';
 
 interface InstrumentCardProps {
+  className?: string;
   instrument: Instrument;
+  style?: ViewStyle;
   currency: UserCurrency;
   onBuy: (instrumentId: string) => Promise<boolean>;
   onUpgrade: (instrumentId: string) => Promise<boolean>;
@@ -29,6 +32,8 @@ interface InstrumentCardProps {
  * @param onEquip - Callback when user equips an instrument
  */
 export function InstrumentCard({
+  style,
+  className,
   instrument,
   currency,
   onBuy,
@@ -142,10 +147,9 @@ export function InstrumentCard({
 
   return (
     <View
-      className="mb-4 p-4 rounded-2xl border-2 border-gray-200"
-      style={{ backgroundColor: cardBackgroundColor }}
+      className={cn('mb-4 p-4 rounded-2xl border-2 border-gray-200', className)}
+      style={{ backgroundColor: cardBackgroundColor, ...(style ?? {}) }}
     >
-      {/* Header */}
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center flex-1">
           <ThemedText className="text-3xl mr-3">{instrument.icon}</ThemedText>

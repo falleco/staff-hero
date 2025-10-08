@@ -1,12 +1,19 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type React from 'react';
 import { useState } from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import {
+  Alert,
+  type DimensionValue,
+  RefreshControl,
+  ScrollView,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { InstrumentCard } from '@/components/ui/instrument-card';
+import { LuthierCard } from '@/components/ui/luthier-card';
 import { useCurrency } from '@/hooks/use-currency';
 import { useLuthier } from '@/hooks/use-luthier';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -100,9 +107,9 @@ export default function LuthierTab() {
   return (
     <>
       <LinearGradient
-        colors={['#9F7FFF', '#8055FE']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        colors={['#1B1B3C', '#7F2866']}
+        start={{ x: 0, y: 0.7 }}
+        end={{ x: 0, y: 0 }}
         style={{
           flex: 1,
           position: 'absolute',
@@ -113,6 +120,9 @@ export default function LuthierTab() {
         }}
       />
       <SafeAreaView className="flex-1">
+        <ThemedText className="text-6xl mb-4  font-bold self-center font-boldpixels-medium text-white">
+          Luthier
+        </ThemedText>
         <ScrollView
           className="flex-1"
           contentContainerClassName="pb-24"
@@ -120,126 +130,73 @@ export default function LuthierTab() {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
         >
-          <ThemedText
-            className="text-4xl font-bold mb-8 self-center font-boldpixels-medium"
-            style={{ color: textColor }}
-          >
-            Luthier
-          </ThemedText>
           {/* Header */}
-          <View className="p-5 pb-3">
+          <View className="px-5">
             {/* Tab Navigation */}
-            <View className="flex-row bg-gray-100 rounded-lg p-1 w-full border-2 border-black/20">
+            <View className="flex-row w-full gap-2 m-0 p-0 -mb-[3px] border-black/20 z-40">
               <FlatButton
                 size="sm"
                 className={cn(
-                  'flex-1 bg-purple-400',
-                  activeTab === 'inventory' ? 'border-purple' : '',
+                  'flex-1 bg-[#2a0f3d] border-2 border-b-0 border-white/20 rounded-b-none z-999',
+                  activeTab === 'inventory' ? '' : 'border-b-2',
                 )}
                 onPress={() => setActiveTab('inventory')}
               >
-                <FlatButtonText className="text-center font-boldpixels-medium text-white">
+                <FlatButtonText
+                  className={cn(
+                    ' text-center font-boldpixels-medium text-white',
+                    activeTab === 'inventory' ? 'color-orange-400' : '',
+                  )}
+                >
                   My Instruments
                 </FlatButtonText>
               </FlatButton>
               <FlatButton
                 size="sm"
                 className={cn(
-                  'flex-1 bg-purple-400',
-                  activeTab === 'shop' ? 'border-purple' : '',
+                  'flex-1 bg-[#2a0f3d] border-t-2 border-l-2 border-r-2 border-b-0 border-white/20 rounded-b-none',
+                  activeTab === 'shop' ? '' : 'border-b-2',
                 )}
                 onPress={() => setActiveTab('shop')}
               >
-                <FlatButtonText className="text-center font-boldpixels-medium text-white">
+                <FlatButtonText
+                  className={cn(
+                    'text-xl text-center font-boldpixels-medium text-white',
+                    activeTab === 'shop' ? 'color-orange-400' : '',
+                  )}
+                >
                   Shop
                 </FlatButtonText>
               </FlatButton>
             </View>
           </View>
 
-          {/* Currently Equipped */}
-          {equippedInstrument && (
-            <View className="px-5 pb-3">
-              <ThemedText
-                className="text-lg font-bold mb-3"
-                style={{ color: textColor }}
-              >
-                🎵 Currently Equipped
-              </ThemedText>
-              <View className="p-4 rounded-xl border-2 border-green-500 bg-green-50">
-                <View className="flex-row items-center">
-                  <ThemedText className="text-2xl mr-3">
-                    {equippedInstrument.icon}
-                  </ThemedText>
-                  <View className="flex-1">
-                    <ThemedText
-                      className="text-lg font-semibold"
-                      style={{ color: textColor }}
-                    >
-                      {equippedInstrument.name}
-                    </ThemedText>
-                    <ThemedText
-                      className="text-sm"
-                      style={{ color: secondaryTextColor }}
-                    >
-                      Level {equippedInstrument.level} •{' '}
-                      {equippedInstrument.tuning}% Tuned
-                    </ThemedText>
-                  </View>
-                  <View className="items-end">
-                    <ThemedText
-                      className="text-sm font-medium"
-                      style={{ color: primaryColor }}
-                    >
-                      {equippedInstrument.bonuses.scoreMultiplier.toFixed(1)}x
-                      Score
-                    </ThemedText>
-                    <ThemedText
-                      className="text-xs"
-                      style={{ color: secondaryTextColor }}
-                    >
-                      +{equippedInstrument.bonuses.accuracyBonus}% Accuracy
-                    </ThemedText>
-                  </View>
-                </View>
-              </View>
-            </View>
-          )}
-
           {/* Content based on active tab */}
-          <View className="px-5">
+          <View className="mx-5 px-4 my-0 bg-[#2a0f3d] rounded-2xl rounded-tl-none z-0 border-2 border-white/20 pt-4 pb-4 justify-center items-center relative">
             {activeTab === 'inventory' && (
               <View>
-                <ThemedText
-                  className="text-lg font-bold mb-3"
-                  style={{ color: textColor }}
-                >
+                <ThemedText className="text-lg font-bold mb-3 text-white">
                   🎒 Your Collection ({ownedInstruments.length})
                 </ThemedText>
 
                 {ownedInstruments.length === 0 ? (
-                  <View className="p-8 items-center">
+                  <View className="py-8 items-center">
                     <ThemedText className="text-6xl mb-4">🎻</ThemedText>
-                    <ThemedText
-                      className="text-lg font-semibold mb-2"
-                      style={{ color: textColor }}
-                    >
+                    <ThemedText className="text-lg font-semibold mb-2 text-white">
                       No Instruments Yet
                     </ThemedText>
-                    <ThemedText
-                      className="text-sm text-center"
-                      style={{ color: secondaryTextColor }}
-                    >
+                    <ThemedText className="text-sm text-center text-white/60">
                       Visit the shop to purchase your first instrument!
                     </ThemedText>
-                    <Button
-                      size="sm"
-                      variant="solid"
+                    <FlatButton
+                      size="xl"
                       onPress={() => setActiveTab('shop')}
-                      className="mt-4"
+                      className="w-full text-center rounded-2xl py-1 px-0 mt-4 border-red-400 bg-red-800 text-[#ffffff] border-4"
                     >
-                      <ButtonText>Browse Shop</ButtonText>
-                    </Button>
+                      <FlatButtonText className="w-full text-2xl text-[#ffffff] font-boldpixels-medium text-center">
+                        Browse Shop
+                      </FlatButtonText>
+                    </FlatButton>
                   </View>
                 ) : (
                   ownedInstruments.map((instrument) => (
@@ -258,14 +215,7 @@ export default function LuthierTab() {
             )}
 
             {activeTab === 'shop' && (
-              <View>
-                <ThemedText
-                  className="text-lg font-bold mb-3"
-                  style={{ color: textColor }}
-                >
-                  🛒 Instrument Shop ({availableInstruments.length} available)
-                </ThemedText>
-
+              <View className="flex-1">
                 {!canAffordAny && (
                   <View className="p-4 mb-4 rounded-xl bg-yellow-50 border border-yellow-200">
                     <ThemedText className="text-sm font-medium text-yellow-800 mb-1">
@@ -296,50 +246,26 @@ export default function LuthierTab() {
                     </ThemedText>
                   </View>
                 ) : (
-                  availableInstruments.map((instrument) => (
-                    <InstrumentCard
-                      key={instrument.id}
-                      instrument={instrument}
-                      currency={currency}
-                      onBuy={handleBuyInstrument}
-                      onUpgrade={handleUpgradeInstrument}
-                      onTune={handleTuneInstrument}
-                      onEquip={handleEquipInstrument}
-                    />
-                  ))
+                  <View>
+                    <View className="flex-row flex-wrap w-full gap-3 relative">
+                      {availableInstruments.map((instrument) => (
+                        <LuthierCard
+                          className="w-[47%]"
+                          key={instrument.id}
+                          instrument={instrument}
+                          currency={currency}
+                          onBuy={handleBuyInstrument}
+                          onUpgrade={handleUpgradeInstrument}
+                          onTune={handleTuneInstrument}
+                          onEquip={handleEquipInstrument}
+                        />
+                      ))}
+                    </View>
+                  </View>
                 )}
               </View>
             )}
           </View>
-
-          {/* Debug Section (Remove in production) */}
-          {__DEV__ && (
-            <View className="p-5 mt-5 border-t border-gray-200">
-              <ThemedText
-                className="text-lg font-bold mb-3"
-                style={{ color: textColor }}
-              >
-                Debug Actions
-              </ThemedText>
-              <View className="flex-row space-x-2">
-                <Button
-                  variant="outline"
-                  onPress={handleResetInstruments}
-                  className="flex-1"
-                >
-                  <ButtonText>Reset Instruments</ButtonText>
-                </Button>
-                <Button
-                  variant="outline"
-                  onPress={() => addGoldenShards(100)}
-                  className="flex-1"
-                >
-                  <ButtonText>Add 100 Shards</ButtonText>
-                </Button>
-              </View>
-            </View>
-          )}
-
           {/* Bottom Spacing */}
           <View className="h-8" />
         </ScrollView>

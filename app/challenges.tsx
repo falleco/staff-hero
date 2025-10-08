@@ -60,7 +60,7 @@ export default function ChallengesScreen() {
       />
       <SafeAreaView className="flex-1">
         <ThemedText
-          className="text-4xl font-bold mb-4 self-center font-boldpixels-medium"
+          className="text-6xl font-bold mb-4 self-center font-boldpixels-medium"
           style={{ color: textColor }}
         >
           Challenges
