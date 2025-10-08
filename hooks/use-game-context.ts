@@ -1,10 +1,10 @@
-import { useContext } from 'react';
-import { GameContext } from '@/contexts/game-context';
+import { useGameLogic } from './use-game-logic';
+import { useGameSettings } from './use-game-settings';
 
 /**
- * Hook to access the game context
+ * Hook to access game logic and settings
  *
- * Provides access to both game logic and settings hooks through the context.
+ * Provides access to both game logic and settings hooks.
  * This is the main hook components should use to interact with game functionality.
  *
  * @returns Object containing gameLogic and gameSettings hooks
@@ -33,9 +33,11 @@ import { GameContext } from '@/contexts/game-context';
  * ```
  */
 export function useGameContext() {
-  const context = useContext(GameContext);
-  if (context === undefined) {
-    throw new Error('useGameContext must be used within a GameProvider');
-  }
-  return context;
+  const gameLogic = useGameLogic();
+  const gameSettings = useGameSettings();
+
+  return {
+    gameLogic,
+    gameSettings,
+  };
 }

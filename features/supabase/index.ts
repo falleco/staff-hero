@@ -3,6 +3,8 @@
 // Export API functions
 export * from './api/challenges';
 export * from './api/currency';
+export * from './api/equipment';
+export * from './api/instruments';
 export * from './api/user-profile';
 // Export auth context
 export { AuthProvider, useAuth } from './auth-context';

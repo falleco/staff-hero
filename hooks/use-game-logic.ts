@@ -1,138 +1,91 @@
-import { useReducer } from 'react';
+import { useContext } from 'react';
+import { GameContext } from '@/contexts/game-context';
 import type { GameSession } from '@/types/analytics';
 import type { GameSettings, GameState, Notes, Question } from '@/types/music';
 import { ChallengeType } from '@/types/music';
 import { addGameSession } from '@/utils/analytics-storage';
 import { generateQuestion } from '@/utils/music-utils';
-
-type GameAction =
-  | { type: 'START_GAME' }
-  | { type: 'END_GAME' }
-  | { type: 'SUBMIT_ANSWER'; payload: Notes[] }
-  | { type: 'NEXT_QUESTION' }
-  | { type: 'RESET_STREAK' }
-  | { type: 'SET_QUESTION'; payload: Question };
-
-const initialGameState: GameState = {
-  score: 0,
-  streak: 0,
-  maxStreak: 0,
-  totalQuestions: 0,
-  correctAnswers: 0,
-  currentQuestion: {
-    id: '',
-    notes: [],
-    options: [],
-    answered: false,
-  },
-  isGameActive: false,
-};
+import {
+  fetchUserChallenges,
+  updateChallengeProgress as updateChallengeProgressAPI,
+  useAuth,
+} from '~/features/supabase';
 
 // Track game session for analytics
 let gameStartTime = 0;
 
-function gameReducer(state: GameState, action: GameAction): GameState {
-  switch (action.type) {
-    case 'START_GAME':
-      gameStartTime = Date.now();
-      return {
-        ...state,
-        isGameActive: true,
-        score: 0,
-        streak: 0,
-        maxStreak: 0,
-        totalQuestions: 0,
-        correctAnswers: 0,
-      };
+// Game state update helpers (reducer logic moved to hook)
+function startGameState(): Partial<GameState> {
+  return {
+    isGameActive: true,
+    score: 0,
+    streak: 0,
+    maxStreak: 0,
+    totalQuestions: 0,
+    correctAnswers: 0,
+  };
+}
 
-    case 'END_GAME':
-      return {
-        ...state,
-        isGameActive: false,
-        currentQuestion: {
-          id: '',
-          notes: [],
-          options: [],
-          answered: false,
-        },
-      };
+function endGameState(): Partial<GameState> {
+  return {
+    isGameActive: false,
+    currentQuestion: {
+      id: '',
+      notes: [],
+      options: [],
+      answered: false,
+    },
+  };
+}
 
-    case 'SUBMIT_ANSWER': {
-      // Convert user answer from display strings to Notes enum values
-      const correctNotes = state.currentQuestion.notes.map((note) => note.name);
-      const isCorrect =
-        JSON.stringify(action.payload.sort()) ===
-        JSON.stringify(correctNotes.sort());
+function submitAnswerState(
+  currentState: GameState,
+  answer: Notes[],
+): Partial<GameState> {
+  const correctNotes = currentState.currentQuestion.notes.map(
+    (note) => note.name,
+  );
+  const isCorrect =
+    JSON.stringify(answer.sort()) === JSON.stringify(correctNotes.sort());
 
-      // Comprehensive answer logging
-      console.log('🎯 ANSWER SUBMITTED:');
-      console.log('  Question ID:', state.currentQuestion.id);
-      console.log(
-        '  Notes shown:',
-        state.currentQuestion.notes.map(
-          (n) => `${n.name}${n.octave} at position ${n.staffPosition}`,
-        ),
-      );
-      console.log('  Expected answer:', correctNotes);
-      console.log('  User selected:', action.payload);
-      console.log('  Result:', isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
-      if (!isCorrect) {
-        console.log('  ❗ Mismatch details:');
-        console.log('    Expected (sorted):', correctNotes.sort());
-        console.log('    User answer (sorted):', action.payload.sort());
-      }
-      console.log(
-        '  Current streak:',
-        state.streak,
-        '→',
-        isCorrect ? state.streak + 1 : 0,
-      );
-      console.log('---');
+  const newStreak = isCorrect ? currentState.streak + 1 : 0;
+  const points = isCorrect ? 10 + currentState.streak * 2 : 0;
 
-      const newStreak = isCorrect ? state.streak + 1 : 0;
-      const points = isCorrect ? 10 + state.streak * 2 : 0;
+  return {
+    currentQuestion: {
+      ...currentState.currentQuestion,
+      answered: true,
+      userAnswer: answer,
+    },
+    score: currentState.score + points,
+    streak: newStreak,
+    maxStreak: Math.max(currentState.maxStreak, newStreak),
+    totalQuestions: currentState.totalQuestions + 1,
+    correctAnswers: currentState.correctAnswers + (isCorrect ? 1 : 0),
+  };
+}
 
-      return {
-        ...state,
-        currentQuestion: {
-          ...state.currentQuestion,
-          answered: true,
-          userAnswer: action.payload,
-        },
-        score: state.score + points,
-        streak: newStreak,
-        maxStreak: Math.max(state.maxStreak, newStreak),
-        totalQuestions: state.totalQuestions + 1,
-        correctAnswers: state.correctAnswers + (isCorrect ? 1 : 0),
-      };
-    }
+function nextQuestionState(): Partial<GameState> {
+  return {
+    currentQuestion: {
+      id: '',
+      notes: [],
+      options: [],
+      answered: false,
+    },
+  };
+}
 
-    case 'NEXT_QUESTION':
-      return {
-        ...state,
-        currentQuestion: {
-          id: '',
-          notes: [],
-          options: [],
-          answered: false,
-        },
-      };
+function setQuestionState(question: Question): Partial<GameState> {
+  return {
+    currentQuestion: question,
+  };
+}
 
-    case 'SET_QUESTION':
-      return {
-        ...state,
-        currentQuestion: action.payload,
-      };
-
-    case 'RESET_STREAK':
-      return {
-        ...state,
-        streak: 0,
-      };
-
-    default:
-      return state;
-  }
+function resetStreakState(): Partial<GameState> {
+  return {
+    streak: 0,
+  };
 }
 
 export interface UseGameLogicReturn {
@@ -159,8 +112,14 @@ export interface UseGameLogicReturn {
 /**
  * Custom hook for managing game logic and state
  *
- * Handles all game-related actions including starting/ending games,
- * submitting answers, managing score and streaks, and generating questions.
+ * This hook implements all game-related business logic:
+ * - Starting/ending games
+ * - Submitting answers and calculating scores
+ * - Managing streaks and question generation
+ * - Tracking challenge progress
+ *
+ * State is managed centrally in GameContext, this hook provides
+ * the business logic and operations.
  *
  * @returns Object containing game state and action methods
  *
@@ -185,7 +144,14 @@ export interface UseGameLogicReturn {
  * ```
  */
 export function useGameLogic(): UseGameLogicReturn {
-  const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
+  const context = useContext(GameContext);
+  const { user } = useAuth();
+
+  if (!context) {
+    throw new Error('useGameLogic must be used within a GameProvider');
+  }
+
+  const { gameState, setGameState, setChallenges } = context;
   let challengeProgressCallback:
     | ((type: ChallengeType, amount: number) => void)
     | null = null;
@@ -203,7 +169,9 @@ export function useGameLogic(): UseGameLogicReturn {
     console.log('  Game mode:', gameSettings.gameMode);
     console.log('  Show labels:', gameSettings.showNoteLabels);
     console.log('====================');
-    dispatch({ type: 'START_GAME' });
+    
+    gameStartTime = Date.now();
+    setGameState((prev) => ({ ...prev, ...startGameState() }));
 
     // Update challenge progress for battle count
     if (challengeProgressCallback) {
@@ -250,7 +218,7 @@ export function useGameLogic(): UseGameLogicReturn {
       }
     }
 
-    dispatch({ type: 'END_GAME' });
+    setGameState((prev) => ({ ...prev, ...endGameState() }));
   };
 
   /**
@@ -260,7 +228,36 @@ export function useGameLogic(): UseGameLogicReturn {
    * @param answer - Array of selected note names (Notes enum values)
    */
   const submitAnswer = (answer: Notes[]) => {
-    dispatch({ type: 'SUBMIT_ANSWER', payload: answer });
+    // Log answer details for debugging
+    const correctNotes = gameState.currentQuestion.notes.map((note) => note.name);
+    const isCorrect =
+      JSON.stringify(answer.sort()) === JSON.stringify(correctNotes.sort());
+
+    console.log('🎯 ANSWER SUBMITTED:');
+    console.log('  Question ID:', gameState.currentQuestion.id);
+    console.log(
+      '  Notes shown:',
+      gameState.currentQuestion.notes.map(
+        (n) => `${n.name}${n.octave} at position ${n.staffPosition}`,
+      ),
+    );
+    console.log('  Expected answer:', correctNotes);
+    console.log('  User selected:', answer);
+    console.log('  Result:', isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
+    if (!isCorrect) {
+      console.log('  ❗ Mismatch details:');
+      console.log('    Expected (sorted):', correctNotes.sort());
+      console.log('    User answer (sorted):', answer.sort());
+    }
+    console.log(
+      '  Current streak:',
+      gameState.streak,
+      '→',
+      isCorrect ? gameState.streak + 1 : 0,
+    );
+    console.log('---');
+
+    setGameState((prev) => ({ ...prev, ...submitAnswerState(prev, answer) }));
 
     // Update challenge progress for score points
     if (challengeProgressCallback) {
@@ -282,7 +279,7 @@ export function useGameLogic(): UseGameLogicReturn {
    * Should be called after processing the current answer
    */
   const nextQuestion = () => {
-    dispatch({ type: 'NEXT_QUESTION' });
+    setGameState((prev) => ({ ...prev, ...nextQuestionState() }));
   };
 
   /**
@@ -290,7 +287,7 @@ export function useGameLogic(): UseGameLogicReturn {
    * Useful for penalty systems or manual streak resets
    */
   const resetStreak = () => {
-    dispatch({ type: 'RESET_STREAK' });
+    setGameState((prev) => ({ ...prev, ...resetStreakState() }));
   };
 
   /**
@@ -303,7 +300,7 @@ export function useGameLogic(): UseGameLogicReturn {
     const newQuestion = generateQuestion(gameSettings);
     console.log('🔄 GENERATING NEW QUESTION');
     console.log('  Game settings:', gameSettings);
-    dispatch({ type: 'SET_QUESTION', payload: newQuestion });
+    setGameState((prev) => ({ ...prev, ...setQuestionState(newQuestion) }));
 
     // Update challenge progress for dominate notes (simplified - just playing counts)
     if (challengeProgressCallback) {
@@ -313,12 +310,27 @@ export function useGameLogic(): UseGameLogicReturn {
 
   /**
    * Sets the callback function for challenge progress updates
+   * This is automatically connected to update challenges in the database
    * @param callback - Function to call when challenge progress should be updated
    */
   const setChallengeProgressCallback = (
     callback: (type: ChallengeType, amount: number) => void,
   ) => {
-    challengeProgressCallback = callback;
+    challengeProgressCallback = async (type: ChallengeType, amount: number) => {
+      // Call the provided callback first
+      callback(type, amount);
+      
+      // Then update database and refresh challenges
+      if (!user) return;
+      
+      try {
+        await updateChallengeProgressAPI(user.id, type, amount);
+        const fetchedChallenges = await fetchUserChallenges(user.id);
+        setChallenges(fetchedChallenges);
+      } catch (error) {
+        console.error('Error tracking challenge progress:', error);
+      }
+    };
   };
 
   return {

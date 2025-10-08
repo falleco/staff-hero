@@ -1,13 +1,7 @@
-import { useState } from 'react';
+import { useContext } from 'react';
+import { GameContext } from '@/contexts/game-context';
 import type { GameSettings } from '@/types/music';
 import { Difficulty, GameMode, NotationSystem } from '@/types/music';
-
-const initialGameSettings: GameSettings = {
-  notationSystem: NotationSystem.SOLFEGE,
-  difficulty: Difficulty.BEGINNER,
-  gameMode: GameMode.SINGLE_NOTE,
-  showNoteLabels: true, // Default to visible for beginners
-};
 
 export interface UseGameSettingsReturn {
   /** Current game settings configuration */
@@ -31,9 +25,14 @@ export interface UseGameSettingsReturn {
 /**
  * Custom hook for managing game settings and configuration
  *
- * Provides methods to update individual settings or multiple settings at once.
- * Maintains the current game configuration state and offers convenient
- * methods for common setting operations.
+ * This hook implements all settings-related business logic:
+ * - Updating notation system, difficulty, game mode
+ * - Toggling note labels
+ * - Managing time limits
+ * - Resetting to defaults
+ *
+ * State is managed centrally in GameContext, this hook provides
+ * the business logic and operations.
  *
  * @returns Object containing current settings and update methods
  *
@@ -62,8 +61,13 @@ export interface UseGameSettingsReturn {
  * ```
  */
 export function useGameSettings(): UseGameSettingsReturn {
-  const [gameSettings, setGameSettings] =
-    useState<GameSettings>(initialGameSettings);
+  const context = useContext(GameContext);
+
+  if (!context) {
+    throw new Error('useGameSettings must be used within a GameProvider');
+  }
+
+  const { gameSettings, setGameSettings } = context;
 
   /**
    * Updates one or more game settings
@@ -174,7 +178,12 @@ export function useGameSettings(): UseGameSettingsReturn {
    * ```
    */
   const resetSettings = () => {
-    setGameSettings(initialGameSettings);
+    setGameSettings({
+      notationSystem: NotationSystem.SOLFEGE,
+      difficulty: Difficulty.BEGINNER,
+      gameMode: GameMode.SINGLE_NOTE,
+      showNoteLabels: true,
+    });
   };
 
   return {

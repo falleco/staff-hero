@@ -358,6 +358,9 @@ export default function EquipmentTab() {
                   onUpgrade={handleUpgradeEquipment}
                   onEquip={handleEquipItem}
                   onUnequip={handleUnequipItem}
+                  hidePurchaseActions={
+                    activeCategory === EquipmentCategory.INSTRUMENTS
+                  }
                 />
               ))
             )}

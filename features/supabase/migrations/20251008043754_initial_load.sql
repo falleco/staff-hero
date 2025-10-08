@@ -43,38 +43,45 @@ alter table public.challenges enable row level security;
 alter table public.user_challenges enable row level security;
 
 -- Policies for user_profiles
+drop policy if exists "Users can view own profile" on public.user_profiles;
 create policy "Users can view own profile"
   on public.user_profiles for select
   to authenticated
   using (auth.uid() = id);
 
+drop policy if exists "Users can update own profile" on public.user_profiles;
 create policy "Users can update own profile"
   on public.user_profiles for update
   to authenticated
   using (auth.uid() = id);
 
+drop policy if exists "Users can insert own profile" on public.user_profiles;
 create policy "Users can insert own profile"
   on public.user_profiles for insert
   to authenticated
   with check (auth.uid() = id);
 
 -- Policies for challenges (everyone can read)
+drop policy if exists "Anyone can view challenges" on public.challenges;
 create policy "Anyone can view challenges"
   on public.challenges for select
   to authenticated
   using (true);
 
 -- Policies for user_challenges
+drop policy if exists "Users can view own challenges" on public.user_challenges;
 create policy "Users can view own challenges"
   on public.user_challenges for select
   to authenticated
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own challenges" on public.user_challenges;
 create policy "Users can insert own challenges"
   on public.user_challenges for insert
   to authenticated
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own challenges" on public.user_challenges;
 create policy "Users can update own challenges"
   on public.user_challenges for update
   to authenticated
@@ -113,14 +120,17 @@ end;
 $$;
 
 -- Triggers for updated_at
+drop trigger if exists handle_user_profiles_updated_at on public.user_profiles;
 create trigger handle_user_profiles_updated_at
   before update on public.user_profiles
   for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists handle_challenges_updated_at on public.challenges;
 create trigger handle_challenges_updated_at
   before update on public.challenges
   for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists handle_user_challenges_updated_at on public.user_challenges;
 create trigger handle_user_challenges_updated_at
   before update on public.user_challenges
   for each row execute procedure public.handle_updated_at();

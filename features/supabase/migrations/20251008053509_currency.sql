@@ -26,11 +26,13 @@ create index if not exists currency_transactions_created_at_idx on public.curren
 alter table public.currency_transactions enable row level security;
 
 -- RLS Policies for currency_transactions
+drop policy if exists "Users can view own transactions" on public.currency_transactions;
 create policy "Users can view own transactions"
   on public.currency_transactions for select
   to authenticated
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own transactions" on public.currency_transactions;
 create policy "Users can insert own transactions"
   on public.currency_transactions for insert
   to authenticated

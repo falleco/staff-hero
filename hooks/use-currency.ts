@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useContext } from 'react';
+import { GameContext } from '@/contexts/game-context';
 import type { UserCurrency } from '@/types/music';
-import type { CurrencyTransaction, CurrencyType } from '~/features/supabase';
+import type { CurrencyTransaction } from '~/features/supabase';
 import {
   addGoldenShards as addGoldenShardsAPI,
   getTransactionHistory,
@@ -35,8 +36,14 @@ export interface UseCurrencyReturn {
 /**
  * Custom hook for managing user currency (Golden Note Shards)
  *
- * Handles currency balance, transactions, and currency operations.
- * Uses the transaction-based currency system from Supabase.
+ * This hook implements all currency-related business logic:
+ * - Loading currency data
+ * - Adding/deducting shards
+ * - Transaction history
+ * - Balance checking
+ *
+ * State is managed centrally in GameContext, this hook provides
+ * the business logic and operations.
  *
  * @returns Object containing currency state and management functions
  *
@@ -64,46 +71,36 @@ export interface UseCurrencyReturn {
  * ```
  */
 export function useCurrency(): UseCurrencyReturn {
-  const { user, isLoading: isAuthLoading } = useAuth();
-  const [currency, setCurrency] = useState<UserCurrency>({
-    goldenNoteShards: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const context = useContext(GameContext);
+  const { user } = useAuth();
 
-  // Load currency when user is available
-  useEffect(() => {
-    if (user && !isAuthLoading) {
-      loadCurrency();
-    }
-  }, [user, isAuthLoading]);
+  if (!context) {
+    throw new Error('useCurrency must be used within a GameProvider');
+  }
+
+  const { currency, currencyLoading, setCurrency, setCurrencyLoading } =
+    context;
 
   /**
-   * Loads currency balance from Supabase
+   * Refreshes currency data from database
    */
-  const loadCurrency = async () => {
+  const refresh = async () => {
     if (!user) return;
 
     try {
-      setIsLoading(true);
+      setCurrencyLoading(true);
       const balance = await getUserBalance(user.id, 'golden_note_shards');
       setCurrency({ goldenNoteShards: balance });
     } catch (error) {
-      console.error('Error loading currency:', error);
+      console.error('Error refreshing currency:', error);
     } finally {
-      setIsLoading(false);
+      setCurrencyLoading(false);
     }
-  };
-
-  /**
-   * Refreshes currency data
-   */
-  const refresh = async () => {
-    await loadCurrency();
   };
 
   /**
    * Adds golden note shards directly to user's account
-   * @param amount - Amount of shards to add
+   * @param amount - Amount of shards to add (positive) or deduct (negative)
    * @param description - Optional description for the transaction
    */
   const addGoldenShards = async (amount: number, description?: string) => {
@@ -111,7 +108,7 @@ export function useCurrency(): UseCurrencyReturn {
 
     try {
       await addGoldenShardsAPI(user.id, amount, description);
-      await loadCurrency(); // Reload to get updated balance
+      await refresh();
     } catch (error) {
       console.error('Error adding golden shards:', error);
       throw error;
@@ -183,7 +180,7 @@ export function useCurrency(): UseCurrencyReturn {
 
   return {
     currency,
-    isLoading,
+    isLoading: currencyLoading,
     refresh,
     addGoldenShards,
     getHistory,

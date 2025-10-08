@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useContext } from 'react';
+import { GameContext } from '@/contexts/game-context';
 import type { Challenge, ChallengeType } from '@/types/music';
 import {
   fetchUserChallenges,
+  getUserBalance,
   redeemChallenge as redeemChallengeAPI,
-  resetUserChallenges,
+  resetUserChallenges as resetUserChallengesAPI,
   startChallenge as startChallengeAPI,
   updateChallengeProgress as updateChallengeProgressAPI,
   useAuth,
@@ -32,8 +34,14 @@ export interface UseChallengesReturn {
 /**
  * Custom hook for managing challenges
  *
- * Handles challenge progress tracking and reward redemption.
- * Data is persisted to Supabase database.
+ * This hook implements all challenge-related business logic:
+ * - Loading challenges
+ * - Starting/progressing challenges
+ * - Redeeming rewards
+ * - Resetting challenges
+ *
+ * State is managed centrally in GameContext, this hook provides
+ * the business logic and operations.
  *
  * Note: For currency management, use the `useCurrency()` hook.
  *
@@ -60,39 +68,37 @@ export interface UseChallengesReturn {
  * ```
  */
 export function useChallenges(): UseChallengesReturn {
-  const { user, isLoading: isAuthLoading } = useAuth();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const context = useContext(GameContext);
+  const { user } = useAuth();
 
-  // Load challenges when user is available
-  useEffect(() => {
-    if (user && !isAuthLoading) {
-      loadChallenges();
-    }
-  }, [user, isAuthLoading]);
+  if (!context) {
+    throw new Error('useChallenges must be used within a GameProvider');
+  }
+
+  const {
+    challenges,
+    challengesLoading,
+    setChallenges,
+    setChallengesLoading,
+    setCurrency,
+    setCurrencyLoading,
+  } = context;
 
   /**
-   * Loads challenges from Supabase
+   * Refreshes challenges data from database
    */
-  const loadChallenges = async () => {
+  const refresh = async () => {
     if (!user) return;
 
     try {
-      setIsLoading(true);
+      setChallengesLoading(true);
       const fetchedChallenges = await fetchUserChallenges(user.id);
       setChallenges(fetchedChallenges);
     } catch (error) {
-      console.error('Error loading challenges:', error);
+      console.error('Error refreshing challenges:', error);
     } finally {
-      setIsLoading(false);
+      setChallengesLoading(false);
     }
-  };
-
-  /**
-   * Refreshes challenge data
-   */
-  const refresh = async () => {
-    await loadChallenges();
   };
 
   /**
@@ -104,7 +110,7 @@ export function useChallenges(): UseChallengesReturn {
 
     try {
       await startChallengeAPI(user.id, challengeId);
-      await loadChallenges(); // Reload to get updated data
+      await refresh();
     } catch (error) {
       console.error('Error starting challenge:', error);
       throw error;
@@ -124,7 +130,7 @@ export function useChallenges(): UseChallengesReturn {
 
     try {
       await updateChallengeProgressAPI(user.id, type, amount);
-      await loadChallenges(); // Reload to get updated data
+      await refresh();
     } catch (error) {
       console.error('Error updating challenge progress:', error);
       throw error;
@@ -133,7 +139,7 @@ export function useChallenges(): UseChallengesReturn {
 
   /**
    * Redeems a completed challenge and awards golden note shards
-   * Note: This creates a currency transaction. Use useCurrency() to see updated balance.
+   * Note: This also updates currency balance
    * @param challengeId - ID of the challenge to redeem
    */
   const redeemChallenge = async (challengeId: string) => {
@@ -141,7 +147,15 @@ export function useChallenges(): UseChallengesReturn {
 
     try {
       await redeemChallengeAPI(user.id, challengeId);
-      await loadChallenges(); // Reload to get updated data
+
+      // Refresh both challenges and currency (redeeming awards currency)
+      await refresh();
+
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
     } catch (error) {
       console.error('Error redeeming challenge:', error);
       throw error;
@@ -150,14 +164,22 @@ export function useChallenges(): UseChallengesReturn {
 
   /**
    * Resets all challenges (for testing)
-   * Note: This also resets currency transactions. Use useCurrency().refresh() to update balance.
+   * Note: This also resets currency
    */
   const resetChallenges = async () => {
     if (!user) return;
 
     try {
-      await resetUserChallenges(user.id);
-      await loadChallenges(); // Reload to get updated data
+      await resetUserChallengesAPI(user.id);
+
+      // Refresh both challenges and currency (reset clears currency too)
+      await refresh();
+
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
     } catch (error) {
       console.error('Error resetting challenges:', error);
       throw error;
@@ -166,7 +188,7 @@ export function useChallenges(): UseChallengesReturn {
 
   return {
     challenges,
-    isLoading,
+    isLoading: challengesLoading,
     refresh,
     startChallenge,
     updateChallengeProgress,

@@ -1,129 +1,27 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import type { Equipment, UserCurrency, UserEquipment } from '@/types/music';
-import { EquipmentCategory, EquipmentRarity } from '@/types/music';
-
-const EQUIPMENT_KEY = '@staff_hero_equipment';
-const USER_EQUIPMENT_KEY = '@staff_hero_user_equipment';
-
-// Default equipment available
-const DEFAULT_EQUIPMENT: Equipment[] = [
-  // Mantles
-  {
-    id: 'novice-cloak',
-    name: 'Novice Cloak',
-    category: EquipmentCategory.MANTLE,
-    rarity: EquipmentRarity.COMMON,
-    level: 1,
-    bonuses: {
-      scoreBonus: 50,
-      accuracyBonus: 5,
-      streakBonus: 1,
-      specialEffect: "Beginner's Luck: +10% chance for bonus points",
-    },
-    price: 20,
-    upgradePrice: 15,
-    icon: '🧙‍♂️',
-    description:
-      'A simple cloak worn by music students. Provides basic protection and confidence.',
-    isOwned: true, // Start with basic equipment
-    isEquipped: true,
-  },
-  {
-    id: 'maestro-robe',
-    name: "Maestro's Robe",
-    category: EquipmentCategory.MANTLE,
-    rarity: EquipmentRarity.EPIC,
-    level: 1,
-    bonuses: {
-      scoreBonus: 200,
-      accuracyBonus: 15,
-      streakBonus: 5,
-      specialEffect: "Conductor's Aura: Double streak bonuses",
-    },
-    price: 80,
-    upgradePrice: 40,
-    icon: '👘',
-    description:
-      'An elegant robe worn by master conductors. Radiates musical authority and precision.',
-    isOwned: false,
-    isEquipped: false,
-  },
-
-  // Adornments
-  {
-    id: 'silver-pendant',
-    name: 'Silver Music Note Pendant',
-    category: EquipmentCategory.ADORNMENTS,
-    rarity: EquipmentRarity.RARE,
-    level: 1,
-    bonuses: {
-      scoreBonus: 100,
-      accuracyBonus: 8,
-      streakBonus: 2,
-      specialEffect: 'Perfect Pitch: +5% accuracy on high notes',
-    },
-    price: 35,
-    upgradePrice: 25,
-    icon: '🎵',
-    description:
-      'A beautiful silver pendant shaped like a musical note. Enhances musical intuition.',
-    isOwned: false,
-    isEquipped: false,
-  },
-  {
-    id: 'golden-metronome',
-    name: 'Golden Metronome Charm',
-    category: EquipmentCategory.ADORNMENTS,
-    rarity: EquipmentRarity.LEGENDARY,
-    level: 1,
-    bonuses: {
-      scoreBonus: 300,
-      accuracyBonus: 20,
-      streakBonus: 8,
-      specialEffect: 'Perfect Timing: Time-based bonuses never expire',
-    },
-    price: 120,
-    upgradePrice: 60,
-    icon: '⏱️',
-    description:
-      'A legendary golden metronome that keeps perfect time. Masters of rhythm covet this charm.',
-    isOwned: false,
-    isEquipped: false,
-  },
-
-  // Instruments (Equipment version - different from luthier instruments)
-  {
-    id: 'enchanted-bow',
-    name: 'Enchanted Violin Bow',
-    category: EquipmentCategory.INSTRUMENTS,
-    rarity: EquipmentRarity.RARE,
-    level: 1,
-    bonuses: {
-      scoreBonus: 150,
-      accuracyBonus: 12,
-      streakBonus: 3,
-      specialEffect: 'Smooth Strings: Violin notes give extra points',
-    },
-    price: 45,
-    upgradePrice: 30,
-    icon: '🏹',
-    description:
-      'A mystical bow that makes violin strings sing with otherworldly beauty.',
-    isOwned: false,
-    isEquipped: false,
-  },
-];
-
-const DEFAULT_USER_EQUIPMENT: UserEquipment = {
-  mantle: null, // Will be set to novice-cloak on first load
-  adornments: [],
-  instruments: null,
-};
+import { useContext } from 'react';
+import { GameContext } from '@/contexts/game-context';
+import type {
+  Equipment,
+  EquipmentCategory,
+  UserCurrency,
+  UserEquipment,
+} from '@/types/music';
+import {
+  equipItem as equipItemAPI,
+  fetchUserEquipment,
+  getUserBalance,
+  purchaseEquipment as purchaseEquipmentAPI,
+  resetUserEquipment as resetUserEquipmentAPI,
+  unequipItem as unequipItemAPI,
+  upgradeEquipment as upgradeEquipmentAPI,
+  useAuth,
+} from '~/features/supabase';
 
 export interface UseEquipmentReturn {
   /** All available equipment */
   equipment: Equipment[];
+  /** Loading state */
+  isLoading: boolean;
   /** Currently equipped items by category */
   userEquipment: UserEquipment;
   /** Equipment filtered by category */
@@ -152,13 +50,21 @@ export interface UseEquipmentReturn {
   };
   /** Reset equipment to default */
   resetEquipment: () => Promise<void>;
+  /** Refresh equipment data */
+  refresh: () => Promise<void>;
 }
 
 /**
  * Custom hook for managing equipment system
  *
- * Handles equipment purchasing, upgrading, equipping, and bonus calculations.
- * Manages three categories: mantles, adornments, and instruments.
+ * This hook implements all equipment-related business logic:
+ * - Loading equipment
+ * - Purchasing/upgrading equipment
+ * - Equipping/unequipping items
+ * - Calculating bonuses
+ *
+ * State is managed centrally in GameContext, this hook provides
+ * the business logic and operations.
  *
  * @returns Object containing equipment data and management functions
  *
@@ -183,95 +89,36 @@ export interface UseEquipmentReturn {
  * ```
  */
 export function useEquipment(): UseEquipmentReturn {
-  const [equipment, setEquipment] = useState<Equipment[]>(DEFAULT_EQUIPMENT);
-  const [userEquipment, setUserEquipment] = useState<UserEquipment>(
-    DEFAULT_USER_EQUIPMENT,
-  );
+  const context = useContext(GameContext);
+  const { user } = useAuth();
 
-  // Load data on mount
-  useEffect(() => {
-    loadEquipment();
-    loadUserEquipment();
-  }, []);
+  if (!context) {
+    throw new Error('useEquipment must be used within a GameProvider');
+  }
 
-  /**
-   * Loads equipment from AsyncStorage
-   */
-  const loadEquipment = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(EQUIPMENT_KEY);
-      if (stored) {
-        const parsedEquipment = JSON.parse(stored);
-        setEquipment(parsedEquipment);
-      } else {
-        // First time setup - equip the novice cloak
-        const initialEquipment = DEFAULT_EQUIPMENT.map((item) =>
-          item.id === 'novice-cloak'
-            ? { ...item, isOwned: true, isEquipped: true }
-            : item,
-        );
-        await saveEquipment(initialEquipment);
-      }
-    } catch (error) {
-      console.error('Error loading equipment:', error);
-    }
-  };
+  const {
+    equipment,
+    equipmentLoading,
+    setEquipment,
+    setEquipmentLoading,
+    setCurrency,
+    setCurrencyLoading,
+  } = context;
 
   /**
-   * Loads user equipment from AsyncStorage
+   * Refreshes equipment data from database
    */
-  const loadUserEquipment = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(USER_EQUIPMENT_KEY);
-      if (stored) {
-        const parsedUserEquipment = JSON.parse(stored);
-        setUserEquipment(parsedUserEquipment);
-      } else {
-        // First time setup
-        const noviceCloak = DEFAULT_EQUIPMENT.find(
-          (item) => item.id === 'novice-cloak',
-        );
-        if (noviceCloak) {
-          const initialUserEquipment = {
-            mantle: noviceCloak,
-            adornments: [],
-            instruments: null,
-          };
-          await saveUserEquipment(initialUserEquipment);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading user equipment:', error);
-    }
-  };
+  const refresh = async () => {
+    if (!user) return;
 
-  /**
-   * Saves equipment to AsyncStorage
-   */
-  const saveEquipment = async (equipmentToSave: Equipment[]) => {
     try {
-      await AsyncStorage.setItem(
-        EQUIPMENT_KEY,
-        JSON.stringify(equipmentToSave),
-      );
-      setEquipment(equipmentToSave);
+      setEquipmentLoading(true);
+      const fetchedEquipment = await fetchUserEquipment(user.id);
+      setEquipment(fetchedEquipment);
     } catch (error) {
-      console.error('Error saving equipment:', error);
-    }
-  };
-
-  /**
-   * Saves user equipment to AsyncStorage
-   */
-  const saveUserEquipment = async (userEquipmentToSave: UserEquipment) => {
-    try {
-      await AsyncStorage.setItem(
-        USER_EQUIPMENT_KEY,
-        JSON.stringify(userEquipmentToSave),
-      );
-      setUserEquipment(userEquipmentToSave);
-    } catch (error) {
-      console.error('Error saving user equipment:', error);
+      console.error('Error refreshing equipment:', error);
+    } finally {
+      setEquipmentLoading(false);
     }
   };
 
@@ -283,6 +130,20 @@ export function useEquipment(): UseEquipmentReturn {
   };
 
   /**
+   * Gets currently equipped items organized by category
+   */
+  const userEquipment: UserEquipment = {
+    mantle:
+      equipment.find((e) => e.category === 'mantle' && e.isEquipped) || null,
+    adornments: equipment.filter(
+      (e) => e.category === 'adornments' && e.isEquipped,
+    ),
+    instruments:
+      equipment.find((e) => e.category === 'instruments' && e.isEquipped) ||
+      null,
+  };
+
+  /**
    * Purchases equipment if user has enough currency
    */
   const buyEquipment = async (
@@ -290,6 +151,8 @@ export function useEquipment(): UseEquipmentReturn {
     currency: UserCurrency,
     updateCurrency: (currency: UserCurrency) => Promise<void>,
   ): Promise<boolean> => {
+    if (!user) return false;
+
     const item = equipment.find((e) => e.id === equipmentId);
     if (!item || item.isOwned) {
       return false;
@@ -299,20 +162,24 @@ export function useEquipment(): UseEquipmentReturn {
       return false;
     }
 
-    // Deduct currency
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards - item.price,
-    };
-    await updateCurrency(newCurrency);
+    try {
+      // Purchase via API (automatically deducts currency)
+      await purchaseEquipmentAPI(user.id, equipmentId);
 
-    // Mark equipment as owned
-    const updatedEquipment = equipment.map((e) =>
-      e.id === equipmentId ? { ...e, isOwned: true } : e,
-    );
-    await saveEquipment(updatedEquipment);
+      // Refresh equipment
+      await refresh();
 
-    return true;
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
+
+      return true;
+    } catch (error) {
+      console.error('Error buying equipment:', error);
+      return false;
+    }
   };
 
   /**
@@ -323,6 +190,8 @@ export function useEquipment(): UseEquipmentReturn {
     currency: UserCurrency,
     updateCurrency: (currency: UserCurrency) => Promise<void>,
   ): Promise<boolean> => {
+    if (!user) return false;
+
     const item = equipment.find((e) => e.id === equipmentId);
     if (!item || !item.isOwned || item.level >= 10) {
       return false;
@@ -332,120 +201,64 @@ export function useEquipment(): UseEquipmentReturn {
       return false;
     }
 
-    // Deduct currency
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards - item.upgradePrice,
-    };
-    await updateCurrency(newCurrency);
+    try {
+      // Upgrade via API (automatically deducts currency)
+      await upgradeEquipmentAPI(user.id, equipmentId);
 
-    // Upgrade equipment
-    const updatedEquipment = equipment.map((e) =>
-      e.id === equipmentId
-        ? {
-            ...e,
-            level: e.level + 1,
-            bonuses: {
-              scoreBonus: e.bonuses.scoreBonus + 25,
-              accuracyBonus: e.bonuses.accuracyBonus + 2,
-              streakBonus: e.bonuses.streakBonus + 1,
-              specialEffect: e.bonuses.specialEffect,
-            },
-            upgradePrice: Math.floor(e.upgradePrice * 1.5),
-          }
-        : e,
-    );
-    await saveEquipment(updatedEquipment);
+      // Refresh equipment
+      await refresh();
 
-    return true;
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
+
+      return true;
+    } catch (error) {
+      console.error('Error upgrading equipment:', error);
+      return false;
+    }
   };
 
   /**
-   * Equips an item (handles category-specific logic)
+   * Equips an item (handles category-specific logic on server)
    */
   const equipItem = async (equipmentId: string) => {
+    if (!user) return;
+
     const item = equipment.find((e) => e.id === equipmentId);
     if (!item || !item.isOwned) {
       return;
     }
 
-    const newUserEquipment = { ...userEquipment };
-    let updatedEquipment = [...equipment];
-
-    // Handle category-specific equipping
-    switch (item.category) {
-      case EquipmentCategory.MANTLE:
-        // Unequip current mantle
-        if (userEquipment.mantle) {
-          updatedEquipment = updatedEquipment.map((e) =>
-            e.id === userEquipment.mantle?.id ? { ...e, isEquipped: false } : e,
-          );
-        }
-        newUserEquipment.mantle = item;
-        break;
-
-      case EquipmentCategory.INSTRUMENTS:
-        // Unequip current instrument
-        if (userEquipment.instruments) {
-          updatedEquipment = updatedEquipment.map((e) =>
-            e.id === userEquipment.instruments?.id
-              ? { ...e, isEquipped: false }
-              : e,
-          );
-        }
-        newUserEquipment.instruments = item;
-        break;
-
-      case EquipmentCategory.ADORNMENTS:
-        // Add to adornments (can have multiple)
-        if (!userEquipment.adornments.find((a) => a.id === item.id)) {
-          newUserEquipment.adornments = [...userEquipment.adornments, item];
-        }
-        break;
+    try {
+      await equipItemAPI(user.id, equipmentId);
+      await refresh();
+    } catch (error) {
+      console.error('Error equipping item:', error);
+      throw error;
     }
-
-    // Mark item as equipped
-    updatedEquipment = updatedEquipment.map((e) =>
-      e.id === equipmentId ? { ...e, isEquipped: true } : e,
-    );
-
-    await saveEquipment(updatedEquipment);
-    await saveUserEquipment(newUserEquipment);
   };
 
   /**
    * Unequips an item
    */
   const unequipItem = async (equipmentId: string) => {
+    if (!user) return;
+
     const item = equipment.find((e) => e.id === equipmentId);
     if (!item || !item.isEquipped) {
       return;
     }
 
-    const newUserEquipment = { ...userEquipment };
-
-    // Handle category-specific unequipping
-    switch (item.category) {
-      case EquipmentCategory.MANTLE:
-        newUserEquipment.mantle = null;
-        break;
-      case EquipmentCategory.INSTRUMENTS:
-        newUserEquipment.instruments = null;
-        break;
-      case EquipmentCategory.ADORNMENTS:
-        newUserEquipment.adornments = userEquipment.adornments.filter(
-          (a) => a.id !== equipmentId,
-        );
-        break;
+    try {
+      await unequipItemAPI(user.id, equipmentId);
+      await refresh();
+    } catch (error) {
+      console.error('Error unequipping item:', error);
+      throw error;
     }
-
-    // Mark item as unequipped
-    const updatedEquipment = equipment.map((e) =>
-      e.id === equipmentId ? { ...e, isEquipped: false } : e,
-    );
-
-    await saveEquipment(updatedEquipment);
-    await saveUserEquipment(newUserEquipment);
   };
 
   /**
@@ -484,15 +297,23 @@ export function useEquipment(): UseEquipmentReturn {
   };
 
   /**
-   * Resets equipment to default state
+   * Resets equipment to default state (for testing)
    */
   const resetEquipment = async () => {
-    await saveEquipment(DEFAULT_EQUIPMENT);
-    await saveUserEquipment(DEFAULT_USER_EQUIPMENT);
+    if (!user) return;
+
+    try {
+      await resetUserEquipmentAPI(user.id);
+      await refresh();
+    } catch (error) {
+      console.error('Error resetting equipment:', error);
+      throw error;
+    }
   };
 
   return {
     equipment,
+    isLoading: equipmentLoading,
     userEquipment,
     getEquipmentByCategory,
     buyEquipment,
@@ -501,5 +322,6 @@ export function useEquipment(): UseEquipmentReturn {
     unequipItem,
     getTotalBonuses,
     resetEquipment,
+    refresh,
   };
 }

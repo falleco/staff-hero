@@ -13,6 +13,8 @@ interface EquipmentCardProps {
   onUpgrade: (equipmentId: string) => Promise<boolean>;
   onEquip: (equipmentId: string) => Promise<void>;
   onUnequip: (equipmentId: string) => Promise<void>;
+  /** Hide buy/upgrade buttons (for instruments that must be purchased at luthier) */
+  hidePurchaseActions?: boolean;
 }
 
 /**
@@ -35,6 +37,7 @@ export function EquipmentCard({
   onUpgrade,
   onEquip,
   onUnequip,
+  hidePurchaseActions = false,
 }: EquipmentCardProps) {
   const cardBackgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -207,7 +210,7 @@ export function EquipmentCard({
 
       {/* Action Buttons */}
       <View className="flex-row space-x-2">
-        {!equipment.isOwned && (
+        {!equipment.isOwned && !hidePurchaseActions && (
           <Button
             size="sm"
             variant="solid"
@@ -217,6 +220,14 @@ export function EquipmentCard({
           >
             <ButtonText>Buy - ✨{equipment.price}</ButtonText>
           </Button>
+        )}
+
+        {!equipment.isOwned && hidePurchaseActions && (
+          <View className="flex-1 p-2 bg-amber-50 rounded-lg">
+            <ThemedText className="text-xs text-amber-800 text-center">
+              Visit the Luthier to purchase
+            </ThemedText>
+          </View>
         )}
 
         {equipment.isOwned && !equipment.isEquipped && (
@@ -241,7 +252,7 @@ export function EquipmentCard({
           </Button>
         )}
 
-        {equipment.isOwned && equipment.level < 10 && (
+        {equipment.isOwned && equipment.level < 10 && !hidePurchaseActions && (
           <Button
             size="sm"
             variant="outline"

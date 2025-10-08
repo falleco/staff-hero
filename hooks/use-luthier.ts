@@ -1,102 +1,23 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useContext } from 'react';
+import { GameContext } from '@/contexts/game-context';
 import type { Instrument, UserCurrency } from '@/types/music';
-import { InstrumentRarity, InstrumentType } from '@/types/music';
-
-const INSTRUMENTS_KEY = '@staff_hero_instruments';
-const USER_INVENTORY_KEY = '@staff_hero_inventory';
-
-// Default instruments available for purchase
-const DEFAULT_INSTRUMENTS: Instrument[] = [
-  {
-    id: 'starter-violin',
-    name: 'Student Violin',
-    type: InstrumentType.VIOLIN,
-    rarity: InstrumentRarity.COMMON,
-    level: 1,
-    tuning: 100, // Starts perfectly tuned
-    bonuses: {
-      scoreMultiplier: 1.0,
-      accuracyBonus: 0,
-      streakBonus: 0,
-    },
-    price: 0, // Free starter instrument
-    upgradePrice: 15,
-    tunePrice: 2,
-    icon: '🎻',
-    description:
-      'A basic violin perfect for beginners. Reliable and easy to play.',
-    isOwned: true,
-    isEquipped: true,
-  },
-  {
-    id: 'acoustic-guitar',
-    name: 'Acoustic Guitar',
-    type: InstrumentType.GUITAR,
-    rarity: InstrumentRarity.COMMON,
-    level: 1,
-    tuning: 85,
-    bonuses: {
-      scoreMultiplier: 1.1,
-      accuracyBonus: 5,
-      streakBonus: 0,
-    },
-    price: 25,
-    upgradePrice: 20,
-    tunePrice: 3,
-    icon: '🎸',
-    description:
-      'A versatile acoustic guitar with warm tones and good projection.',
-    isOwned: false,
-    isEquipped: false,
-  },
-  {
-    id: 'grand-piano',
-    name: 'Grand Piano',
-    type: InstrumentType.PIANO,
-    rarity: InstrumentRarity.RARE,
-    level: 1,
-    tuning: 90,
-    bonuses: {
-      scoreMultiplier: 1.2,
-      accuracyBonus: 10,
-      streakBonus: 2,
-    },
-    price: 50,
-    upgradePrice: 35,
-    tunePrice: 5,
-    icon: '🎹',
-    description:
-      'A majestic grand piano with rich harmonics and perfect resonance.',
-    isOwned: false,
-    isEquipped: false,
-  },
-  {
-    id: 'silver-flute',
-    name: 'Silver Flute',
-    type: InstrumentType.FLUTE,
-    rarity: InstrumentRarity.EPIC,
-    level: 1,
-    tuning: 95,
-    bonuses: {
-      scoreMultiplier: 1.3,
-      accuracyBonus: 15,
-      streakBonus: 3,
-    },
-    price: 75,
-    upgradePrice: 50,
-    tunePrice: 8,
-    icon: '🪈',
-    description:
-      'An elegant silver flute with crystal-clear tone and exceptional responsiveness.',
-    isOwned: false,
-    isEquipped: false,
-  },
-];
+import {
+  equipInstrument as equipInstrumentAPI,
+  fetchUserInstruments,
+  getUserBalance,
+  purchaseInstrument as purchaseInstrumentAPI,
+  resetUserInstruments as resetUserInstrumentsAPI,
+  tuneInstrument as tuneInstrumentAPI,
+  unequipInstrument as unequipInstrumentAPI,
+  upgradeInstrument as upgradeInstrumentAPI,
+  useAuth,
+} from '~/features/supabase';
 
 export interface UseLuthierReturn {
   /** Available instruments in the shop */
   instruments: Instrument[];
+  /** Loading state */
+  isLoading: boolean;
   /** Currently equipped instrument */
   equippedInstrument: Instrument | null;
   /** User's owned instruments */
@@ -121,15 +42,24 @@ export interface UseLuthierReturn {
   ) => Promise<boolean>;
   /** Equip an owned instrument */
   equipInstrument: (instrumentId: string) => Promise<void>;
+  /** Unequip an owned instrument */
+  unequipInstrument: (instrumentId: string) => Promise<void>;
   /** Reset instruments to default (for testing) */
   resetInstruments: () => Promise<void>;
+  /** Refresh instruments data */
+  refresh: () => Promise<void>;
 }
 
 /**
  * Custom hook for managing luthier services and instruments
  *
- * Handles instrument purchasing, upgrading, tuning, and equipment management.
- * Integrates with the golden note shards currency system.
+ * This hook implements all instrument-related business logic:
+ * - Loading instruments
+ * - Purchasing/upgrading/tuning instruments
+ * - Equipping/unequipping instruments
+ *
+ * State is managed centrally in GameContext, this hook provides
+ * the business logic and operations.
  *
  * @returns Object containing instruments and luthier service functions
  *
@@ -154,41 +84,36 @@ export interface UseLuthierReturn {
  * ```
  */
 export function useLuthier(): UseLuthierReturn {
-  const [instruments, setInstruments] =
-    useState<Instrument[]>(DEFAULT_INSTRUMENTS);
+  const context = useContext(GameContext);
+  const { user } = useAuth();
 
-  // Load data on mount
-  useEffect(() => {
-    loadInstruments();
-  }, []);
+  if (!context) {
+    throw new Error('useLuthier must be used within a GameProvider');
+  }
 
-  /**
-   * Loads instruments from AsyncStorage
-   */
-  const loadInstruments = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(INSTRUMENTS_KEY);
-      if (stored) {
-        const parsedInstruments = JSON.parse(stored);
-        setInstruments(parsedInstruments);
-      }
-    } catch (error) {
-      console.error('Error loading instruments:', error);
-    }
-  };
+  const {
+    instruments,
+    instrumentsLoading,
+    setInstruments,
+    setInstrumentsLoading,
+    setCurrency,
+    setCurrencyLoading,
+  } = context;
 
   /**
-   * Saves instruments to AsyncStorage
+   * Refreshes instruments data from database
    */
-  const saveInstruments = async (instrumentsToSave: Instrument[]) => {
+  const refresh = async () => {
+    if (!user) return;
+
     try {
-      await AsyncStorage.setItem(
-        INSTRUMENTS_KEY,
-        JSON.stringify(instrumentsToSave),
-      );
-      setInstruments(instrumentsToSave);
+      setInstrumentsLoading(true);
+      const fetchedInstruments = await fetchUserInstruments(user.id);
+      setInstruments(fetchedInstruments);
     } catch (error) {
-      console.error('Error saving instruments:', error);
+      console.error('Error refreshing instruments:', error);
+    } finally {
+      setInstrumentsLoading(false);
     }
   };
 
@@ -210,6 +135,8 @@ export function useLuthier(): UseLuthierReturn {
     currency: UserCurrency,
     updateCurrency: (currency: UserCurrency) => Promise<void>,
   ): Promise<boolean> => {
+    if (!user) return false;
+
     const instrument = instruments.find((i) => i.id === instrumentId);
     if (!instrument || instrument.isOwned) {
       return false;
@@ -219,20 +146,24 @@ export function useLuthier(): UseLuthierReturn {
       return false; // Not enough currency
     }
 
-    // Deduct currency
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards - instrument.price,
-    };
-    await updateCurrency(newCurrency);
+    try {
+      // Purchase via API (automatically deducts currency)
+      await purchaseInstrumentAPI(user.id, instrumentId);
 
-    // Mark instrument as owned
-    const updatedInstruments = instruments.map((i) =>
-      i.id === instrumentId ? { ...i, isOwned: true } : i,
-    );
-    await saveInstruments(updatedInstruments);
+      // Refresh instruments
+      await refresh();
 
-    return true;
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
+
+      return true;
+    } catch (error) {
+      console.error('Error buying instrument:', error);
+      return false;
+    }
   };
 
   /**
@@ -247,6 +178,8 @@ export function useLuthier(): UseLuthierReturn {
     currency: UserCurrency,
     updateCurrency: (currency: UserCurrency) => Promise<void>,
   ): Promise<boolean> => {
+    if (!user) return false;
+
     const instrument = instruments.find((i) => i.id === instrumentId);
     if (!instrument || !instrument.isOwned || instrument.level >= 10) {
       return false; // Not owned or max level
@@ -256,31 +189,24 @@ export function useLuthier(): UseLuthierReturn {
       return false; // Not enough currency
     }
 
-    // Deduct currency
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards - instrument.upgradePrice,
-    };
-    await updateCurrency(newCurrency);
+    try {
+      // Upgrade via API (automatically deducts currency)
+      await upgradeInstrumentAPI(user.id, instrumentId);
 
-    // Upgrade instrument
-    const updatedInstruments = instruments.map((i) =>
-      i.id === instrumentId
-        ? {
-            ...i,
-            level: i.level + 1,
-            bonuses: {
-              scoreMultiplier: i.bonuses.scoreMultiplier + 0.1,
-              accuracyBonus: i.bonuses.accuracyBonus + 2,
-              streakBonus: i.bonuses.streakBonus + 1,
-            },
-            upgradePrice: Math.floor(i.upgradePrice * 1.5), // Increase upgrade cost
-          }
-        : i,
-    );
-    await saveInstruments(updatedInstruments);
+      // Refresh instruments
+      await refresh();
 
-    return true;
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
+
+      return true;
+    } catch (error) {
+      console.error('Error upgrading instrument:', error);
+      return false;
+    }
   };
 
   /**
@@ -295,6 +221,8 @@ export function useLuthier(): UseLuthierReturn {
     currency: UserCurrency,
     updateCurrency: (currency: UserCurrency) => Promise<void>,
   ): Promise<boolean> => {
+    if (!user) return false;
+
     const instrument = instruments.find((i) => i.id === instrumentId);
     if (!instrument || !instrument.isOwned || instrument.tuning >= 100) {
       return false; // Not owned or already perfectly tuned
@@ -304,22 +232,24 @@ export function useLuthier(): UseLuthierReturn {
       return false; // Not enough currency
     }
 
-    // Deduct currency
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards - instrument.tunePrice,
-    };
-    await updateCurrency(newCurrency);
+    try {
+      // Tune via API (automatically deducts currency)
+      await tuneInstrumentAPI(user.id, instrumentId);
 
-    // Tune instrument
-    const updatedInstruments = instruments.map((i) =>
-      i.id === instrumentId
-        ? { ...i, tuning: Math.min(100, i.tuning + 15) } // Improve tuning by 15 points
-        : i,
-    );
-    await saveInstruments(updatedInstruments);
+      // Refresh instruments
+      await refresh();
 
-    return true;
+      // Refresh currency too
+      setCurrencyLoading(true);
+      const balance = await getUserBalance(user.id, 'golden_note_shards');
+      setCurrency({ goldenNoteShards: balance });
+      setCurrencyLoading(false);
+
+      return true;
+    } catch (error) {
+      console.error('Error tuning instrument:', error);
+      return false;
+    }
   };
 
   /**
@@ -327,34 +257,69 @@ export function useLuthier(): UseLuthierReturn {
    * @param instrumentId - ID of the instrument to equip
    */
   const equipInstrument = async (instrumentId: string) => {
+    if (!user) return;
+
     const instrument = instruments.find((i) => i.id === instrumentId);
     if (!instrument || !instrument.isOwned) {
       return;
     }
 
-    // Unequip all instruments and equip the selected one
-    const updatedInstruments = instruments.map((i) => ({
-      ...i,
-      isEquipped: i.id === instrumentId,
-    }));
-    await saveInstruments(updatedInstruments);
+    try {
+      await equipInstrumentAPI(user.id, instrumentId);
+      await refresh();
+    } catch (error) {
+      console.error('Error equipping instrument:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Unequips an owned instrument
+   * @param instrumentId - ID of the instrument to unequip
+   */
+  const unequipInstrument = async (instrumentId: string) => {
+    if (!user) return;
+
+    const instrument = instruments.find((i) => i.id === instrumentId);
+    if (!instrument || !instrument.isEquipped) {
+      return;
+    }
+
+    try {
+      await unequipInstrumentAPI(user.id, instrumentId);
+      await refresh();
+    } catch (error) {
+      console.error('Error unequipping instrument:', error);
+      throw error;
+    }
   };
 
   /**
    * Resets instruments to default state (for testing)
    */
   const resetInstruments = async () => {
-    await saveInstruments(DEFAULT_INSTRUMENTS);
+    if (!user) return;
+
+    try {
+      await resetUserInstrumentsAPI(user.id);
+      await refresh();
+    } catch (error) {
+      console.error('Error resetting instruments:', error);
+      throw error;
+    }
   };
 
   return {
     instruments,
+    isLoading: instrumentsLoading,
     equippedInstrument,
     ownedInstruments,
     buyInstrument,
     upgradeInstrument,
     tuneInstrument,
     equipInstrument,
+    unequipInstrument,
     resetInstruments,
+    refresh,
   };
 }
