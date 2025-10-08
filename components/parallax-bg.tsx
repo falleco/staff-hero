@@ -232,8 +232,8 @@ export const ParallaxBg = ({ className }: { className?: string }) => {
         loop={true}
         autoPlay={true}
         style={{
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           position: 'absolute',
           top: -10,
           left: 0,

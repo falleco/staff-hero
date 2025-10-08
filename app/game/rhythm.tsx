@@ -98,14 +98,14 @@ export default function RhythmGame() {
   useEffect(() => {
     return () => {
       gameOverRef.current = true;
-      
+
       if (lineAnimationRef.current) {
         lineAnimationRef.current.stop();
       }
       if (checkIntervalRef.current) {
         clearInterval(checkIntervalRef.current);
       }
-      
+
       // Remove all listeners from animated value
       linePosition.removeAllListeners();
     };
@@ -114,7 +114,7 @@ export default function RhythmGame() {
   const generateRhythmNotes = () => {
     // Generate 10 different notes directly
     const notes: NoteStatus[] = [];
-    
+
     for (let i = 0; i < NOTE_COUNT; i++) {
       const note = generateRandomNote(gameSettings.gameSettings.difficulty);
       notes.push({
@@ -126,7 +126,7 @@ export default function RhythmGame() {
     }
 
     setNoteStatuses(notes);
-    
+
     // Generate a question to populate the answer options
     gameLogic.generateNewQuestion(gameSettings.gameSettings);
   };
@@ -159,7 +159,7 @@ export default function RhythmGame() {
         checkForMissedNotes(value);
       }
     });
-    
+
     // Store the listener ID for cleanup
     return listenerId;
   };
@@ -188,7 +188,7 @@ export default function RhythmGame() {
       if (updated[index]) {
         updated[index] = { ...updated[index], missed: true, answered: true };
       }
-      
+
       // Check if all notes completed
       const allAnswered = updated.every((n) => n.answered);
       if (allAnswered) {
@@ -197,7 +197,7 @@ export default function RhythmGame() {
           setShowResults(true);
         }, 500);
       }
-      
+
       return updated;
     });
 
@@ -214,13 +214,13 @@ export default function RhythmGame() {
     // Get current line position
     const currentPos = (linePosition as any)._value;
     const noteWidth = STAFF_WIDTH / NOTE_COUNT;
-    
+
     // Find which note the line is closest to
     let closestNoteIndex = Math.round(currentPos / noteWidth);
-    
+
     // Clamp to valid range
     closestNoteIndex = Math.max(0, Math.min(NOTE_COUNT - 1, closestNoteIndex));
-    
+
     // Calculate distance to that note's center
     const noteCenter = closestNoteIndex * noteWidth + noteWidth / 2;
     const distance = Math.abs(currentPos - noteCenter);
@@ -260,7 +260,7 @@ export default function RhythmGame() {
       if (updated[index]) {
         updated[index] = { ...updated[index], hit: true, answered: true };
       }
-      
+
       // Check if all notes completed
       const allAnswered = updated.every((n) => n.answered);
       if (allAnswered) {
@@ -269,7 +269,7 @@ export default function RhythmGame() {
           setShowResults(true);
         }, 500);
       }
-      
+
       return updated;
     });
 
@@ -288,7 +288,7 @@ export default function RhythmGame() {
       if (updated[index]) {
         updated[index] = { ...updated[index], missed: true, answered: true };
       }
-      
+
       // Check if all notes completed
       const allAnswered = updated.every((n) => n.answered);
       if (allAnswered) {
@@ -297,7 +297,7 @@ export default function RhythmGame() {
           setShowResults(true);
         }, 500);
       }
-      
+
       return updated;
     });
 
@@ -318,7 +318,7 @@ export default function RhythmGame() {
     // Prevent multiple calls
     if (gameOverRef.current) return;
     gameOverRef.current = true;
-    
+
     // Stop animations
     if (lineAnimationRef.current) {
       lineAnimationRef.current.stop();
@@ -455,9 +455,7 @@ export default function RhythmGame() {
               </ThemedText>
               <View className="flex-row gap-6">
                 <View className="items-center">
-                  <ThemedText
-                    className="text-3xl font-bold text-green-400"
-                  >
+                  <ThemedText className="text-3xl font-bold text-green-400">
                     {noteStatuses.filter((n) => n.hit).length}
                   </ThemedText>
                   <ThemedText
@@ -468,9 +466,7 @@ export default function RhythmGame() {
                   </ThemedText>
                 </View>
                 <View className="items-center">
-                  <ThemedText
-                    className="text-3xl font-bold text-red-400"
-                  >
+                  <ThemedText className="text-3xl font-bold text-red-400">
                     {noteStatuses.filter((n) => n.missed).length}
                   </ThemedText>
                   <ThemedText

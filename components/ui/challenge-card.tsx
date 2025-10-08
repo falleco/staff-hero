@@ -108,9 +108,7 @@ export function ChallengeCard({
         <View className="flex-row items-center flex-1">
           <ThemedText className="text-2xl mr-3">{challenge.icon}</ThemedText>
           <View className="flex-1">
-            <ThemedText
-              className="text-xl font-semibold"
-            >
+            <ThemedText className="text-xl font-semibold">
               {challenge.title}
             </ThemedText>
             <View className="flex-row items-center mt-1">

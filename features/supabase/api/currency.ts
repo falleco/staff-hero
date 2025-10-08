@@ -1,5 +1,9 @@
 import { supabase } from '../client';
-import type { CurrencyTransaction, CurrencyType, TransactionSource } from '../types';
+import type {
+  CurrencyTransaction,
+  CurrencyType,
+  TransactionSource,
+} from '../types';
 
 /**
  * Gets the current balance for a user
@@ -82,7 +86,10 @@ export async function getTransactionHistory(
     }
 
     if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+      query = query.range(
+        options.offset,
+        options.offset + (options.limit || 10) - 1,
+      );
     }
 
     const { data, error } = await query;
@@ -155,4 +162,3 @@ export async function hasSufficientBalance(
   const balance = await getUserBalance(userId, currencyType);
   return balance >= requiredAmount;
 }
-

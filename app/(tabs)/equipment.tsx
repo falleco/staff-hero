@@ -135,9 +135,7 @@ export default function EquipmentTab() {
                 >
                   ⚔️ Equipment
                 </ThemedText>
-                <ThemedText
-                  className="text-sm"
-                >
+                <ThemedText className="text-sm">
                   Enhance your musical abilities with powerful gear
                 </ThemedText>
               </View>
@@ -146,17 +144,11 @@ export default function EquipmentTab() {
               <View className="items-end">
                 <View className="flex-row items-center">
                   <ThemedText className="text-lg mr-1">✨</ThemedText>
-                  <ThemedText
-                    className="text-xl font-bold"
-                  >
+                  <ThemedText className="text-xl font-bold">
                     {currency.goldenNoteShards}
                   </ThemedText>
                 </View>
-                <ThemedText
-                  className="text-xs"
-                >
-                  Golden Shards
-                </ThemedText>
+                <ThemedText className="text-xs">Golden Shards</ThemedText>
               </View>
             </View>
 

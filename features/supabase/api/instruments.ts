@@ -1,11 +1,17 @@
-import type { Instrument, InstrumentRarity, InstrumentType } from '@/types/music';
+import type {
+  Instrument,
+  InstrumentRarity,
+  InstrumentType,
+} from '@/types/music';
 import { supabase } from '../client';
 import { getUserProfile } from './user-profile';
 
 /**
  * Fetches all available instruments with user ownership data
  */
-export async function fetchUserInstruments(userId: string): Promise<Instrument[]> {
+export async function fetchUserInstruments(
+  userId: string,
+): Promise<Instrument[]> {
   try {
     // Ensure user profile exists
     await getUserProfile(userId);
@@ -185,4 +191,3 @@ export async function resetUserInstruments(userId: string): Promise<void> {
     throw error;
   }
 }
-

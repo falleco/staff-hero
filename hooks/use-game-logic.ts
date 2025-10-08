@@ -222,7 +222,9 @@ export function useGameLogic(): UseGameLogicReturn {
    */
   const submitAnswer = (answer: Notes[]) => {
     // Log answer details for debugging
-    const correctNotes = gameState.currentQuestion.notes.map((note) => note.name);
+    const correctNotes = gameState.currentQuestion.notes.map(
+      (note) => note.name,
+    );
     const isCorrect =
       JSON.stringify(answer.sort()) === JSON.stringify(correctNotes.sort());
 
@@ -286,10 +288,10 @@ export function useGameLogic(): UseGameLogicReturn {
     challengeProgressCallback = async (type: ChallengeType, amount: number) => {
       // Call the provided callback first
       callback(type, amount);
-      
+
       // Then update database and refresh challenges
       if (!user) return;
-      
+
       try {
         await updateChallengeProgressAPI(user.id, type, amount);
         const fetchedChallenges = await fetchUserChallenges(user.id);

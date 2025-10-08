@@ -1,4 +1,8 @@
-import type { Achievement, GameSession, UserAnalytics } from '@/types/analytics';
+import type {
+  Achievement,
+  GameSession,
+  UserAnalytics,
+} from '@/types/analytics';
 import { Difficulty, GameMode, NotationSystem } from '@/types/music';
 import { supabase } from '../client';
 import { getUserProfile } from './user-profile';
@@ -72,7 +76,7 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
 
     // Parse analytics data
     const analytics = analyticsData as any;
-    
+
     // Ensure default values for counts if no games played
     const gamesPerMode = analytics.gamesPerMode || {
       [GameMode.SINGLE_NOTE]: 0,
@@ -98,34 +102,39 @@ export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
       bestStreak: analytics.bestStreak || 0,
       averageAccuracy: analytics.averageAccuracy || 0,
       totalPlayTime: analytics.totalPlayTime || 0,
-      favoriteGameMode: (analytics.favoriteGameMode || GameMode.SINGLE_NOTE) as GameMode,
-      favoriteNotation: (analytics.favoriteNotation || NotationSystem.LETTER) as NotationSystem,
-      favoriteDifficulty: (analytics.favoriteDifficulty || Difficulty.BEGINNER) as Difficulty,
+      favoriteGameMode: (analytics.favoriteGameMode ||
+        GameMode.SINGLE_NOTE) as GameMode,
+      favoriteNotation: (analytics.favoriteNotation ||
+        NotationSystem.LETTER) as NotationSystem,
+      favoriteDifficulty: (analytics.favoriteDifficulty ||
+        Difficulty.BEGINNER) as Difficulty,
       gamesPerMode,
       gamesPerNotation,
       gamesPerDifficulty,
-      recentSessions: (sessionsData as any[])?.map((session: any) => ({
-        id: session.id,
-        date: session.created_at,
-        gameMode: session.game_mode as GameMode,
-        difficulty: session.difficulty as Difficulty,
-        notationSystem: session.notation_system as NotationSystem,
-        score: session.score,
-        streak: session.streak,
-        maxStreak: session.max_streak,
-        totalQuestions: session.total_questions,
-        correctAnswers: session.correct_answers,
-        accuracy: session.accuracy,
-        duration: session.duration,
-      })) || [],
-      achievements: (achievementsData as any[])?.map((achievement: any) => ({
-        id: achievement.id,
-        title: achievement.title,
-        description: achievement.description,
-        icon: achievement.icon,
-        isUnlocked: achievement.is_unlocked,
-        unlockedAt: achievement.unlocked_at,
-      })) || [],
+      recentSessions:
+        (sessionsData as any[])?.map((session: any) => ({
+          id: session.id,
+          date: session.created_at,
+          gameMode: session.game_mode as GameMode,
+          difficulty: session.difficulty as Difficulty,
+          notationSystem: session.notation_system as NotationSystem,
+          score: session.score,
+          streak: session.streak,
+          maxStreak: session.max_streak,
+          totalQuestions: session.total_questions,
+          correctAnswers: session.correct_answers,
+          accuracy: session.accuracy,
+          duration: session.duration,
+        })) || [],
+      achievements:
+        (achievementsData as any[])?.map((achievement: any) => ({
+          id: achievement.id,
+          title: achievement.title,
+          description: achievement.description,
+          icon: achievement.icon,
+          isUnlocked: achievement.is_unlocked,
+          unlockedAt: achievement.unlocked_at,
+        })) || [],
     };
 
     return userAnalytics;
@@ -150,20 +159,22 @@ export async function getRecentSessions(
 
     if (error) throw error;
 
-    return (data as any[])?.map((session: any) => ({
-      id: session.id,
-      date: session.created_at,
-      gameMode: session.game_mode as GameMode,
-      difficulty: session.difficulty as Difficulty,
-      notationSystem: session.notation_system as NotationSystem,
-      score: session.score,
-      streak: session.streak,
-      maxStreak: session.max_streak,
-      totalQuestions: session.total_questions,
-      correctAnswers: session.correct_answers,
-      accuracy: session.accuracy,
-      duration: session.duration,
-    })) || [];
+    return (
+      (data as any[])?.map((session: any) => ({
+        id: session.id,
+        date: session.created_at,
+        gameMode: session.game_mode as GameMode,
+        difficulty: session.difficulty as Difficulty,
+        notationSystem: session.notation_system as NotationSystem,
+        score: session.score,
+        streak: session.streak,
+        maxStreak: session.max_streak,
+        totalQuestions: session.total_questions,
+        correctAnswers: session.correct_answers,
+        accuracy: session.accuracy,
+        duration: session.duration,
+      })) || []
+    );
   } catch (error) {
     console.error('Error getting recent sessions:', error);
     throw error;
@@ -173,7 +184,9 @@ export async function getRecentSessions(
 /**
  * Gets user achievements with unlock status
  */
-export async function getUserAchievements(userId: string): Promise<Achievement[]> {
+export async function getUserAchievements(
+  userId: string,
+): Promise<Achievement[]> {
   try {
     const { data, error } = await supabase.rpc('get_user_achievements', {
       p_user_id: userId,
@@ -181,14 +194,16 @@ export async function getUserAchievements(userId: string): Promise<Achievement[]
 
     if (error) throw error;
 
-    return (data as any[])?.map((achievement: any) => ({
-      id: achievement.id,
-      title: achievement.title,
-      description: achievement.description,
-      icon: achievement.icon,
-      isUnlocked: achievement.is_unlocked,
-      unlockedAt: achievement.unlocked_at,
-    })) || [];
+    return (
+      (data as any[])?.map((achievement: any) => ({
+        id: achievement.id,
+        title: achievement.title,
+        description: achievement.description,
+        icon: achievement.icon,
+        isUnlocked: achievement.is_unlocked,
+        unlockedAt: achievement.unlocked_at,
+      })) || []
+    );
   } catch (error) {
     console.error('Error getting user achievements:', error);
     throw error;
@@ -241,4 +256,3 @@ export async function clearUserAnalytics(userId: string): Promise<void> {
     throw error;
   }
 }
-

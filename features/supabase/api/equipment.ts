@@ -1,4 +1,8 @@
-import type { Equipment, EquipmentCategory, EquipmentRarity } from '@/types/music';
+import type {
+  Equipment,
+  EquipmentCategory,
+  EquipmentRarity,
+} from '@/types/music';
 import { supabase } from '../client';
 import { getUserProfile } from './user-profile';
 
@@ -164,4 +168,3 @@ export async function resetUserEquipment(userId: string): Promise<void> {
     throw error;
   }
 }
-
