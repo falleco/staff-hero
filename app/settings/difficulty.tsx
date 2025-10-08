@@ -21,7 +21,7 @@ export default function DifficultyScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader title="🎯 Difficulty" onClose={handleClose} />
-      
+
       <ScrollView className="flex-1 p-5">
         <SettingOption
           title="Note Range"
@@ -35,30 +35,33 @@ export default function DifficultyScreen() {
             {
               label: 'Intermediate',
               value: Difficulty.INTERMEDIATE,
-              description: 'C3 to B5 - Extended range with ledger lines (16 notes)',
+              description:
+                'C3 to B5 - Extended range with ledger lines (16 notes)',
             },
             {
               label: 'Advanced',
               value: Difficulty.ADVANCED,
-              description: 'C3 to B6 - Full range with many ledger lines (21 notes)',
+              description:
+                'C3 to B6 - Full range with many ledger lines (21 notes)',
             },
           ]}
           currentValue={gameSettings.gameSettings.difficulty}
           onValueChange={(value) => gameSettings.updateDifficulty(value)}
         />
-        
+
         {/* Difficulty Explanation */}
         <View className="mt-6 p-4 bg-yellow-50 rounded-xl">
           <ThemedText className="text-sm font-medium text-yellow-800 mb-3">
             📊 Difficulty Breakdown
           </ThemedText>
-          
+
           <View className="mb-3">
             <ThemedText className="text-sm font-semibold text-yellow-800 mb-1">
               🟢 Beginner (C4-B5):
             </ThemedText>
             <ThemedText className="text-xs text-yellow-700">
-              Notes stay within the main staff lines. Perfect for learning basic note positions.
+              Notes stay within the main staff lines. Perfect for learning basic
+              note positions.
             </ThemedText>
           </View>
 
@@ -67,7 +70,8 @@ export default function DifficultyScreen() {
               🟡 Intermediate (C3-B5):
             </ThemedText>
             <ThemedText className="text-xs text-yellow-700">
-              Includes ledger lines below the staff. Introduces middle C and lower notes.
+              Includes ledger lines below the staff. Introduces middle C and
+              lower notes.
             </ThemedText>
           </View>
 
@@ -76,7 +80,8 @@ export default function DifficultyScreen() {
               🔴 Advanced (C3-B6):
             </ThemedText>
             <ThemedText className="text-xs text-yellow-700">
-              Full range with ledger lines above and below. Challenges even experienced musicians.
+              Full range with ledger lines above and below. Challenges even
+              experienced musicians.
             </ThemedText>
           </View>
         </View>

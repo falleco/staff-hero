@@ -56,7 +56,7 @@ export default function GraphicsScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader title="🎨 Graphics" onClose={handleClose} />
-      
+
       <ScrollView className="flex-1 p-5">
         {/* Graphics Quality */}
         <View className="mb-6">
@@ -108,7 +108,7 @@ export default function GraphicsScreen() {
         </View>
 
         <SettingsList sections={sections} />
-        
+
         {/* Performance Info */}
         <View className="mt-5 p-4 bg-orange-50 rounded-xl">
           <ThemedText className="text-sm font-medium text-orange-800 mb-2">

@@ -21,7 +21,9 @@ export default function SoundVibrationsScreen() {
     router.back();
   };
 
-  const handleToggle = async (key: keyof typeof appSettings.soundAndVibrations) => {
+  const handleToggle = async (
+    key: keyof typeof appSettings.soundAndVibrations,
+  ) => {
     if (key === 'volume') return; // Volume is handled separately
     const newValue = !appSettings.soundAndVibrations[key];
     await updateSoundAndVibrations({ [key]: newValue });
@@ -76,16 +78,22 @@ export default function SoundVibrationsScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader title="🔊 Sound & Vibrations" onClose={handleClose} />
-      
+
       <ScrollView className="flex-1 p-5">
         {/* Volume Control */}
         <View className="mb-6">
           <View className="p-4 rounded-xl" style={{ backgroundColor }}>
             <View className="flex-row items-center justify-between mb-3">
-              <ThemedText className="text-lg font-bold" style={{ color: textColor }}>
+              <ThemedText
+                className="text-lg font-bold"
+                style={{ color: textColor }}
+              >
                 🔊 Master Volume
               </ThemedText>
-              <ThemedText className="text-lg font-bold" style={{ color: primaryColor }}>
+              <ThemedText
+                className="text-lg font-bold"
+                style={{ color: primaryColor }}
+              >
                 {appSettings.soundAndVibrations.volume}%
               </ThemedText>
             </View>
@@ -100,10 +108,16 @@ export default function SoundVibrationsScreen() {
               />
             </View>
             <View className="flex-row justify-between mt-2">
-              <ThemedText className="text-xs" style={{ color: secondaryTextColor }}>
+              <ThemedText
+                className="text-xs"
+                style={{ color: secondaryTextColor }}
+              >
                 Mute
               </ThemedText>
-              <ThemedText className="text-xs" style={{ color: secondaryTextColor }}>
+              <ThemedText
+                className="text-xs"
+                style={{ color: secondaryTextColor }}
+              >
                 Max
               </ThemedText>
             </View>
@@ -111,7 +125,7 @@ export default function SoundVibrationsScreen() {
         </View>
 
         <SettingsList sections={sections} />
-        
+
         {/* Info Section */}
         <View className="mt-5 p-4 bg-green-50 rounded-xl">
           <ThemedText className="text-sm font-medium text-green-800 mb-2">

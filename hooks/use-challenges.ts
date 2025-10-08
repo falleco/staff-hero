@@ -1,60 +1,21 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import type { Challenge, ChallengeStatus, UserCurrency } from '@/types/music';
-import { ChallengeType, ChallengeStatus as Status } from '@/types/music';
-
-const CHALLENGES_KEY = '@staff_hero_challenges';
-const CURRENCY_KEY = '@staff_hero_currency';
-
-// Default challenges
-const DEFAULT_CHALLENGES: Challenge[] = [
-  {
-    id: 'dominate-violin-notes',
-    type: ChallengeType.DOMINATE_NOTES,
-    title: 'Dominate Violin Notes',
-    description: 'Master the art of violin note recognition',
-    icon: '🎻',
-    requirement: 1, // Just need to play violin notes (simplified for demo)
-    progress: 0,
-    reward: 3,
-    status: Status.AVAILABLE,
-    targetRoute: '/(tabs)/',
-  },
-  {
-    id: 'score-master',
-    type: ChallengeType.SCORE_POINTS,
-    title: 'Score Master',
-    description: 'Achieve 1,000 points in total gameplay',
-    icon: '🎯',
-    requirement: 1000,
-    progress: 0,
-    reward: 5,
-    status: Status.AVAILABLE,
-    targetRoute: '/(tabs)/',
-  },
-  {
-    id: 'battle-warrior',
-    type: ChallengeType.BATTLE_COUNT,
-    title: 'Battle Warrior',
-    description: 'Complete 5 game battles',
-    icon: '⚔️',
-    requirement: 5,
-    progress: 0,
-    reward: 10,
-    status: Status.AVAILABLE,
-    targetRoute: '/(tabs)/',
-  },
-];
-
-const DEFAULT_CURRENCY: UserCurrency = {
-  goldenNoteShards: 0,
-};
+import type { Challenge, ChallengeType } from '@/types/music';
+import {
+  fetchUserChallenges,
+  redeemChallenge as redeemChallengeAPI,
+  resetUserChallenges,
+  startChallenge as startChallengeAPI,
+  updateChallengeProgress as updateChallengeProgressAPI,
+  useAuth,
+} from '~/features/supabase';
 
 export interface UseChallengesReturn {
   /** Current list of challenges */
   challenges: Challenge[];
-  /** User's current currency */
-  currency: UserCurrency;
+  /** Loading state */
+  isLoading: boolean;
+  /** Refresh challenges data */
+  refresh: () => Promise<void>;
   /** Start a challenge (mark as in progress) */
   startChallenge: (challengeId: string) => Promise<void>;
   /** Update challenge progress */
@@ -66,23 +27,23 @@ export interface UseChallengesReturn {
   redeemChallenge: (challengeId: string) => Promise<void>;
   /** Reset all challenges (for testing) */
   resetChallenges: () => Promise<void>;
-  /** Add golden note shards directly */
-  addGoldenShards: (amount: number) => Promise<void>;
 }
 
 /**
- * Custom hook for managing challenges and currency system
+ * Custom hook for managing challenges
  *
- * Handles challenge progress tracking, currency management, and reward redemption.
- * Persists data to AsyncStorage for persistence across app sessions.
+ * Handles challenge progress tracking and reward redemption.
+ * Data is persisted to Supabase database.
  *
- * @returns Object containing challenges, currency, and management functions
+ * Note: For currency management, use the `useCurrency()` hook.
+ *
+ * @returns Object containing challenges and management functions
  *
  * @example
  * ```tsx
  * const {
  *   challenges,
- *   currency,
+ *   isLoading,
  *   startChallenge,
  *   updateChallengeProgress,
  *   redeemChallenge
@@ -99,70 +60,39 @@ export interface UseChallengesReturn {
  * ```
  */
 export function useChallenges(): UseChallengesReturn {
-  const [challenges, setChallenges] = useState<Challenge[]>(DEFAULT_CHALLENGES);
-  const [currency, setCurrency] = useState<UserCurrency>(DEFAULT_CURRENCY);
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data on mount
+  // Load challenges when user is available
   useEffect(() => {
-    loadChallenges();
-    loadCurrency();
-  }, []);
+    if (user && !isAuthLoading) {
+      loadChallenges();
+    }
+  }, [user, isAuthLoading]);
 
   /**
-   * Loads challenges from AsyncStorage
+   * Loads challenges from Supabase
    */
   const loadChallenges = async () => {
+    if (!user) return;
+
     try {
-      const stored = await AsyncStorage.getItem(CHALLENGES_KEY);
-      if (stored) {
-        const parsedChallenges = JSON.parse(stored);
-        setChallenges(parsedChallenges);
-      }
+      setIsLoading(true);
+      const fetchedChallenges = await fetchUserChallenges(user.id);
+      setChallenges(fetchedChallenges);
     } catch (error) {
       console.error('Error loading challenges:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   /**
-   * Saves challenges to AsyncStorage
+   * Refreshes challenge data
    */
-  const saveChallenges = async (challengesToSave: Challenge[]) => {
-    try {
-      await AsyncStorage.setItem(
-        CHALLENGES_KEY,
-        JSON.stringify(challengesToSave),
-      );
-      setChallenges(challengesToSave);
-    } catch (error) {
-      console.error('Error saving challenges:', error);
-    }
-  };
-
-  /**
-   * Loads currency from AsyncStorage
-   */
-  const loadCurrency = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CURRENCY_KEY);
-      if (stored) {
-        const parsedCurrency = JSON.parse(stored);
-        setCurrency(parsedCurrency);
-      }
-    } catch (error) {
-      console.error('Error loading currency:', error);
-    }
-  };
-
-  /**
-   * Saves currency to AsyncStorage
-   */
-  const saveCurrency = async (currencyToSave: UserCurrency) => {
-    try {
-      await AsyncStorage.setItem(CURRENCY_KEY, JSON.stringify(currencyToSave));
-      setCurrency(currencyToSave);
-    } catch (error) {
-      console.error('Error saving currency:', error);
-    }
+  const refresh = async () => {
+    await loadChallenges();
   };
 
   /**
@@ -170,12 +100,15 @@ export function useChallenges(): UseChallengesReturn {
    * @param challengeId - ID of the challenge to start
    */
   const startChallenge = async (challengeId: string) => {
-    const updatedChallenges = challenges.map((challenge) =>
-      challenge.id === challengeId
-        ? { ...challenge, status: Status.IN_PROGRESS }
-        : challenge,
-    );
-    await saveChallenges(updatedChallenges);
+    if (!user) return;
+
+    try {
+      await startChallengeAPI(user.id, challengeId);
+      await loadChallenges(); // Reload to get updated data
+    } catch (error) {
+      console.error('Error starting challenge:', error);
+      throw error;
+    }
   };
 
   /**
@@ -187,80 +120,57 @@ export function useChallenges(): UseChallengesReturn {
     type: ChallengeType,
     amount: number,
   ) => {
-    const updatedChallenges = challenges.map((challenge) => {
-      if (challenge.type === type && challenge.status === Status.IN_PROGRESS) {
-        const newProgress = Math.min(
-          challenge.progress + amount,
-          challenge.requirement,
-        );
-        const newStatus =
-          newProgress >= challenge.requirement
-            ? Status.COMPLETED
-            : Status.IN_PROGRESS;
+    if (!user) return;
 
-        return {
-          ...challenge,
-          progress: newProgress,
-          status: newStatus,
-        };
-      }
-      return challenge;
-    });
-
-    await saveChallenges(updatedChallenges);
+    try {
+      await updateChallengeProgressAPI(user.id, type, amount);
+      await loadChallenges(); // Reload to get updated data
+    } catch (error) {
+      console.error('Error updating challenge progress:', error);
+      throw error;
+    }
   };
 
   /**
    * Redeems a completed challenge and awards golden note shards
+   * Note: This creates a currency transaction. Use useCurrency() to see updated balance.
    * @param challengeId - ID of the challenge to redeem
    */
   const redeemChallenge = async (challengeId: string) => {
-    const challenge = challenges.find((c) => c.id === challengeId);
-    if (!challenge || challenge.status !== Status.COMPLETED) {
-      return;
+    if (!user) return;
+
+    try {
+      await redeemChallengeAPI(user.id, challengeId);
+      await loadChallenges(); // Reload to get updated data
+    } catch (error) {
+      console.error('Error redeeming challenge:', error);
+      throw error;
     }
-
-    // Award golden note shards
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards + challenge.reward,
-    };
-    await saveCurrency(newCurrency);
-
-    // Mark challenge as redeemed
-    const updatedChallenges = challenges.map((c) =>
-      c.id === challengeId ? { ...c, status: Status.REDEEMED } : c,
-    );
-    await saveChallenges(updatedChallenges);
   };
 
   /**
-   * Resets all challenges to default state (for testing)
+   * Resets all challenges (for testing)
+   * Note: This also resets currency transactions. Use useCurrency().refresh() to update balance.
    */
   const resetChallenges = async () => {
-    await saveChallenges(DEFAULT_CHALLENGES);
-    await saveCurrency(DEFAULT_CURRENCY);
-  };
+    if (!user) return;
 
-  /**
-   * Adds golden note shards directly to user's currency
-   * @param amount - Amount of shards to add
-   */
-  const addGoldenShards = async (amount: number) => {
-    const newCurrency = {
-      ...currency,
-      goldenNoteShards: currency.goldenNoteShards + amount,
-    };
-    await saveCurrency(newCurrency);
+    try {
+      await resetUserChallenges(user.id);
+      await loadChallenges(); // Reload to get updated data
+    } catch (error) {
+      console.error('Error resetting challenges:', error);
+      throw error;
+    }
   };
 
   return {
     challenges,
-    currency,
+    isLoading,
+    refresh,
     startChallenge,
     updateChallengeProgress,
     redeemChallenge,
     resetChallenges,
-    addGoldenShards,
   };
 }

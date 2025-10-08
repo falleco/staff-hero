@@ -18,7 +18,9 @@ export default function PushNotificationsScreen() {
     router.back();
   };
 
-  const handleToggle = async (key: keyof typeof appSettings.pushNotifications) => {
+  const handleToggle = async (
+    key: keyof typeof appSettings.pushNotifications,
+  ) => {
     const newValue = !appSettings.pushNotifications[key];
     await updatePushNotifications({ [key]: newValue });
   };
@@ -71,18 +73,19 @@ export default function PushNotificationsScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader title="🔔 Push Notifications" onClose={handleClose} />
-      
+
       <ScrollView className="flex-1 p-5">
         <SettingsList sections={sections} />
-        
+
         {/* Info Section */}
         <View className="mt-5 p-4 bg-blue-50 rounded-xl">
           <ThemedText className="text-sm font-medium text-blue-800 mb-2">
             💡 About Notifications
           </ThemedText>
           <ThemedText className="text-xs text-blue-700">
-            Push notifications help you stay engaged with your musical journey. 
-            You can customize which types of notifications you receive to match your preferences.
+            Push notifications help you stay engaged with your musical journey.
+            You can customize which types of notifications you receive to match
+            your preferences.
           </ThemedText>
         </View>
       </ScrollView>

@@ -1,9 +1,9 @@
 import React, { createContext, type ReactNode, useEffect } from 'react';
+import { useChallenges } from '@/hooks/use-challenges';
 import type { UseGameLogicReturn } from '@/hooks/use-game-logic';
 import { useGameLogic } from '@/hooks/use-game-logic';
 import type { UseGameSettingsReturn } from '@/hooks/use-game-settings';
 import { useGameSettings } from '@/hooks/use-game-settings';
-import { useChallenges } from '@/hooks/use-challenges';
 
 interface GameContextType {
   gameLogic: UseGameLogicReturn;

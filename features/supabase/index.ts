@@ -1,14 +1,12 @@
-import 'expo-sqlite/localStorage/install';
-import { createClient } from '@supabase/supabase-js';
+// Re-export supabase client
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL as string;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
+// Export API functions
+export * from './api/challenges';
+export * from './api/currency';
+export * from './api/user-profile';
+// Export auth context
+export { AuthProvider, useAuth } from './auth-context';
+export { supabase } from './client';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: localStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+// Export types
+export type * from './types';

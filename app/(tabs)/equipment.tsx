@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { EquipmentCard } from '@/components/ui/equipment-card';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { useChallenges } from '@/hooks/use-challenges';
+import { useCurrency } from '@/hooks/use-currency';
 import { useEquipment } from '@/hooks/use-equipment';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { EquipmentCategory } from '@/types/music';
@@ -16,7 +16,7 @@ export default function EquipmentTab() {
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const primaryColor = useThemeColor({}, 'tint');
 
-  const { currency, addGoldenShards } = useChallenges();
+  const { currency, addGoldenShards } = useCurrency();
   const {
     userEquipment,
     getEquipmentByCategory,
@@ -137,7 +137,6 @@ export default function EquipmentTab() {
                 </ThemedText>
                 <ThemedText
                   className="text-sm"
-                  style={{ color: secondaryTextColor }}
                 >
                   Enhance your musical abilities with powerful gear
                 </ThemedText>
@@ -149,14 +148,12 @@ export default function EquipmentTab() {
                   <ThemedText className="text-lg mr-1">✨</ThemedText>
                   <ThemedText
                     className="text-xl font-bold"
-                    style={{ color: primaryColor }}
                   >
                     {currency.goldenNoteShards}
                   </ThemedText>
                 </View>
                 <ThemedText
                   className="text-xs"
-                  style={{ color: secondaryTextColor }}
                 >
                   Golden Shards
                 </ThemedText>

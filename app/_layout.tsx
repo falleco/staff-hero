@@ -14,6 +14,7 @@ import '../global.css';
 import { useEffect } from 'react';
 import { GameProvider } from '@/contexts/game-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AuthProvider } from '~/features/supabase';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -44,51 +45,53 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <GameProvider>
-        <ThemeProvider
-          value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="settings"
-              options={{
-                presentation: 'card',
-                animation: 'slide_from_left',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="challenges"
-              options={{
-                presentation: 'card',
-                headerShown: false,
-                animation: 'slide_from_right',
-              }}
-            />
-            <Stack.Screen
-              name="game-modes"
-              options={{
-                presentation: 'transparentModal',
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="game"
-              options={{
-                presentation: 'card',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="modal"
-              options={{ presentation: 'modal', headerShown: false }}
-            />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </GameProvider>
+      <AuthProvider>
+        <GameProvider>
+          <ThemeProvider
+            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+          >
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="settings"
+                options={{
+                  presentation: 'card',
+                  animation: 'slide_from_left',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="challenges"
+                options={{
+                  presentation: 'card',
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                }}
+              />
+              <Stack.Screen
+                name="game-modes"
+                options={{
+                  presentation: 'transparentModal',
+                  headerShown: false,
+                  animation: 'fade',
+                }}
+              />
+              <Stack.Screen
+                name="game"
+                options={{
+                  presentation: 'card',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="modal"
+                options={{ presentation: 'modal', headerShown: false }}
+              />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </GameProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

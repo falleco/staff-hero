@@ -11,6 +11,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useGameContext } from '@/hooks/use-game-context';
+import { useNoteAnimations } from '@/hooks/use-note-animations';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { GameMode } from '@/types/music';
 import {
@@ -24,7 +25,6 @@ import {
   getNoteDisplayName,
   isAnswerCorrect,
 } from '@/utils/music-utils';
-import { useNoteAnimations } from '@/hooks/use-note-animations';
 
 interface GameScreenProps {
   onGameEnd?: () => void;
@@ -39,7 +39,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
     handleNoteAnimationComplete,
     isAnimating,
   } = useNoteAnimations();
-  
+
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -56,10 +56,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
     ) {
       gameLogic.generateNewQuestion(gameSettings.gameSettings);
     }
-  }, [
-    gameLogic,
-    gameSettings.gameSettings,
-  ]);
+  }, [gameLogic, gameSettings.gameSettings]);
 
   // Update animated notes when question changes
   useEffect(() => {

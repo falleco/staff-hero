@@ -257,7 +257,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
-      <ScrollView className="flex-1 p-5" contentContainerClassName='pb-20'>
+      <ScrollView className="flex-1 p-5" contentContainerClassName="pb-20">
         <SettingsList sections={sections} />
       </ScrollView>
       <View className="absolute bottom-10 right-0 left-0 justify-center items-center p-0 m-0">

@@ -68,10 +68,10 @@ export default function NetworkingScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader title="🌐 Networking" onClose={handleClose} />
-      
+
       <ScrollView className="flex-1 p-5">
         <SettingsList sections={sections} />
-        
+
         {/* Connection Status */}
         <View className="mt-5 p-4 bg-green-50 rounded-xl">
           <ThemedText className="text-sm font-medium text-green-800 mb-2">

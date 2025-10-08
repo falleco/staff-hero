@@ -262,9 +262,9 @@ export interface AppSettings {
   // Account
   username: string;
   isConnected: boolean;
-  
+
   // Gameplay (already exists in GameSettings)
-  
+
   // General
   pushNotifications: {
     enabled: boolean;

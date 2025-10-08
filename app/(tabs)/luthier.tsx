@@ -7,7 +7,7 @@ import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { InstrumentCard } from '@/components/ui/instrument-card';
-import { useChallenges } from '@/hooks/use-challenges';
+import { useCurrency } from '@/hooks/use-currency';
 import { useLuthier } from '@/hooks/use-luthier';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { cn } from '@/lib/cn';
@@ -17,7 +17,7 @@ export default function LuthierTab() {
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const primaryColor = useThemeColor({}, 'tint');
 
-  const { currency, addGoldenShards } = useChallenges();
+  const { currency, addGoldenShards } = useCurrency();
   const {
     instruments,
     equippedInstrument,

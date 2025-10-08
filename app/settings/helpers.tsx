@@ -45,23 +45,23 @@ export default function HelpersScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor }}>
       <ModalHeader title="🎓 Learning Helpers" onClose={handleClose} />
-      
+
       <ScrollView className="flex-1 p-5">
         <SettingsList sections={sections} />
-        
+
         {/* Helper Examples */}
         <View className="mt-5 p-4 bg-green-50 rounded-xl">
           <ThemedText className="text-sm font-medium text-green-800 mb-3">
             🎯 How Helpers Work
           </ThemedText>
-          
+
           <View className="mb-3">
             <ThemedText className="text-sm font-semibold text-green-800 mb-1">
               📝 Note Labels:
             </ThemedText>
             <ThemedText className="text-xs text-green-700">
-              Shows the note name (Do, Re, Mi or C, D, E) next to each staff line and space.
-              Perfect for beginners learning note positions.
+              Shows the note name (Do, Re, Mi or C, D, E) next to each staff
+              line and space. Perfect for beginners learning note positions.
             </ThemedText>
           </View>
         </View>
