@@ -59,20 +59,19 @@ export default function ChallengesScreen() {
         }}
       />
       <SafeAreaView className="flex-1">
+        <ThemedText
+          className="text-4xl font-bold mb-4 self-center font-boldpixels-medium"
+          style={{ color: textColor }}
+        >
+          Challenges
+        </ThemedText>
         <ScrollView
-          className="flex-1"
+          className="flex-1 pt-6"
           contentContainerClassName="pb-20"
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
         >
-          <ThemedText
-            className="text-4xl font-bold mb-8 self-center font-boldpixels-medium"
-            style={{ color: textColor }}
-          >
-            Challenges
-          </ThemedText>
-
           {/* Challenges List */}
           <View className="px-5">
             {challenges.map((challenge) => (

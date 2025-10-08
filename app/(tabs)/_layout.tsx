@@ -1,14 +1,24 @@
+import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TabBar } from '@/components/core/tab-bar';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+const audioSource = require('@/assets/music/sad-violin-amp-orchestral-233798.mp3');
+
 export default function TabLayout() {
+  const player = useAudioPlayer(audioSource);
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    player.seekTo(0);
+    player.loop = true;
+    player.play();
+  }, []);
 
   return (
     <Tabs

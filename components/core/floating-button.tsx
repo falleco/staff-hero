@@ -1,8 +1,12 @@
+import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
+import { XIcon } from 'phosphor-react-native';
 import type React from 'react';
 import { useState } from 'react';
 import { Pressable, Text } from 'react-native';
 import { cn } from '@/lib/cn';
+
+const audioSource = require('@/assets/sfx/interface-click-1-1.wav');
 
 type FloatingButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -36,9 +40,13 @@ export function FloatingButton({
   className,
   hapticFeedback = true,
 }: FloatingButtonProps) {
+  const player = useAudioPlayer(audioSource);
   const [isPressed, setIsPressed] = useState(false);
   const handlePress = () => {
     if (isDisabled || !onPress) return;
+
+    player.seekTo(0);
+    player.play();
 
     if (hapticFeedback) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -68,13 +76,7 @@ export function FloatingButton({
         transform: [{ scale: pressed ? 0.55 : 1 }],
       })}
     >
-      <Text
-        className={
-          'text-center text-white text-4xl justify-center items-center align-middle font-pixelpurl-medium'
-        }
-      >
-        X
-      </Text>
+      <XIcon size={36} weight="bold" color="white" />
     </Pressable>
   );
 }

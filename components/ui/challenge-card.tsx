@@ -162,7 +162,7 @@ export function ChallengeCard({
         onPress={handleActionPress}
         isDisabled={isActionDisabled}
       >
-        <FlatButtonText className="text-xl text-[#ffffff] font-boldpixels-medium">
+        <FlatButtonText className="text-2xl text-[#ffffff] font-boldpixels-medium">
           {getActionButtonText()}
         </FlatButtonText>
       </FlatButton>

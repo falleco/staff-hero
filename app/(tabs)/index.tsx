@@ -44,7 +44,7 @@ export default function HomeTab() {
               style={{ width: 72, height: 72, marginLeft: -16, marginTop: -12 }}
               source={require('@/assets/images/hud/settings.png')}
             />
-            <Text className="text-center text-md text-white -mt-4 font-pixelpurl-medium -ml-4">
+            <Text className="text-center text-xl text-white -mt-4 font-pixelpurl-medium -ml-4">
               settings
             </Text>
           </FlatButton>
@@ -57,7 +57,7 @@ export default function HomeTab() {
               style={{ width: 48, height: 48, marginTop: 6 }}
               source={require('@/assets/images/hud/book.png')}
             />
-            <Text className="text-center text-md text-white font-pixelpurl-medium">
+            <Text className="text-center text-xl text-white font-pixelpurl-medium">
               challenges
             </Text>
           </FlatButton>

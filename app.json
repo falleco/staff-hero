@@ -8,7 +8,9 @@
     "scheme": "staffhero",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "assetBundlePatterns": ["assets/images/*"],
+    "assetBundlePatterns": [
+      "assets/images/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.staffhero.app",
@@ -23,7 +25,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": ["android.permission.BODY_SENSORS"],
+      "permissions": [
+        "android.permission.BODY_SENSORS"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -56,7 +60,8 @@
         }
       ],
       "expo-web-browser",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

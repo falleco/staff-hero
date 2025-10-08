@@ -1,5 +1,11 @@
+import { useAudioPlayer } from 'expo-audio';
 import React, { useEffect } from 'react';
-import { Pressable, type PressableProps, Text } from 'react-native';
+import {
+  type GestureResponderEvent,
+  Pressable,
+  type PressableProps,
+  Text,
+} from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -9,6 +15,8 @@ import Animated, {
 import { cn } from '@/lib/cn';
 import { icons } from '../icons';
 
+const audioSource = require('@/assets/sfx/interface-click-1-1.wav');
+
 export interface TabBarButtonProps extends PressableProps {
   isFocused: boolean;
   label: string;
@@ -17,6 +25,7 @@ export interface TabBarButtonProps extends PressableProps {
 }
 
 export const TabBarButton = (props: TabBarButtonProps) => {
+  const player = useAudioPlayer(audioSource);
   const { isFocused, label, routeName, color } = props;
   const scale = useSharedValue(0);
 
@@ -37,8 +46,18 @@ export const TabBarButton = (props: TabBarButtonProps) => {
     };
   });
 
+  const handlePress = (e: GestureResponderEvent) => {
+    player.seekTo(0);
+    player.play();
+    props.onPress?.(e);
+  };
+
   return (
-    <Pressable {...props} className={cn('flex-1 justify-between items-center')}>
+    <Pressable
+      {...props}
+      onPress={handlePress}
+      className={cn('flex-1 justify-between items-center')}
+    >
       <Animated.View
         style={[animatedIconStyle]}
         className={cn(
