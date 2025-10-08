@@ -163,13 +163,6 @@ export function useGameLogic(): UseGameLogicReturn {
    * @param gameSettings - Current game configuration
    */
   const startGame = (gameSettings: GameSettings) => {
-    console.log('🎮 GAME STARTED:');
-    console.log('  Notation system:', gameSettings.notationSystem);
-    console.log('  Difficulty:', gameSettings.difficulty);
-    console.log('  Game mode:', gameSettings.gameMode);
-    console.log('  Show labels:', gameSettings.showNoteLabels);
-    console.log('====================');
-    
     gameStartTime = Date.now();
     setGameState((prev) => ({ ...prev, ...startGameState() }));
 
@@ -233,30 +226,6 @@ export function useGameLogic(): UseGameLogicReturn {
     const isCorrect =
       JSON.stringify(answer.sort()) === JSON.stringify(correctNotes.sort());
 
-    console.log('🎯 ANSWER SUBMITTED:');
-    console.log('  Question ID:', gameState.currentQuestion.id);
-    console.log(
-      '  Notes shown:',
-      gameState.currentQuestion.notes.map(
-        (n) => `${n.name}${n.octave} at position ${n.staffPosition}`,
-      ),
-    );
-    console.log('  Expected answer:', correctNotes);
-    console.log('  User selected:', answer);
-    console.log('  Result:', isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
-    if (!isCorrect) {
-      console.log('  ❗ Mismatch details:');
-      console.log('    Expected (sorted):', correctNotes.sort());
-      console.log('    User answer (sorted):', answer.sort());
-    }
-    console.log(
-      '  Current streak:',
-      gameState.streak,
-      '→',
-      isCorrect ? gameState.streak + 1 : 0,
-    );
-    console.log('---');
-
     setGameState((prev) => ({ ...prev, ...submitAnswerState(prev, answer) }));
 
     // Update challenge progress for score points
@@ -298,8 +267,6 @@ export function useGameLogic(): UseGameLogicReturn {
    */
   const generateNewQuestion = (gameSettings: GameSettings) => {
     const newQuestion = generateQuestion(gameSettings);
-    console.log('🔄 GENERATING NEW QUESTION');
-    console.log('  Game settings:', gameSettings);
     setGameState((prev) => ({ ...prev, ...setQuestionState(newQuestion) }));
 
     // Update challenge progress for dominate notes (simplified - just playing counts)

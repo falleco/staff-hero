@@ -40,7 +40,7 @@ const gameModes: {
     title: 'Rhythm Hero',
     description: 'Guitar Hero style! Hit notes as they cross the line.',
     icon: '🎸',
-    path: '/game/sequence',
+    path: '/game/rhythm',
   },
 ];
 

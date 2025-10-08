@@ -33,7 +33,6 @@ export function MusicStaff({
 }: MusicStaffProps) {
   const staffColor = useThemeColor({}, 'text');
 
-  console.log('notes', notes);
   // Staff configuration
   const staffLineSpacing = 12;
   const staffStartY = height / 2 - staffLineSpacing * 2;

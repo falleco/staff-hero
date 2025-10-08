@@ -7,6 +7,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
+import { ParallaxBg } from '@/components/parallax-bg';
 
 export default function HomeTab() {
   const { top } = useSafeAreaInsets();
@@ -28,7 +29,8 @@ export default function HomeTab() {
 
   return (
     <>
-      <Image
+      <ParallaxBg className="absolute top-0 left-0 right-0 bottom-0" />
+      {/* <Image
         style={{
           width: '100%',
           height: '100%',
@@ -42,7 +44,7 @@ export default function HomeTab() {
         source={require('@/assets/images/bgs/city_purple_night.png')}
         contentFit="cover"
         transition={1000}
-      />
+      /> */}
 
       <View
         className="flex-1 flex-col justify-center items-center"

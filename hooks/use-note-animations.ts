@@ -122,7 +122,6 @@ export function useNoteAnimations(): UseNoteAnimationsReturn {
    * @param noteId - ID of the note that completed animation
    */
   const handleNoteAnimationComplete = useCallback((noteId?: string) => {
-    console.log(`Note animation completed: ${noteId}`);
     // Additional logic can be added here for specific note completion handling
   }, []);
 
