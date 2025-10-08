@@ -59,21 +59,43 @@ You have two options to set up the database schema:
 
 ### Option A: Using SQL Editor (Recommended for first-time setup)
 
+Run each migration in order by copying the SQL and running it in the Supabase SQL Editor:
+
+**Migration 1 - Initial Schema & Challenges:**
 1. Go to **SQL Editor** in your Supabase dashboard
 2. Click **New Query**
-
-**Run Migration 1 - Initial Schema:**
 3. Copy the entire contents of `features/supabase/migrations/20251008043754_initial_load.sql`
 4. Paste it into the SQL Editor
 5. Click **Run** (or press Cmd/Ctrl + Enter)
 6. You should see "Success. No rows returned" - this is expected!
 
-**Run Migration 2 - Currency System:**
+**Migration 2 - Currency System:**
 7. Click **New Query** again
 8. Copy the entire contents of `features/supabase/migrations/20251008053509_currency.sql`
 9. Paste it into the SQL Editor
 10. Click **Run**
 11. You should see "Success" - this sets up the transaction-based currency system!
+
+**Migration 3 - Analytics System:**
+12. Click **New Query** again
+13. Copy the entire contents of `features/supabase/migrations/20251008053514_analytics.sql`
+14. Paste it into the SQL Editor
+15. Click **Run**
+16. You should see "Success" - game sessions and achievements are now tracked!
+
+**Migration 4 - Equipment System:**
+17. Click **New Query** again
+18. Copy the entire contents of `features/supabase/migrations/20251008062059_equipments.sql`
+19. Paste it into the SQL Editor
+20. Click **Run**
+21. You should see "Success" - equipment system is ready!
+
+**Migration 5 - Instruments System:**
+22. Click **New Query** again
+23. Copy the entire contents of `features/supabase/migrations/20251008062059_instruments.sql`
+24. Paste it into the SQL Editor
+25. Click **Run**
+26. You should see "Success" - instrument system is ready!
 
 ### Option B: Using Supabase CLI
 
@@ -88,20 +110,52 @@ bunx supabase link --workdir features/supabase --project-ref your-project-ref
 bunx supabase db push --workdir features/supabase
 ```
 
-## Step 6: Verify Setup
+## Step 6: Run Seed Data
+
+After running all migrations, populate the database with initial data:
+
+**Seed 1 - Challenges:**
+1. Go to **SQL Editor** in your Supabase dashboard
+2. Click **New Query**
+3. Copy the entire contents of `features/supabase/seeds/challenges.sql`
+4. Paste and **Run**
+
+**Seed 2 - Achievements:**
+5. Click **New Query**
+6. Copy the entire contents of `features/supabase/seeds/achievements.sql`
+7. Paste and **Run**
+
+**Seed 3 - Equipment:**
+8. Click **New Query**
+9. Copy the entire contents of `features/supabase/seeds/equipments.sql`
+10. Paste and **Run**
+
+**Seed 4 - Instruments:**
+11. Click **New Query**
+12. Copy the entire contents of `features/supabase/seeds/instruments.sql`
+13. Paste and **Run**
+
+## Step 7: Verify Setup
 
 1. Go to **Table Editor** in your Supabase dashboard
 2. You should see these tables:
    - `user_profiles` - User data
-   - `challenges` - Master list of challenges
+   - `challenges` - Master list of challenges (3 default)
    - `user_challenges` - User progress on challenges
-   - `currency_transactions` - All currency movements (transaction-based system!)
-3. Click on `challenges` - you should see 3 pre-populated challenges:
-   - Dominate Violin Notes
-   - Score Master
-   - Battle Warrior
+   - `currency_transactions` - All currency movements (transaction-based!)
+   - `equipments` - Master list of equipment (5 default)
+   - `user_equipments` - User equipment data
+   - `instruments` - Master list of instruments (4 default)
+   - `user_instruments` - User instrument data
+   - `game_sessions` - Individual game sessions
+   - `achievements` - Master list of achievements (6 default)
+   - `user_achievements` - User achievement unlocks
+3. Click on `challenges` - you should see 3 pre-populated challenges
+4. Click on `achievements` - you should see 6 pre-populated achievements
+5. Click on `equipments` - you should see 5 pre-populated items
+6. Click on `instruments` - you should see 4 pre-populated instruments
 
-## Step 7: Test the App
+## Step 8: Test the App
 
 ```bash
 # Start the development server
@@ -116,8 +170,10 @@ bun android
 
 The app should:
 1. Automatically create an anonymous user on first launch
-2. Load challenges from the database
-3. Track challenge progress in the database
+2. Load all data from the database (challenges, equipment, instruments)
+3. Track game sessions and progress in the database
+4. Award Golden Note Shards for completing challenges
+5. Allow purchasing and upgrading equipment and instruments
 
 ## Troubleshooting
 
@@ -146,9 +202,12 @@ The app should:
 
 You can now:
 - Add more challenges via the Supabase dashboard
-- View user data in real-time
+- Add custom equipment and instruments
+- View user data, transactions, and game sessions in real-time
 - Monitor authentication in the Auth section
+- Track player analytics and achievements
 - Add permanent authentication methods (email, OAuth) later
+- Customize equipment bonuses and instrument stats
 
 ## Resources
 

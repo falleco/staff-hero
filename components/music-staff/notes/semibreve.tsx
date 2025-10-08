@@ -1,10 +1,13 @@
 import LottieView from 'lottie-react-native';
 import { useEffect, useRef, useState } from 'react';
+import { View } from 'react-native';
 import { G, Path } from 'react-native-svg';
+import { lineSpacing } from '@/constants/config';
 import type { NoteAnimation, NoteState } from '@/types/music';
 import { NoteAnimationType, NoteState as State } from '@/types/music';
 
 interface SemibreveNoteProps {
+  position: number;
   x: number;
   y: number;
   scale: number;
@@ -32,6 +35,7 @@ interface SemibreveNoteProps {
  * @param onAnimationComplete - Callback when animation completes
  */
 export const SemibreveNote = ({
+  position,
   color,
   x,
   y,
@@ -50,7 +54,6 @@ export const SemibreveNote = ({
   useEffect(() => {
     if (!animation) return;
 
-    console.log('🔥 animation', animation);
     switch (animation.type) {
       case NoteAnimationType.CREATION:
         // Note appears - just show the note
@@ -135,13 +138,13 @@ export const SemibreveNote = ({
   }
 
   return (
-    <>
+    <View className="absolute">
       {/* Lottie Animation - only shows when triggered */}
       {showAnimation && (
         <LottieView
           ref={animationRef}
           loop={false}
-          autoPlay={false}
+          autoPlay={true}
           style={{
             width: 40,
             height: 40,
@@ -167,6 +170,6 @@ export const SemibreveNote = ({
           fill={currentColor}
         />
       </G>
-    </>
+    </View>
   );
 };

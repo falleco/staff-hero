@@ -2,6 +2,14 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
+import {
+  LINE_WIDTH,
+  LINES,
+  lineSpacing,
+  noteSpacing,
+  START_X_WITH_CLEF,
+  START_X_WITHOUT_CLEF,
+} from '@/constants/config';
 import { useAnimatedSlideTo } from '@/hooks/animations/use-animated-slide-to';
 import type { Note } from '@/types/music';
 import { TrebleClef } from '../clefs/tremble';
@@ -20,15 +28,6 @@ interface PentagramProps {
   notes: Note[];
   onNoteAnimationComplete?: (noteId?: string) => void;
 }
-
-const LINE_COUNT = 5;
-const LINE_WIDTH = 2;
-const LINES = new Array(LINE_COUNT).fill(null).map((_, i) => i);
-
-const START_X_WITH_CLEF = 60;
-const START_X_WITHOUT_CLEF = 15;
-const noteSpacing = 30;
-const lineSpacing = 12;
 
 export const Pentagram = ({
   clef,
@@ -132,6 +131,7 @@ export const Pentagram = ({
             return (
               <SemibreveNote
                 key={note.noteId || `note-${noteX}-${noteY}`}
+                position={note.staffPosition}
                 color={color}
                 x={noteX}
                 y={noteY}

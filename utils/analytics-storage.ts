@@ -1,13 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ACHIEVEMENTS,
   type GameSession,
   type UserAnalytics,
 } from '@/types/analytics';
 import { Difficulty, GameMode, NotationSystem } from '@/types/music';
-
-const ANALYTICS_KEY = '@staff_hero_analytics';
-const SESSIONS_KEY = '@staff_hero_sessions';
+import {
+  addGameSession as addGameSessionAPI,
+  clearUserAnalytics as clearUserAnalyticsAPI,
+  getUserAnalytics as getUserAnalyticsAPI,
+} from '~/features/supabase';
 
 const defaultAnalytics: UserAnalytics = {
   totalGamesPlayed: 0,
@@ -36,164 +37,92 @@ const defaultAnalytics: UserAnalytics = {
   achievements: [...ACHIEVEMENTS],
 };
 
-export async function getAnalytics(): Promise<UserAnalytics> {
-  try {
-    const data = await AsyncStorage.getItem(ANALYTICS_KEY);
-    if (data) {
-      const analytics = JSON.parse(data) as UserAnalytics;
-      // Ensure all achievements are present (for app updates)
-      const updatedAchievements = ACHIEVEMENTS.map((defaultAchievement) => {
-        const existingAchievement = analytics.achievements.find(
-          (a) => a.id === defaultAchievement.id,
-        );
-        return existingAchievement || defaultAchievement;
-      });
-      return { ...analytics, achievements: updatedAchievements };
-    }
+/**
+ * Gets user analytics from Supabase
+ * @param userId - User ID to get analytics for
+ */
+export async function getAnalytics(userId?: string): Promise<UserAnalytics> {
+  if (!userId) {
     return defaultAnalytics;
+  }
+
+  try {
+    const analytics = await getUserAnalyticsAPI(userId);
+    return analytics;
   } catch (error) {
     console.error('Error loading analytics:', error);
     return defaultAnalytics;
   }
 }
 
+/**
+ * Note: saveAnalytics is not needed with Supabase as analytics are automatically
+ * calculated from game sessions. This function exists for backward compatibility.
+ */
 export async function saveAnalytics(analytics: UserAnalytics): Promise<void> {
-  try {
-    await AsyncStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
-  } catch (error) {
-    console.error('Error saving analytics:', error);
-  }
+  // Analytics are automatically calculated from sessions in Supabase
+  // This function is kept for backward compatibility but does nothing
+  console.warn(
+    'saveAnalytics is deprecated with Supabase. Analytics are automatically calculated.',
+  );
 }
 
+/**
+ * Adds a game session to Supabase
+ * @param session - Game session data
+ * @param userId - User ID to add session for
+ */
 export async function addGameSession(
   session: GameSession,
+  userId?: string,
 ): Promise<UserAnalytics> {
-  const analytics = await getAnalytics();
-
-  // Update counters
-  analytics.totalGamesPlayed += 1;
-  analytics.totalScore += session.score;
-  analytics.bestStreak = Math.max(analytics.bestStreak, session.maxStreak);
-  analytics.totalPlayTime += session.duration;
-
-  // Update game mode counters
-  analytics.gamesPerMode[session.gameMode] += 1;
-  analytics.gamesPerNotation[session.notationSystem] += 1;
-  analytics.gamesPerDifficulty[session.difficulty] += 1;
-
-  // Calculate average accuracy
-  const totalAccuracy =
-    analytics.averageAccuracy * (analytics.totalGamesPlayed - 1) +
-    session.accuracy;
-  analytics.averageAccuracy = Math.round(
-    totalAccuracy / analytics.totalGamesPlayed,
-  );
-
-  // Update favorites (most played)
-  analytics.favoriteGameMode = Object.entries(analytics.gamesPerMode).reduce(
-    (a, b) =>
-      analytics.gamesPerMode[a[0] as keyof typeof analytics.gamesPerMode] >
-      analytics.gamesPerMode[b[0] as keyof typeof analytics.gamesPerMode]
-        ? a
-        : b,
-  )[0] as any;
-
-  analytics.favoriteNotation = Object.entries(
-    analytics.gamesPerNotation,
-  ).reduce((a, b) =>
-    analytics.gamesPerNotation[
-      a[0] as keyof typeof analytics.gamesPerNotation
-    ] >
-    analytics.gamesPerNotation[b[0] as keyof typeof analytics.gamesPerNotation]
-      ? a
-      : b,
-  )[0] as any;
-
-  analytics.favoriteDifficulty = Object.entries(
-    analytics.gamesPerDifficulty,
-  ).reduce((a, b) =>
-    analytics.gamesPerDifficulty[
-      a[0] as keyof typeof analytics.gamesPerDifficulty
-    ] >
-    analytics.gamesPerDifficulty[
-      b[0] as keyof typeof analytics.gamesPerDifficulty
-    ]
-      ? a
-      : b,
-  )[0] as any;
-
-  // Add to recent sessions (keep last 20)
-  analytics.recentSessions.unshift(session);
-  analytics.recentSessions = analytics.recentSessions.slice(0, 20);
-
-  // Check for new achievements
-  checkAndUnlockAchievements(analytics, session);
-
-  await saveAnalytics(analytics);
-  return analytics;
-}
-
-function checkAndUnlockAchievements(
-  analytics: UserAnalytics,
-  session: GameSession,
-): void {
-  const now = new Date().toISOString();
-
-  // First game
-  if (analytics.totalGamesPlayed === 1) {
-    unlockAchievement(analytics, 'first_game', now);
+  if (!userId) {
+    return defaultAnalytics;
   }
 
-  // Streak achievements
-  if (session.maxStreak >= 5) {
-    unlockAchievement(analytics, 'streak_5', now);
-  }
-  if (session.maxStreak >= 10) {
-    unlockAchievement(analytics, 'streak_10', now);
-  }
-
-  // Perfect game
-  if (session.accuracy === 100) {
-    unlockAchievement(analytics, 'perfect_game', now);
-  }
-
-  // Notation master (played both systems)
-  if (
-    analytics.gamesPerNotation[NotationSystem.LETTER] > 0 &&
-    analytics.gamesPerNotation[NotationSystem.SOLFEGE] > 0
-  ) {
-    unlockAchievement(analytics, 'notation_master', now);
-  }
-
-  // Dedicated player
-  if (analytics.totalGamesPlayed >= 50) {
-    unlockAchievement(analytics, 'dedicated_player', now);
-  }
-}
-
-function unlockAchievement(
-  analytics: UserAnalytics,
-  achievementId: string,
-  unlockedAt: string,
-): void {
-  const achievement = analytics.achievements.find(
-    (a) => a.id === achievementId,
-  );
-  if (achievement && !achievement.isUnlocked) {
-    achievement.isUnlocked = true;
-    achievement.unlockedAt = unlockedAt;
-  }
-}
-
-export async function clearAnalytics(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(ANALYTICS_KEY);
-    await AsyncStorage.removeItem(SESSIONS_KEY);
+    // Add session to Supabase (automatically checks for achievements)
+    await addGameSessionAPI(userId, {
+      gameMode: session.gameMode,
+      difficulty: session.difficulty,
+      notationSystem: session.notationSystem,
+      score: session.score,
+      streak: session.streak,
+      maxStreak: session.maxStreak,
+      totalQuestions: session.totalQuestions,
+      correctAnswers: session.correctAnswers,
+      accuracy: session.accuracy,
+      duration: session.duration,
+    });
+
+    // Get updated analytics
+    const analytics = await getUserAnalyticsAPI(userId);
+    return analytics;
+  } catch (error) {
+    console.error('Error adding game session:', error);
+    throw error;
+  }
+}
+
+/**
+ * Clears all analytics data for a user
+ * @param userId - User ID to clear analytics for
+ */
+export async function clearAnalytics(userId?: string): Promise<void> {
+  if (!userId) {
+    return;
+  }
+
+  try {
+    await clearUserAnalyticsAPI(userId);
   } catch (error) {
     console.error('Error clearing analytics:', error);
   }
 }
 
+/**
+ * Formats play time from seconds to human readable format
+ */
 export function formatPlayTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -204,6 +133,9 @@ export function formatPlayTime(seconds: number): string {
   return `${minutes}m`;
 }
 
+/**
+ * Gets appropriate emoji for a streak value
+ */
 export function getStreakEmoji(streak: number): string {
   if (streak < 5) return '⚡';
   if (streak < 10) return '🔥';

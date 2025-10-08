@@ -1,6 +1,7 @@
 // Re-export supabase client
 
 // Export API functions
+export * from './api/analytics';
 export * from './api/challenges';
 export * from './api/currency';
 export * from './api/equipment';

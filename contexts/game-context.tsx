@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import type { UserAnalytics } from '@/types/analytics';
 import type {
   Challenge,
   Equipment,
@@ -19,6 +20,7 @@ import {
   fetchUserChallenges,
   fetchUserEquipment,
   fetchUserInstruments,
+  getUserAnalytics,
   getUserBalance,
   useAuth,
 } from '~/features/supabase';
@@ -79,6 +81,12 @@ interface GameContextType {
   instrumentsLoading: boolean;
   setInstruments: Dispatch<SetStateAction<Instrument[]>>;
   setInstrumentsLoading: Dispatch<SetStateAction<boolean>>;
+
+  // Analytics state (read-only for components, writable for hooks)
+  analytics: UserAnalytics | null;
+  analyticsLoading: boolean;
+  setAnalytics: Dispatch<SetStateAction<UserAnalytics | null>>;
+  setAnalyticsLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 /**
@@ -156,6 +164,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [instruments, setInstruments] = useState<Instrument[]>([]);
   const [instrumentsLoading, setInstrumentsLoading] = useState(true);
 
+  // Analytics state - managed centrally, but logic in useAnalytics hook
+  const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+
   // Initial data loading
   useEffect(() => {
     if (user && !isAuthLoading) {
@@ -194,12 +206,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const fetchedInstruments = await fetchUserInstruments(user.id);
       setInstruments(fetchedInstruments);
       setInstrumentsLoading(false);
+
+      // Load analytics
+      setAnalyticsLoading(true);
+      const fetchedAnalytics = await getUserAnalytics(user.id);
+      setAnalytics(fetchedAnalytics);
+      setAnalyticsLoading(false);
     } catch (error) {
       console.error('Error loading initial data:', error);
       setCurrencyLoading(false);
       setChallengesLoading(false);
       setEquipmentLoading(false);
       setInstrumentsLoading(false);
+      setAnalyticsLoading(false);
     }
   };
 
@@ -230,6 +249,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
     instrumentsLoading,
     setInstruments,
     setInstrumentsLoading,
+    // Analytics state and setters
+    analytics,
+    analyticsLoading,
+    setAnalytics,
+    setAnalyticsLoading,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

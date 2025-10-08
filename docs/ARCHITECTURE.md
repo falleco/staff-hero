@@ -1,54 +1,71 @@
 # Staff Hero - Architecture Documentation
 
-## 🏗️ Project Structure
+## 🏗️ Project Overview
 
-### Core Architecture Principles
+Staff Hero is a React Native music learning game built with Expo, featuring note recognition games, a progression system with challenges, equipment, and instruments, all backed by Supabase for data persistence.
+
+## Core Architecture Principles
 
 1. **Separation of Concerns** - Business logic separated from UI components
-2. **Component Reusability** - Shared UI components with consistent styling
+2. **Centralized State Management** - Single source of truth in GameContext
 3. **Type Safety** - Comprehensive TypeScript interfaces
 4. **Performance** - Optimized animations using react-native-reanimated
 5. **Testability** - Pure functions for business logic
+6. **Supabase Integration** - Real-time data sync and persistence
 
 ## 📁 Directory Structure
 
 ```
 ├── app/                    # Expo Router screens
 │   ├── (tabs)/            # Tab navigation
-│   └── _layout.tsx        # Root layout with navigation
+│   │   ├── index.tsx      # Home screen
+│   │   ├── equipment.tsx  # Equipment management
+│   │   └── luthier.tsx    # Instrument shop
+│   ├── game/              # Game modes
+│   │   ├── single-note.tsx
+│   │   └── sequence.tsx
+│   ├── settings/          # Game settings
+│   └── _layout.tsx        # Root layout with providers
 ├── components/
 │   ├── game/              # Game-specific components
-│   │   ├── answer-buttons.tsx    # Answer selection UI
-│   │   ├── game-screen.tsx       # Main game orchestrator
-│   │   ├── rhythm-hero.tsx       # Guitar Hero style mode
-│   │   ├── sequence-game.tsx     # Note sequence mode
-│   │   └── score-display.tsx     # Score and streak display
-│   ├── modals/            # Modal dialogs
-│   │   ├── game-mode-modal.tsx   # Game mode selection
-│   │   └── settings-modal.tsx    # Settings configuration
+│   │   ├── answer-buttons.tsx
+│   │   ├── score-display.tsx
+│   │   └── ...
 │   ├── music/             # Music notation components
-│   │   └── music-staff.tsx       # SVG-based staff rendering
+│   │   └── music-staff/
 │   ├── screens/           # Screen components
-│   │   ├── analytics-screen.tsx  # Statistics and achievements
-│   │   └── home-screen.tsx       # Main menu
+│   │   └── analytics-screen.tsx
 │   └── ui/                # Reusable UI components
-│       ├── button.tsx            # Standardized button component
-│       ├── modal-header.tsx      # Modal header component
-│       └── setting-option.tsx    # Settings option component
+│       ├── button.tsx
+│       ├── challenge-card.tsx
+│       ├── equipment-card.tsx
+│       └── ...
 ├── contexts/              # React Context for state management
-│   └── game-context.tsx   # Global game state
+│   └── game-context.tsx   # Centralized game state
+├── hooks/                 # Custom React hooks (business logic)
+│   ├── use-game-logic.ts
+│   ├── use-game-settings.ts
+│   ├── use-currency.ts
+│   ├── use-challenges.ts
+│   ├── use-equipment.ts
+│   ├── use-luthier.ts
+│   ├── use-analytics.ts
+│   └── use-game-context.ts
+├── features/              # Feature modules
+│   └── supabase/          # Supabase integration
+│       ├── api/           # API functions
+│       ├── migrations/    # Database migrations
+│       ├── seeds/         # Seed data
+│       ├── auth-context.tsx
+│       └── client.ts
 ├── types/                 # TypeScript type definitions
-│   ├── analytics.ts       # Analytics and achievements types
-│   ├── music.ts          # Core music and game types
-│   └── note-symbols.ts   # Note symbol definitions
-├── utils/                 # Business logic and utilities
-│   ├── analytics-storage.ts     # Local storage for analytics
-│   ├── game-logic.ts           # Pure game logic functions
-│   ├── music-utils.ts          # Music theory utilities
-│   ├── rhythm-logic.ts         # Rhythm game business logic
-│   └── sequence-logic.ts       # Sequence game business logic
-└── hooks/                 # Custom React hooks
-    └── use-theme-color.ts  # Theme color management
+│   ├── analytics.ts
+│   ├── music.ts
+│   └── note-symbols.ts
+└── utils/                 # Business logic utilities
+    ├── game-logic.ts
+    ├── music-utils.ts
+    └── ...
 ```
 
 ## 🎮 Game Modes
@@ -65,11 +82,10 @@
 - **Features**: Visual sequence building, reset capability
 - **UI**: Sequence slots, progress indicators
 
-### 3. Rhythm Hero Mode
+### 3. Rhythm Hero Mode (Coming Soon)
 - **Purpose**: Guitar Hero style timing game
 - **Mechanics**: Notes move across staff, hit at target line
 - **Features**: Accuracy scoring, disappearing effects
-- **UI**: Moving musical notes, timing feedback
 
 ## 🎵 Music System
 
@@ -84,35 +100,120 @@
 - **Solfege**: Do, Re, Mi, Fa, Sol, La, Si
 - **Default**: Solfege (beginner-friendly)
 
-## 🔧 Technical Implementation
+## 🔧 State Management
 
-### State Management
-- **Context**: React Context with useReducer for game state
-- **Local Storage**: AsyncStorage for analytics and achievements
-- **Performance**: Optimized re-renders with proper dependencies
+### Centralized Architecture
+All application state is managed in **GameContext** (dumb store), with hooks providing business logic (smart operations).
 
-### Animations
-- **Library**: react-native-reanimated for 60fps performance
-- **Patterns**: Pre-allocated animation values to avoid hook violations
-- **Effects**: Note slide-ins, treble clef dancing, button press states
+```
+GameContext (State Container)
+  ↓
+Hooks (Business Logic)
+  ↓
+Components (Presentation)
+```
 
-### Styling
-- **Theme System**: Light/dark mode support with consistent colors
-- **NativeWind**: Tailwind CSS integration for utility-first styling
-- **Components**: Reusable styled components with variant support
+### Available Hooks
 
-## 📊 Analytics System
+| Hook | Purpose | Supabase |
+|------|---------|----------|
+| `useGameLogic()` | Game session, scoring, questions | No |
+| `useGameSettings()` | Notation, difficulty, game mode | No |
+| `useCurrency()` | Golden Note Shards | ✅ |
+| `useChallenges()` | Challenges system | ✅ |
+| `useEquipment()` | Equipment management | ✅ |
+| `useLuthier()` | Musical instruments | ✅ |
+| `useAnalytics()` | Game statistics & achievements | ✅ |
 
-### Data Tracking
-- **Game Sessions**: Score, accuracy, duration, difficulty
-- **User Preferences**: Favorite modes, notation systems
-- **Achievements**: Progressive unlocking system
-- **Statistics**: Comprehensive analytics dashboard
+See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 
-### Storage
-- **Local**: AsyncStorage for offline persistence
-- **Format**: JSON with versioning for app updates
-- **Privacy**: All data stored locally on device
+## 🗄️ Data Persistence (Supabase)
+
+### Database Tables
+
+1. **user_profiles** - User data
+2. **challenges** - Master list of challenges
+3. **user_challenges** - User progress on challenges
+4. **currency_transactions** - Transaction-based currency system
+5. **equipments** - Master list of equipment
+6. **user_equipments** - User equipment data
+7. **instruments** - Master list of instruments
+8. **user_instruments** - User instrument data
+9. **game_sessions** - Individual game sessions
+10. **achievements** - Master list of achievements
+11. **user_achievements** - User achievement unlocks
+
+### Authentication
+- **Anonymous Sign-ins**: Users start playing immediately
+- **No Registration Required**: Seamless onboarding
+- **Auto-Profile Creation**: Database trigger creates profile on signup
+
+### Transaction-Based Currency
+- All currency movements stored as individual transactions
+- Current balance = SUM of all transactions
+- Audit trail for all currency changes
+- Prevents balance manipulation
+
+## 🎨 Styling
+
+### Design System
+- **NativeWind**: Tailwind CSS for React Native
+- **Theme System**: Light/dark mode support
+- **Components**: Reusable styled components from `components/nativewindui/`
+- **Colors**: Defined in `theme/colors.ts`
+- **Typography**: Text component with semantic variants
+
+### UI Components
+- `Text` - Typography with variants (title1, body, caption1, etc.)
+- `Button` - Standardized buttons with variants and sizes
+- `Avatar` - User avatars
+- `Sheet` - Bottom sheets for modals
+
+## 📊 Progression System
+
+### Challenges
+- Track various achievements (score points, win games, use equipment)
+- Reward Golden Note Shards on completion
+- Progress stored in Supabase
+- Real-time updates across the app
+
+### Equipment System
+- **Categories**: Accessories, Instruments
+- **Rarities**: Common, Uncommon, Rare, Epic, Legendary
+- **Stats**: Score bonus, accuracy bonus, streak bonus
+- **Progression**: Purchase, upgrade, equip/unequip
+
+### Instrument System (Luthier)
+- **Types**: Violin, Guitar, Piano, Flute, etc.
+- **Rarities**: Common, Uncommon, Rare, Epic, Legendary
+- **Stats**: Score multiplier, accuracy bonus, streak bonus
+- **Tuning**: Increase tuning level for better stats
+- **Progression**: Purchase, upgrade, tune, equip
+
+### Currency
+- **Golden Note Shards**: Main currency
+- Earned from challenges, game performance
+- Spent on equipment, instruments, upgrades
+- Transaction history available
+
+## 📈 Analytics System
+
+### Game Sessions
+- Automatically recorded after each game
+- Tracks: score, accuracy, streak, duration
+- Stored in Supabase for analysis
+
+### Achievements
+- Auto-unlock on meeting conditions
+- Examples: First game, 5-note streak, perfect game
+- Progress tracked across sessions
+
+### Statistics
+- Total games played
+- Best streak ever
+- Average accuracy
+- Total play time
+- Favorite game mode/notation/difficulty
 
 ## 🧪 Testing Strategy
 
@@ -130,6 +231,7 @@
 
 ### Animations
 - **Native Driver**: All animations use native driver when possible
+- **react-native-reanimated**: For 60fps performance
 - **Pre-allocation**: Animation values created once, reused
 - **Cleanup**: Proper cleanup of timers and intervals
 
@@ -138,20 +240,125 @@
 - **Lazy Loading**: Components loaded only when needed
 - **SVG Optimization**: Efficient SVG rendering for musical notation
 
+### State Management
+- **Centralized State**: No prop drilling
+- **Efficient Updates**: Only affected components re-render
+- **Loading States**: Prevent duplicate API calls
+
+## 🔐 Security
+
+### Row Level Security (RLS)
+- Users can only access their own data
+- Database-enforced security policies
+- Secure by default
+
+### Anonymous Auth
+- Secure temporary accounts
+- Can be upgraded to permanent later
+- No sensitive data required
+
 ## 🔮 Future Enhancements
 
 ### Additional Note Types
-- **Half Notes**: Minim symbols with stems
-- **Quarter Notes**: Crotchet symbols with filled heads
-- **Eighth Notes**: Quaver symbols with flags
+- Half Notes, Quarter Notes, Eighth Notes
+- Different note durations and rhythms
 
 ### Advanced Features
-- **Key Signatures**: Support for different key signatures
-- **Time Signatures**: Rhythm patterns beyond 4/4
-- **Bass Clef**: Additional clef support
-- **Chord Recognition**: Harmonic interval training
+- Key Signatures support
+- Time Signatures beyond 4/4
+- Bass Clef notation
+- Chord Recognition
 
 ### Multiplayer
-- **Real-time**: WebSocket-based multiplayer sessions
-- **Leaderboards**: Global and friend-based competitions
-- **Collaborative**: Team-based learning modes
+- Real-time multiplayer sessions
+- Leaderboards (global and friends)
+- Collaborative learning modes
+
+### Social Features
+- Friend system
+- Share achievements
+- Challenge friends
+
+## 📚 Resources
+
+- **State Management**: `docs/STATE_MANAGEMENT.md`
+- **Quick Reference**: `docs/STATE_MANAGEMENT_QUICK_REFERENCE.md`
+- **Supabase Setup**: `docs/SUPABASE_SETUP.md`
+- **Analytics System**: `features/supabase/ANALYTICS_SYSTEM.md`
+- **Equipment System**: `features/supabase/EQUIPMENT_SYSTEM.md`
+- **Currency System**: `features/supabase/CURRENCY_SYSTEM.md`
+
+## 🛠️ Development Commands
+
+```bash
+# Start development server
+bun start
+
+# Run iOS simulator
+bun ios
+
+# Run Android emulator
+bun android
+
+# Type checking
+bun run tsc
+
+# Linting
+bun run lint
+
+# Install packages (use expo compatibility)
+bunx expo install <package>
+```
+
+## 📦 Key Dependencies
+
+- **Expo**: React Native framework
+- **React Native Reanimated**: Animations
+- **NativeWind**: Tailwind CSS for RN
+- **Supabase**: Backend and database
+- **Expo Router**: File-based routing
+- **TypeScript**: Type safety
+
+## 🎯 Architecture Benefits
+
+### 1. Maintainability
+- Clear separation of concerns
+- Predictable data flow
+- Easy to locate and fix bugs
+- Consistent patterns
+
+### 2. Scalability
+- Easy to add new features
+- Database-backed persistence
+- Modular hook system
+- Type-safe APIs
+
+### 3. Performance
+- Optimized animations
+- Efficient re-renders
+- Minimal prop drilling
+- Loading state management
+
+### 4. Developer Experience
+- TypeScript everywhere
+- Clear file structure
+- Comprehensive documentation
+- Reusable components
+
+### 5. User Experience
+- Smooth animations
+- Real-time updates
+- Offline-capable (with sync)
+- Fast load times
+
+## Summary
+
+Staff Hero is built with a modern, scalable architecture that prioritizes:
+- **Clean Code**: Separation of concerns, DRY principles
+- **Type Safety**: Comprehensive TypeScript coverage
+- **State Management**: Centralized state with dedicated hooks
+- **Data Persistence**: Supabase for reliable backend
+- **Performance**: Optimized animations and rendering
+- **UX**: Smooth, intuitive gameplay with progression systems
+
+The architecture supports easy extension with new game modes, features, and content while maintaining code quality and performance.

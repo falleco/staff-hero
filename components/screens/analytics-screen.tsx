@@ -1,38 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import type { UserAnalytics } from '@/types/analytics';
-import {
-  clearAnalytics,
-  formatPlayTime,
-  getAnalytics,
-  getStreakEmoji,
-} from '@/utils/analytics-storage';
+import { formatPlayTime, getStreakEmoji } from '@/utils/analytics-storage';
 
 export function AnalyticsScreen() {
-  const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { analytics, isLoading, clearData } = useAnalytics();
 
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
-
-  useEffect(() => {
-    loadAnalytics();
-  }, []);
-
-  const loadAnalytics = async () => {
-    try {
-      const data = await getAnalytics();
-      setAnalytics(data);
-    } catch (error) {
-      console.error('Error loading analytics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleClearData = () => {
     Alert.alert(
@@ -44,15 +24,18 @@ export function AnalyticsScreen() {
           text: 'Clear All',
           style: 'destructive',
           onPress: async () => {
-            await clearAnalytics();
-            loadAnalytics();
+            try {
+              await clearData();
+            } catch (error) {
+              console.error('Error clearing data:', error);
+            }
           },
         },
       ],
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor }]}>
         <View style={styles.loadingContainer}>

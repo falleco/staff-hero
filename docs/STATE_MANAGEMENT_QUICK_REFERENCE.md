@@ -6,28 +6,66 @@
 **Hooks** = Business logic (smart operations)  
 **Components** = Use hooks, not context directly
 
-## Context (Read-Only State)
+## All Available Hooks
 
+### Core Game Hooks
 ```typescript
-// contexts/game-context.tsx
-interface GameContextType {
-  // State
-  currency: UserCurrency;
-  challenges: Challenge[];
-  currencyLoading: boolean;
-  challengesLoading: boolean;
-  
-  // Setters (for hooks only!)
-  setCurrency: Dispatch<SetStateAction<UserCurrency>>;
-  setChallenges: Dispatch<SetStateAction<Challenge[]>>;
-  setCurrencyLoading: Dispatch<SetStateAction<boolean>>;
-  setChallengesLoading: Dispatch<SetStateAction<boolean>>;
-}
+useGameLogic()      // Game session, scoring, questions
+useGameSettings()   // Notation, difficulty, game mode
 ```
 
-## Hooks (Business Logic)
+### Supabase-Integrated Hooks
+```typescript
+useCurrency()       // Golden Note Shards
+useChallenges()     // Challenges system
+useEquipment()      // Equipment management
+useLuthier()        // Musical instruments
+useAnalytics()      // Game statistics & achievements
+```
 
-### useCurrency()
+### Convenience Hook
+```typescript
+useGameContext()    // Returns { gameLogic, gameSettings, analytics }
+```
+
+## Hook APIs
+
+### 1. useGameLogic()
+```typescript
+const {
+  gameState,          // Current game state
+  startGame,          // Start a new game
+  endGame,            // End current game (saves to analytics)
+  submitAnswer,       // Submit answer (updates score/streak)
+  nextQuestion,       // Move to next question
+  resetStreak,        // Reset streak to 0
+  generateNewQuestion, // Generate new question
+} = useGameLogic();
+
+// Example
+gameLogic.startGame(gameSettings.gameSettings);
+gameLogic.submitAnswer([Notes.C4]);
+```
+
+### 2. useGameSettings()
+```typescript
+const {
+  gameSettings,        // Current settings
+  updateSettings,      // Update multiple settings
+  updateNotationSystem, // Change notation
+  updateDifficulty,    // Change difficulty
+  updateGameMode,      // Change game mode
+  toggleNoteLabels,    // Toggle note labels
+  updateTimeLimit,     // Set time limit
+  resetSettings,       // Reset to defaults
+} = useGameSettings();
+
+// Example
+gameSettings.updateDifficulty(Difficulty.ADVANCED);
+gameSettings.toggleNoteLabels();
+```
+
+### 3. useCurrency()
 ```typescript
 const {
   currency,              // Current balance
@@ -40,18 +78,18 @@ const {
 } = useCurrency();
 
 // Add shards
-await addGoldenShards(100, 'Bonus reward');
+await currency.addGoldenShards(100, 'Bonus reward');
 
 // Deduct shards (negative amount)
-await addGoldenShards(-50, 'Purchase item');
+await currency.addGoldenShards(-50, 'Purchase item');
 
 // Check balance
-if (await hasSufficientBalance(100)) {
+if (await currency.hasSufficientBalance(100)) {
   // Can afford
 }
 ```
 
-### useChallenges()
+### 4. useChallenges()
 ```typescript
 const {
   challenges,             // All challenges
@@ -64,13 +102,100 @@ const {
 } = useChallenges();
 
 // Start challenge
-await startChallenge('challenge-id');
+await challenges.startChallenge('challenge-id');
 
 // Update progress
-await updateChallengeProgress(ChallengeType.SCORE_POINTS, 100);
+await challenges.updateChallengeProgress(ChallengeType.SCORE_POINTS, 100);
 
 // Redeem (awards golden note shards)
-await redeemChallenge('challenge-id');
+await challenges.redeemChallenge('challenge-id');
+```
+
+### 5. useEquipment()
+```typescript
+const {
+  equipment,             // All equipment items
+  isLoading,            // Loading state
+  refresh,              // Reload from DB
+  getEquipmentByCategory, // Filter by category
+  buyEquipment,         // Purchase equipment
+  upgradeEquipment,     // Upgrade level
+  equipItem,            // Equip item
+  unequipItem,          // Unequip item
+  getTotalBonuses,      // Get all active bonuses
+  resetEquipment,       // Reset all equipment
+} = useEquipment();
+
+// Buy equipment
+await equipment.buyEquipment('equipment-id');
+
+// Equip item
+await equipment.equipItem('equipment-id');
+
+// Get bonuses
+const bonuses = equipment.getTotalBonuses();
+// { scoreBonus: 10, accuracyBonus: 5, streakBonus: 2 }
+```
+
+### 6. useLuthier()
+```typescript
+const {
+  instruments,          // All instruments
+  isLoading,           // Loading state
+  refresh,             // Reload from DB
+  buyInstrument,       // Purchase instrument
+  upgradeInstrument,   // Upgrade level
+  tuneInstrument,      // Tune instrument
+  equipInstrument,     // Equip instrument
+  resetInstruments,    // Reset all instruments
+  equippedInstrument,  // Currently equipped instrument
+  ownedInstruments,    // Owned instruments only
+} = useLuthier();
+
+// Buy instrument
+await luthier.buyInstrument('instrument-id');
+
+// Tune instrument (increases tuning level)
+await luthier.tuneInstrument('instrument-id');
+
+// Equip instrument
+await luthier.equipInstrument('instrument-id');
+
+// Check equipped
+const current = luthier.equippedInstrument;
+```
+
+### 7. useAnalytics()
+```typescript
+const {
+  analytics,            // User analytics data
+  isLoading,           // Loading state
+  refresh,             // Reload from DB
+  addSession,          // Record game session
+  getRecentSessions,   // Get recent sessions
+  getUserAchievements, // Get achievements
+  unlockAchievement,   // Manually unlock achievement
+  clearData,           // Clear all analytics (dev only)
+} = useAnalytics();
+
+// Record game session
+await analytics.addSession({
+  gameMode: GameMode.SINGLE_NOTE,
+  difficulty: Difficulty.BEGINNER,
+  notationSystem: NotationSystem.LETTER,
+  score: 450,
+  streak: 8,
+  maxStreak: 12,
+  totalQuestions: 20,
+  correctAnswers: 18,
+  accuracy: 90,
+  duration: 180, // seconds
+});
+
+// Get analytics
+const stats = analytics.analytics;
+console.log(`Total games: ${stats?.totalGamesPlayed}`);
+console.log(`Best streak: ${stats?.bestStreak}`);
 ```
 
 ## Component Patterns
@@ -107,119 +232,158 @@ function ShopItem({ price }: { price: number }) {
 ### Multiple Hooks
 ```tsx
 function GameOverScreen() {
-  const { currency } = useCurrency();
-  const { challenges, updateChallengeProgress } = useChallenges();
+  const { gameState, endGame } = useGameLogic();
+  const { gameSettings } = useGameSettings();
+  const { addSession } = useAnalytics();
+  const { updateChallengeProgress } = useChallenges();
   
-  // Use both hooks together
-  // State updates propagate everywhere
+  const handleGameEnd = async () => {
+    // End game
+    await endGame(gameSettings.gameSettings);
+    
+    // Record session
+    await addSession({
+      gameMode: gameSettings.gameSettings.gameMode,
+      score: gameState.score,
+      // ... other stats
+    });
+    
+    // Update challenges
+    await updateChallengeProgress(ChallengeType.SCORE_POINTS, gameState.score);
+  };
+  
+  return <Button onPress={handleGameEnd}>Finish Game</Button>;
+}
+```
+
+### Using useGameContext (Convenience)
+```tsx
+function GameDashboard() {
+  const { gameLogic, gameSettings, analytics } = useGameContext();
+  
+  return (
+    <View>
+      {/* Current game */}
+      <Text>Score: {gameLogic.gameState.score}</Text>
+      <Text>Streak: {gameLogic.gameState.streak}</Text>
+      
+      {/* Settings */}
+      <Text>Difficulty: {gameSettings.gameSettings.difficulty}</Text>
+      
+      {/* Analytics */}
+      <Text>Total Games: {analytics.analytics?.totalGamesPlayed}</Text>
+      <Text>Best Streak: {analytics.analytics?.bestStreak}</Text>
+    </View>
+  );
 }
 ```
 
 ## Rules
 
 ### ✅ DO
-- Use `useCurrency()` for all currency operations
-- Use `useChallenges()` for all challenge operations
-- Access context state via hooks (not directly)
-- Update state via hook operations
-- Handle errors in try/catch blocks
+- Use hooks in components for all operations
+- Handle loading states properly
+- Catch errors in try/catch blocks
+- Use appropriate hook for each feature
+- Call `refresh()` to reload data from database
 
 ### ❌ DON'T
-- Don't use `useContext(GameContext)` in components
+- Don't use `useContext(GameContext)` directly in components
 - Don't duplicate state in components
-- Don't forget loading states
-- Don't call setters directly from components
+- Don't call Supabase APIs directly from components
+- Don't forget loading/error states
 - Don't skip error handling
 
-## Data Flow
+## Common Workflows
 
-```
-Component calls hook operation
-         ↓
-Hook calls Supabase API
-         ↓
-Hook updates state via setter
-         ↓
-All components see new state
-```
-
-## Example: Complete Flow
-
+### 1. Starting a Game
 ```tsx
-// Component
-function ChallengeCard({ challenge }: Props) {
-  const { redeemChallenge } = useChallenges();
-  const { currency } = useCurrency();
-  
-  const handleRedeem = async () => {
-    try {
-      await redeemChallenge(challenge.id);
-      // Both challenges AND currency are updated automatically!
-      Alert.alert('Success', `You earned ${challenge.reward} shards!`);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to redeem challenge');
-    }
-  };
-  
-  return (
-    <View>
-      <Text>{challenge.title}</Text>
-      <Text>Progress: {challenge.current}/{challenge.target}</Text>
-      <Text>Reward: {challenge.reward} shards</Text>
-      <Text>Current Balance: {currency.goldenNoteShards}</Text>
-      {challenge.current >= challenge.target && (
-        <Button onPress={handleRedeem}>Redeem</Button>
-      )}
-    </View>
-  );
-}
+const { gameLogic, gameSettings } = useGameContext();
+
+useEffect(() => {
+  gameLogic.startGame(gameSettings.gameSettings);
+}, []);
 ```
 
-## Testing
-
-### Testing Hooks
-```typescript
-import { renderHook } from '@testing-library/react-hooks';
-import { useCurrency } from './use-currency';
-
-describe('useCurrency', () => {
-  it('should add golden shards', async () => {
-    const { result } = renderHook(() => useCurrency(), {
-      wrapper: GameProvider,
-    });
-    
-    await result.current.addGoldenShards(100);
-    
-    expect(result.current.currency.goldenNoteShards).toBe(100);
-  });
-});
-```
-
-### Testing Components
+### 2. Buying Equipment
 ```tsx
-import { render } from '@testing-library/react-native';
-import { GameProvider } from '@/contexts/game-context';
+const { buyEquipment, refresh } = useEquipment();
+const { addGoldenShards } = useCurrency();
 
-describe('BalanceDisplay', () => {
-  it('should display balance', () => {
-    const { getByText } = render(
-      <GameProvider>
-        <BalanceDisplay />
-      </GameProvider>
-    );
-    
-    expect(getByText(/shards/)).toBeTruthy();
-  });
-});
+const handleBuy = async (equipmentId: string, price: number) => {
+  try {
+    // Equipment system deducts currency automatically
+    await buyEquipment(equipmentId);
+    Alert.alert('Success', 'Equipment purchased!');
+  } catch (error) {
+    Alert.alert('Error', 'Failed to purchase');
+  }
+};
 ```
+
+### 3. Redeeming a Challenge
+```tsx
+const { redeemChallenge } = useChallenges();
+
+const handleRedeem = async (challengeId: string) => {
+  try {
+    // Automatically updates both challenges AND currency
+    await redeemChallenge(challengeId);
+    Alert.alert('Success', 'Challenge redeemed!');
+  } catch (error) {
+    Alert.alert('Error', 'Failed to redeem');
+  }
+};
+```
+
+### 4. Recording a Game Session
+```tsx
+const { gameState, endGame } = useGameLogic();
+const { gameSettings } = useGameSettings();
+const { addSession } = useAnalytics();
+
+const handleEndGame = async () => {
+  // End game first
+  await endGame(gameSettings.gameSettings);
+  
+  // Then record to analytics
+  await addSession({
+    gameMode: gameSettings.gameSettings.gameMode,
+    difficulty: gameSettings.gameSettings.difficulty,
+    notationSystem: gameSettings.gameSettings.notation,
+    score: gameState.score,
+    streak: gameState.streak,
+    maxStreak: gameState.maxStreak,
+    totalQuestions: gameState.totalQuestions,
+    correctAnswers: gameState.correctAnswers,
+    accuracy: Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100),
+    duration: Math.floor((Date.now() - startTime) / 1000),
+  });
+};
+```
+
+## Hook Dependencies
+
+| Hook | Depends On | Updates |
+|------|-----------|---------|
+| useGameLogic | - | challenges (progress tracking) |
+| useGameSettings | - | - |
+| useCurrency | - | - |
+| useChallenges | - | currency (when redeeming) |
+| useEquipment | currency | currency (when buying/upgrading) |
+| useLuthier | currency | currency (when buying/upgrading/tuning) |
+| useAnalytics | - | - |
 
 ## Summary
 
 | Layer | Responsibility | Examples |
 |---|---|---|
-| **GameContext** | State storage | currency, challenges, loading states |
-| **Hooks** | Business logic | addGoldenShards(), redeemChallenge() |
+| **GameContext** | State storage | All state + setters |
+| **Hooks** | Business logic | useGameLogic(), useCurrency(), etc. |
 | **Components** | Presentation | Display data, call hook operations |
 
-Remember: **Context = State, Hooks = Logic, Components = View**
+**Remember: Context = State, Hooks = Logic, Components = View**
 
+## Need More Info?
+
+See `docs/STATE_MANAGEMENT.md` for complete architecture documentation.
