@@ -16,7 +16,7 @@ export const TabBar = ({ state, descriptors, navigation }: TabBarProps) => {
   const { bottom } = useSafeAreaInsets();
   return (
     <View
-      className={`absolute bottom-0 flex-row justify-between items-center bg-[#160E22] pt-4 mx-0`}
+      className={`absolute bottom-0 flex-row justify-between items-center bg-[###1B1B3C] pt-4 mx-0`}
       style={{ paddingBottom: bottom + 5 }}
     >
       {state.routes.map((route: any, index: number) => {

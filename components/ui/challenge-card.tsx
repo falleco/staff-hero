@@ -97,8 +97,8 @@ export function ChallengeCard({
   return (
     <View className="mb-8 p-4 rounded-2xl border-2 border-gray-200 bg-white">
       <View className="absolute top-0 right-5 left-40">
-        <View className="bg-red-400 rounded-3xl border-2 px-2 border-black/20 -mt-4 w-[100px] text-center items-center self-end">
-          <ThemedText className="text-sm font-pixelpurl-medium text-white">
+        <View className="bg-red-400 rounded-3xl border-2 px-2 border-black/20 -mt-4 w-[150px] text-center items-center self-end">
+          <ThemedText className="text-lg font-pixelpurl-medium text-white">
             Progress: {challenge.progress}/{challenge.requirement}
           </ThemedText>
         </View>
@@ -109,8 +109,7 @@ export function ChallengeCard({
           <ThemedText className="text-2xl mr-3">{challenge.icon}</ThemedText>
           <View className="flex-1">
             <ThemedText
-              className="text-lg font-semibold"
-              style={{ color: textColor }}
+              className="text-xl font-semibold"
             >
               {challenge.title}
             </ThemedText>
@@ -141,7 +140,7 @@ export function ChallengeCard({
               {challenge.reward}
             </ThemedText>
           </View>
-          <ThemedText className="text-xs" style={{ color: secondaryTextColor }}>
+          <ThemedText className="text-sm" style={{ color: secondaryTextColor }}>
             Golden Shards
           </ThemedText>
         </View>
@@ -149,7 +148,7 @@ export function ChallengeCard({
 
       {/* Description */}
       <ThemedText
-        className="text-sm mb-3"
+        className="text-md mb-3"
         style={{ color: secondaryTextColor }}
       >
         {challenge.description}
@@ -159,7 +158,7 @@ export function ChallengeCard({
       <FlatButton
         size="sm"
         className={cn(
-          'w-full max-w-sm rounded-2xl px-2 py-1 border-purple-400 bg-purple-800 text-[#ffffff] border-4',
+          'w-full rounded-2xl px-2 py-1 border-purple-400 bg-purple-800 text-[#ffffff] border-4',
           challenge.status === ChallengeStatus.COMPLETED ? 'border-green' : '',
         )}
         onPress={handleActionPress}

@@ -33,7 +33,7 @@ export default function TabLayout() {
         name="index"
         options={{
           headerShown: false,
-          title: 'Play',
+          title: 'Home',
           tabBarIcon: ({ color }) => (
             <Image
               source={require('@/assets/images/hud/combat_512.png')}

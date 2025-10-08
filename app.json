@@ -8,9 +8,15 @@
     "scheme": "staffhero",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "assets/images/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.staffhero.app"
+      "bundleIdentifier": "com.staffhero.app",
+      "infoPlist": {
+        "NSMotionUsageDescription": "This app uses motion sensors to create cool parallax effects in the background."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,6 +25,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.BODY_SENSORS"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },

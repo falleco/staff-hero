@@ -30,22 +30,6 @@ export default function HomeTab() {
   return (
     <>
       <ParallaxBg className="absolute top-0 left-0 right-0 bottom-0" />
-      {/* <Image
-        style={{
-          width: '100%',
-          height: '100%',
-          flex: 1,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-        source={require('@/assets/images/bgs/city_purple_night.png')}
-        contentFit="cover"
-        transition={1000}
-      /> */}
-
       <View
         className="flex-1 flex-col justify-center items-center"
         style={{ paddingTop: top }}
@@ -83,7 +67,7 @@ export default function HomeTab() {
           <FlatButton
             size="xl"
             onPress={handleStartGamePress}
-            className="w-full max-w-sm mb-6 rounded-2xl px-4 py-2 border-red-400 bg-red-800 text-[#ffffff] border-4"
+            className="w-full max-w-sm -mb-6 rounded-2xl px-4 py-2 border-red-400 bg-red-800 text-[#ffffff] border-4"
           >
             <FlatButtonText className="text-2xl text-[#ffffff] font-boldpixels-medium">
               START PLAYING
@@ -91,7 +75,7 @@ export default function HomeTab() {
           </FlatButton>
         </View>
       </View>
-      <StatusBar style="light" animated={true} />
+      <StatusBar style="light" hidden={true} />
     </>
   );
 }
