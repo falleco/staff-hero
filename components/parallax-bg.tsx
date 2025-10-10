@@ -228,6 +228,7 @@ export const ParallaxBg = ({ className }: { className?: string }) => {
           contentFit="none"
         />
       </Animated.View>
+      <View className="absolute left-0 right-0 h-[200px] bottom-0 bg-[#1B1B3C]" />
       <LottieView
         loop={true}
         autoPlay={true}

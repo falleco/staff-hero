@@ -15,9 +15,9 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    player.seekTo(0);
-    player.loop = true;
-    player.play();
+    // player.seekTo(0);
+    // player.loop = true;
+    // player.play();
   }, []);
 
   return (

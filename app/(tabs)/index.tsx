@@ -29,7 +29,7 @@ export default function HomeTab() {
 
   return (
     <>
-      <ParallaxBg className="absolute top-0 left-0 right-0 bottom-0" />
+      <ParallaxBg className="absolute top-0 left-0 right-0 bottom-0 bg-[#1B1B3C]" />
       <View
         className="flex-1 flex-col justify-center items-center"
         style={{ paddingTop: top }}

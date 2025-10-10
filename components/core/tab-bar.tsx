@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import Animated, {
@@ -80,9 +81,22 @@ export const TabBar = ({ state, descriptors, navigation }: TabBarProps) => {
 
   return (
     <View
-      className={`absolute bottom-0 flex-row justify-between items-center bg-[#1B1B3C] pt-4 mx-0`}
+      className={`absolute bottom-0 flex-row justify-between items-center pt-4 mx-0`}
       style={{ paddingBottom: bottom + 5 }}
     >
+      <LinearGradient
+        colors={['#1B1B3C', '#1B1B3C00']}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 0, y: 0 }}
+        style={{
+          flex: 1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}
+      />
       <View className="flex-1 flex-row relative">
         <TabBarButtonBackground
           className="flex-1 absolute"
