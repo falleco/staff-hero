@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import type React from 'react';
-import { Alert, type StyleProp, View, type ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, View, type ViewStyle } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -41,29 +42,18 @@ export function LuthierCard({
   onTune,
   onEquip,
 }: InstrumentCardProps) {
-  const cardBackgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
-
-  const getRarityColor = () => {
-    switch (instrument.rarity) {
-      case InstrumentRarity.COMMON:
-        return '#6B7280'; // Gray
-      case InstrumentRarity.RARE:
-        return '#3B82F6'; // Blue
-      case InstrumentRarity.EPIC:
-        return '#8B5CF6'; // Purple
-      case InstrumentRarity.LEGENDARY:
-        return '#F59E0B'; // Gold
-      default:
-        return '#6B7280';
-    }
+  const handlePress = () => {
+    router.push({
+      pathname: '/luthier/purchase',
+      params: { id: instrument.id },
+    });
   };
 
   return (
-    <View
+    <Pressable
+      onPress={handlePress}
       className={cn(
-        ' rounded-2xl border-2 border-gray-200 justify-center items-center bg-white',
+        ' rounded-2xl border-2 border-gray-200 justify-center items-center bg-white active:opacity-80',
         className,
       )}
       style={{ ...(style ?? {}) }}
@@ -80,6 +70,6 @@ export function LuthierCard({
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }

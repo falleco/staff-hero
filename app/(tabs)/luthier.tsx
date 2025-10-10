@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { InstrumentCard } from '@/components/ui/instrument-card';
+import { InstrumentGridCard } from '@/components/ui/instrument-grid-card';
 import { LuthierCard } from '@/components/ui/luthier-card';
 import { useCurrency } from '@/hooks/use-currency';
 import { useLuthier } from '@/hooks/use-luthier';
@@ -174,7 +174,7 @@ export default function LuthierTab() {
           {/* Content based on active tab */}
           <View className="mx-5 px-4 my-0 bg-[#2a0f3d] rounded-2xl rounded-tl-none z-0 border-2 border-white/20 pt-4 pb-4 justify-center items-center relative">
             {activeTab === 'inventory' && (
-              <View>
+              <View className="w-full">
                 <ThemedText className="text-lg font-bold mb-3 text-white">
                   🎒 Your Collection ({ownedInstruments.length})
                 </ThemedText>
@@ -199,17 +199,15 @@ export default function LuthierTab() {
                     </FlatButton>
                   </View>
                 ) : (
-                  ownedInstruments.map((instrument) => (
-                    <InstrumentCard
-                      key={instrument.id}
-                      instrument={instrument}
-                      currency={currency}
-                      onBuy={handleBuyInstrument}
-                      onUpgrade={handleUpgradeInstrument}
-                      onTune={handleTuneInstrument}
-                      onEquip={handleEquipInstrument}
-                    />
-                  ))
+                  <View className="flex-row flex-wrap gap-3 w-full">
+                    {ownedInstruments.map((instrument) => (
+                      <InstrumentGridCard
+                        key={instrument.id}
+                        instrument={instrument}
+                        className="w-[47%] h-[180px]"
+                      />
+                    ))}
+                  </View>
                 )}
               </View>
             )}

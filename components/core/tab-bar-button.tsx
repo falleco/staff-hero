@@ -32,7 +32,17 @@ export const TabBarButton = (props: TabBarButtonProps) => {
   useEffect(() => {
     scale.value = withSpring(
       typeof isFocused === 'boolean' ? (isFocused ? 1 : 0) : isFocused,
-      { duration: 350 },
+      {
+        duration: isFocused ? 350 : 150,
+        ...(isFocused
+          ? {
+              dampingRatio: 0.2,
+              mass: 2,
+              overshootClamping: undefined,
+              energyThreshold: 0.002672955976,
+            }
+          : {}),
+      },
     );
   }, [scale, isFocused]);
 
@@ -63,7 +73,7 @@ export const TabBarButton = (props: TabBarButtonProps) => {
         className={cn(
           'flex-1 border-[#361848] rounded-full w-20 h-20 justify-center items-center ',
           props.className,
-          isFocused ? 'border-4 bg-[#160E22]' : 'border-0',
+          // isFocused ? 'border-4 bg-[#160E22]' : 'border-0',
         )}
       >
         {icons[routeName as keyof typeof icons]({

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
-import { EquipmentCard } from '@/components/ui/equipment-card';
+import { EquipmentGridCard } from '@/components/ui/equipment-grid-card';
 import { Button, ButtonText } from '@/components/ui/gluestack-button';
 import { useCurrency } from '@/hooks/use-currency';
 import { useEquipment } from '@/hooks/use-equipment';
@@ -311,7 +311,7 @@ export default function EquipmentTab() {
             )}
           </View>
 
-          {/* Equipment List */}
+          {/* Equipment Grid */}
           <View className="px-5">
             <ThemedText
               className="text-lg font-bold mb-3"
@@ -341,20 +341,15 @@ export default function EquipmentTab() {
                 </ThemedText>
               </View>
             ) : (
-              categoryEquipment.map((item) => (
-                <EquipmentCard
-                  key={item.id}
-                  equipment={item}
-                  currency={currency}
-                  onBuy={handleBuyEquipment}
-                  onUpgrade={handleUpgradeEquipment}
-                  onEquip={handleEquipItem}
-                  onUnequip={handleUnequipItem}
-                  hidePurchaseActions={
-                    activeCategory === EquipmentCategory.INSTRUMENTS
-                  }
-                />
-              ))
+              <View className="flex-row flex-wrap gap-3">
+                {categoryEquipment.map((item) => (
+                  <EquipmentGridCard
+                    key={item.id}
+                    equipment={item}
+                    className="w-[32%] h-[180px]"
+                  />
+                ))}
+              </View>
             )}
           </View>
 
