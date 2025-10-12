@@ -444,7 +444,7 @@ expect(mockContext.dispatchGameAction).toHaveBeenCalled();
   ├─ use-analytics.ts          # Analytics logic
   └─ use-game-context.ts       # Convenience wrapper
 
-/features/supabase/api
+/src/data/supabase/api
   ├─ currency.ts               # Currency API functions
   ├─ challenges.ts             # Challenges API functions
   ├─ equipment.ts              # Equipment API functions
@@ -515,7 +515,7 @@ export function useNewFeature() {
 
 ### 3. Create API Functions
 ```typescript
-// features/supabase/api/new-feature.ts
+// src/data/supabase/api/new-feature.ts
 export async function fetchNewFeature(userId: string) {
   const { data, error } = await supabase
     .from('new_feature')

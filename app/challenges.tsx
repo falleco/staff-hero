@@ -4,11 +4,10 @@ import type React from 'react';
 import { useState } from 'react';
 import { RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FloatingButton } from '@/components/core/floating-button';
-import { ThemedText } from '@/components/themed-text';
-import { ChallengeCard } from '@/components/ui/challenge-card';
-import { useChallenges } from '@/hooks/use-challenges';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { FloatingButton } from '~/shared/components/core/floating-button';
+import { ThemedText } from '~/shared/components/themed-text';
+import { ChallengeCard, useChallenges } from '~/features/challenges';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
 
 export default function ChallengesScreen() {
   const textColor = useThemeColor({}, 'text');

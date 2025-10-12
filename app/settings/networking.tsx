@@ -2,13 +2,13 @@ import { router } from 'expo-router';
 import type React from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/components/themed-text';
-import { ModalHeader } from '@/components/ui/modal-header';
-import { SettingsList } from '@/components/ui/settings-list';
-import { useAppSettings } from '@/hooks/use-app-settings';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import type { SettingSection } from '@/types/music';
-import { SettingActionType } from '@/types/music';
+import { ThemedText } from '~/shared/components/themed-text';
+import { ModalHeader } from '~/features/settings';
+import { SettingsList } from '~/features/settings';
+import { useAppSettings } from '~/features/settings';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import type { SettingSection } from '~/shared/types/music';
+import { SettingActionType } from '~/shared/types/music';
 
 export default function NetworkingScreen() {
   const backgroundColor = useThemeColor({}, 'background');

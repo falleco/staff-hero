@@ -3,28 +3,27 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { AnswerButtons } from '@/components/game/answer-buttons';
-import { ScoreDisplay } from '@/components/game/score-display';
-import { MusicStaff } from '@/components/music-staff';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { useGameContext } from '@/hooks/use-game-context';
-import { useNoteAnimations } from '@/hooks/use-note-animations';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { GameMode } from '@/types/music';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { AnswerButtons, ScoreDisplay } from '~/features/game';
+import { MusicStaff } from '~/shared/components/music-staff';
+import { ThemedText } from '~/shared/components/themed-text';
+import { ThemedView } from '~/shared/components/themed-view';
+import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
+import { useGameContext } from '~/features/game';
+import { useNoteAnimations } from '~/features/game';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { GameMode } from '~/shared/types/music';
 import {
   getAutoAdvanceDelay,
   getStreakLevel,
   triggerGameHaptics,
   validateAnswer,
-} from '@/utils/game-logic';
+} from '~/features/game/utils/game-logic';
 import {
   convertDisplayNamesToNotes,
   getNoteDisplayName,
   isAnswerCorrect,
-} from '@/utils/music-utils';
+} from '~/shared/utils/music-utils';
 
 interface GameScreenProps {
   onGameEnd?: () => void;

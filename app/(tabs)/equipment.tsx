@@ -3,13 +3,12 @@ import type React from 'react';
 import { useState } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/components/themed-text';
-import { EquipmentGridCard } from '@/components/ui/equipment-grid-card';
-import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { useCurrency } from '@/hooks/use-currency';
-import { useEquipment } from '@/hooks/use-equipment';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { EquipmentCategory } from '@/types/music';
+import { ThemedText } from '~/shared/components/themed-text';
+import { EquipmentGridCard, useEquipment } from '~/features/equipment';
+import { useCurrency } from '~/features/currency';
+import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { EquipmentCategory } from '~/shared/types/music';
 
 export default function EquipmentTab() {
   const textColor = useThemeColor({}, 'text');
@@ -47,15 +46,13 @@ export default function EquipmentTab() {
   const totalBonuses = getTotalBonuses();
 
   // Get equipment for each category
-  const mantles = getEquipmentByCategory(EquipmentCategory.MANTLE).filter(
-    (item) => item.isOwned,
-  );
+  const mantles = getEquipmentByCategory(EquipmentCategory.MANTLE);
   const adornments = getEquipmentByCategory(
     EquipmentCategory.ADORNMENTS,
-  ).filter((item) => item.isOwned);
+  );
   const instruments = getEquipmentByCategory(
     EquipmentCategory.INSTRUMENTS,
-  ).filter((item) => item.isOwned);
+  );
 
   return (
     <>

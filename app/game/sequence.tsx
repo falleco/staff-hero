@@ -5,27 +5,26 @@ import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { AnswerButtons } from '@/components/game/answer-buttons';
-import { ScoreDisplay } from '@/components/game/score-display';
-import { MusicStaff } from '@/components/music-staff';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useGameContext } from '@/hooks/use-game-context';
-import { useNoteAnimations } from '@/hooks/use-note-animations';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { cn } from '@/lib/cn';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { AnswerButtons, ScoreDisplay } from '~/features/game';
+import { MusicStaff } from '~/shared/components/music-staff';
+import { ThemedText } from '~/shared/components/themed-text';
+import { ThemedView } from '~/shared/components/themed-view';
+import { useGameContext } from '~/features/game';
+import { useNoteAnimations } from '~/features/game';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { cn } from '~/shared/lib/cn';
 import {
   getAutoAdvanceDelay,
   getStreakLevel,
   triggerGameHaptics,
   validateAnswer,
-} from '@/utils/game-logic';
+} from '~/features/game/utils/game-logic';
 import {
   convertDisplayNamesToNotes,
   getNoteDisplayName,
   isAnswerCorrect,
-} from '@/utils/music-utils';
+} from '~/shared/utils/music-utils';
 
 export default function SequenceGame() {
   const { gameLogic, gameSettings } = useGameContext();

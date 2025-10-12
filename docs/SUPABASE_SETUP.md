@@ -64,35 +64,35 @@ Run each migration in order by copying the SQL and running it in the Supabase SQ
 **Migration 1 - Initial Schema & Challenges:**
 1. Go to **SQL Editor** in your Supabase dashboard
 2. Click **New Query**
-3. Copy the entire contents of `features/supabase/migrations/20251008043754_initial_load.sql`
+3. Copy the entire contents of `src/data/supabase/migrations/20251008043754_initial_load.sql`
 4. Paste it into the SQL Editor
 5. Click **Run** (or press Cmd/Ctrl + Enter)
 6. You should see "Success. No rows returned" - this is expected!
 
 **Migration 2 - Currency System:**
 7. Click **New Query** again
-8. Copy the entire contents of `features/supabase/migrations/20251008053509_currency.sql`
+8. Copy the entire contents of `src/data/supabase/migrations/20251008053509_currency.sql`
 9. Paste it into the SQL Editor
 10. Click **Run**
 11. You should see "Success" - this sets up the transaction-based currency system!
 
 **Migration 3 - Analytics System:**
 12. Click **New Query** again
-13. Copy the entire contents of `features/supabase/migrations/20251008053514_analytics.sql`
+13. Copy the entire contents of `src/data/supabase/migrations/20251008053514_analytics.sql`
 14. Paste it into the SQL Editor
 15. Click **Run**
 16. You should see "Success" - game sessions and achievements are now tracked!
 
 **Migration 4 - Equipment System:**
 17. Click **New Query** again
-18. Copy the entire contents of `features/supabase/migrations/20251008062059_equipments.sql`
+18. Copy the entire contents of `src/data/supabase/migrations/20251008062059_equipments.sql`
 19. Paste it into the SQL Editor
 20. Click **Run**
 21. You should see "Success" - equipment system is ready!
 
 **Migration 5 - Instruments System:**
 22. Click **New Query** again
-23. Copy the entire contents of `features/supabase/migrations/20251008062059_instruments.sql`
+23. Copy the entire contents of `src/data/supabase/migrations/20251008062059_instruments.sql`
 24. Paste it into the SQL Editor
 25. Click **Run**
 26. You should see "Success" - instrument system is ready!
@@ -104,10 +104,10 @@ Run each migration in order by copying the SQL and running it in the Supabase SQ
 npm install -g supabase
 
 # Link your project (you'll need your database password)
-bunx supabase link --workdir features/supabase --project-ref your-project-ref
+bunx supabase link --workdir src/data/supabase --project-ref your-project-ref
 
 # Push migrations
-bunx supabase db push --workdir features/supabase
+bunx supabase db push --workdir src/data/supabase
 ```
 
 ## Step 6: Run Seed Data
@@ -117,22 +117,22 @@ After running all migrations, populate the database with initial data:
 **Seed 1 - Challenges:**
 1. Go to **SQL Editor** in your Supabase dashboard
 2. Click **New Query**
-3. Copy the entire contents of `features/supabase/seeds/challenges.sql`
+3. Copy the entire contents of `src/data/supabase/seeds/challenges.sql`
 4. Paste and **Run**
 
 **Seed 2 - Achievements:**
 5. Click **New Query**
-6. Copy the entire contents of `features/supabase/seeds/achievements.sql`
+6. Copy the entire contents of `src/data/supabase/seeds/achievements.sql`
 7. Paste and **Run**
 
 **Seed 3 - Equipment:**
 8. Click **New Query**
-9. Copy the entire contents of `features/supabase/seeds/equipments.sql`
+9. Copy the entire contents of `src/data/supabase/seeds/equipments.sql`
 10. Paste and **Run**
 
 **Seed 4 - Instruments:**
 11. Click **New Query**
-12. Copy the entire contents of `features/supabase/seeds/instruments.sql`
+12. Copy the entire contents of `src/data/supabase/seeds/instruments.sql`
 13. Paste and **Run**
 
 ## Step 7: Verify Setup

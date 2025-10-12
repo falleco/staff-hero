@@ -3,22 +3,21 @@ import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { AnswerButtons } from '@/components/game/answer-buttons';
-import { ScoreDisplay } from '@/components/game/score-display';
-import { MusicStaff } from '@/components/music-staff';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useGameContext } from '@/hooks/use-game-context';
-import { useNoteAnimations } from '@/hooks/use-note-animations';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import type { Note, Notes } from '@/types/music';
-import { getStreakLevel, triggerGameHaptics } from '@/utils/game-logic';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { AnswerButtons, ScoreDisplay } from '~/features/game';
+import { MusicStaff } from '~/shared/components/music-staff';
+import { ThemedText } from '~/shared/components/themed-text';
+import { ThemedView } from '~/shared/components/themed-view';
+import { useGameContext } from '~/features/game';
+import { useNoteAnimations } from '~/features/game';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import type { Note, Notes } from '~/shared/types/music';
+import { getStreakLevel, triggerGameHaptics } from '~/features/game';
 import {
   convertDisplayNamesToNotes,
   generateRandomNote,
   getNoteDisplayName,
-} from '@/utils/music-utils';
+} from '~/shared/utils/music-utils';
 
 // Configuration
 const COUNTDOWN_SECONDS = 3;

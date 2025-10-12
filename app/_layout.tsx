@@ -12,9 +12,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { useEffect } from 'react';
-import { GameProvider } from '@/contexts/game-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { AuthProvider } from '~/features/supabase';
+import { GameProvider } from '~/features/game';
+import { useColorScheme } from '~/shared/hooks/use-color-scheme';
+import { AuthProvider } from '~/data/supabase';
 
 export const unstable_settings = {
   anchor: '(tabs)',

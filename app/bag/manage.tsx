@@ -3,12 +3,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { ThemedText } from '@/components/themed-text';
-import { useCurrency } from '@/hooks/use-currency';
-import { useEquipment } from '@/hooks/use-equipment';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { EquipmentRarity } from '@/types/music';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { ThemedText } from '~/shared/components/themed-text';
+import { useCurrency } from '~/features/currency';
+import { useEquipment } from '~/features/equipment';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { EquipmentRarity } from '~/shared/types/music';
 
 export default function EquipmentManagePage() {
   const { id } = useLocalSearchParams<{ id: string }>();

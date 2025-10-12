@@ -9,15 +9,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { ThemedText } from '@/components/themed-text';
-import { Button, ButtonText } from '@/components/ui/gluestack-button';
-import { InstrumentGridCard } from '@/components/ui/instrument-grid-card';
-import { LuthierCard } from '@/components/ui/luthier-card';
-import { useCurrency } from '@/hooks/use-currency';
-import { useLuthier } from '@/hooks/use-luthier';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { cn } from '@/lib/cn';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { ThemedText } from '~/shared/components/themed-text';
+import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
+import { InstrumentGridCard } from '~/features/instruments';
+import { LuthierCard, useLuthier } from '~/features/luthier';
+import { useCurrency } from '~/features/currency';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { cn } from '~/shared/lib/cn';
 
 export default function LuthierTab() {
   const textColor = useThemeColor({}, 'text');

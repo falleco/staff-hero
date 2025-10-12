@@ -7,10 +7,10 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { useGameContext } from '@/hooks/use-game-context';
-import type { GameSettings } from '@/types/music';
-import { GameMode } from '@/types/music';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { useGameContext } from '~/features/game';
+import type { GameSettings } from '~/shared/types/music';
+import { GameMode } from '~/shared/types/music';
 
 const gameModes: {
   mode: GameMode;

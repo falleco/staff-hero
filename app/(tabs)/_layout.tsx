@@ -2,11 +2,11 @@ import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { Tabs } from 'expo-router';
 import React, { useEffect } from 'react';
-import { TabBar } from '@/components/core/tab-bar';
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { TabBar } from '~/shared/components/core/tab-bar';
+import { HapticTab } from '~/shared/components/haptic-tab';
+import { IconSymbol } from '~/shared/components/ui/icon-symbol';
+import { Colors } from '~/shared/constants/theme';
+import { useColorScheme } from '~/shared/hooks/use-color-scheme';
 
 const audioSource = require('@/assets/music/sad-violin-amp-orchestral-233798.mp3');
 

@@ -26,46 +26,32 @@ Staff Hero is a React Native music learning game built with Expo, featuring note
 │   │   └── sequence.tsx
 │   ├── settings/          # Game settings
 │   └── _layout.tsx        # Root layout with providers
-├── components/
-│   ├── game/              # Game-specific components
-│   │   ├── answer-buttons.tsx
-│   │   ├── score-display.tsx
-│   │   └── ...
-│   ├── music/             # Music notation components
-│   │   └── music-staff/
-│   ├── screens/           # Screen components
-│   │   └── analytics-screen.tsx
-│   └── ui/                # Reusable UI components
-│       ├── button.tsx
-│       ├── challenge-card.tsx
-│       ├── equipment-card.tsx
-│       └── ...
-├── contexts/              # React Context for state management
-│   └── game-context.tsx   # Centralized game state
-├── hooks/                 # Custom React hooks (business logic)
-│   ├── use-game-logic.ts
-│   ├── use-game-settings.ts
-│   ├── use-currency.ts
-│   ├── use-challenges.ts
-│   ├── use-equipment.ts
-│   ├── use-luthier.ts
-│   ├── use-analytics.ts
-│   └── use-game-context.ts
-├── features/              # Feature modules
-│   └── supabase/          # Supabase integration
-│       ├── api/           # API functions
-│       ├── migrations/    # Database migrations
-│       ├── seeds/         # Seed data
-│       ├── auth-context.tsx
-│       └── client.ts
-├── types/                 # TypeScript type definitions
-│   ├── analytics.ts
-│   ├── music.ts
-│   └── note-symbols.ts
-└── utils/                 # Business logic utilities
-    ├── game-logic.ts
-    ├── music-utils.ts
-    └── ...
+├── src/
+│   ├── data/
+│   │   └── supabase/      # Supabase client, auth provider, migrations & seeds
+│   ├── features/          # Domain-centric feature packages
+│   │   ├── analytics/
+│   │   ├── challenges/
+│   │   ├── currency/
+│   │   ├── equipment/
+│   │   ├── game/
+│   │   ├── instruments/
+│   │   ├── luthier/
+│   │   └── settings/
+│   │       ├── components/
+│   │       ├── hooks/
+│   │       └── services/
+│   ├── shared/            # Cross-cutting UI, hooks, and helpers
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── constants/
+│   │   ├── lib/
+│   │   ├── types/
+│   │   └── utils/
+│   └── features/**/index.ts  # Barrel files for stable imports
+├── assets/                # Fonts, images, audio, animations
+├── docs/                  # Architecture & system docs
+└── scripts/               # Tooling and maintenance scripts
 ```
 
 ## 🎮 Game Modes
@@ -284,9 +270,9 @@ See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 - **State Management**: `docs/STATE_MANAGEMENT.md`
 - **Quick Reference**: `docs/STATE_MANAGEMENT_QUICK_REFERENCE.md`
 - **Supabase Setup**: `docs/SUPABASE_SETUP.md`
-- **Analytics System**: `features/supabase/ANALYTICS_SYSTEM.md`
-- **Equipment System**: `features/supabase/EQUIPMENT_SYSTEM.md`
-- **Currency System**: `features/supabase/CURRENCY_SYSTEM.md`
+- **Analytics System**: `src/data/supabase/ANALYTICS_SYSTEM.md`
+- **Equipment System**: `src/data/supabase/EQUIPMENT_SYSTEM.md`
+- **Currency System**: `src/data/supabase/CURRENCY_SYSTEM.md`
 
 ## 🛠️ Development Commands
 

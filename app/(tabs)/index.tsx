@@ -6,8 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '@/components/core/flat-button';
-import { ParallaxBg } from '@/components/parallax-bg';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import { ParallaxBg } from '~/shared/components/parallax-bg';
 
 export default function HomeTab() {
   const { top } = useSafeAreaInsets();
