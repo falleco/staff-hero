@@ -17,6 +17,7 @@ interface MusicStaffProps {
   showFeedback?: boolean;
   isCorrect?: boolean;
   showNoteLabels?: boolean;
+  showClef?: boolean;
   notationSystem?: NotationSystem;
   streakLevel?: number; // 0 = no streak, 1-3 = dancing levels
   onNoteAnimationComplete?: (noteId?: string) => void;
@@ -27,6 +28,7 @@ export function MusicStaff({
   width = 300,
   height = 200,
   showNoteLabels = true,
+  showClef = true,
   notationSystem = NotationSystem.SOLFEGE,
   streakLevel = 0,
   onNoteAnimationComplete,
@@ -97,7 +99,7 @@ export function MusicStaff({
       <Pentagram
         width={width}
         height={height}
-        clef="treble"
+        clef={showClef ? 'treble' : undefined}
         streakLevel={streakLevel}
         color={staffColor}
         renderExtras={renderNoteLabels}

@@ -3,7 +3,7 @@ import { Animated, View } from 'react-native';
 import { ThemedText } from '~/shared/components/themed-text';
 import { calculateAccuracy } from '~/shared/utils/music-utils';
 
-interface ScoreDisplayProps {
+export interface ScoreDisplayProps {
   score: number;
   streak: number;
   maxStreak: number;

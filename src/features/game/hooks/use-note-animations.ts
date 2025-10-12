@@ -16,6 +16,8 @@ export interface UseNoteAnimationsReturn {
   animatedNotes: Note[];
   /** Set new notes and trigger creation animation */
   setNotesWithCreation: (notes: Note[]) => void;
+  /** Set new notes without triggering animations (useful for static displays) */
+  setNotesStatic: (notes: Note[]) => void;
   /** Trigger destruction animation for all notes */
   triggerDestruction: (isCorrect: boolean, onComplete?: () => void) => void;
   /** Trigger individual note feedback for sequence mode */
@@ -67,11 +69,21 @@ export function useNoteAnimations(): UseNoteAnimationsReturn {
   /**
    * Sets new notes and triggers creation animation
    * @param notes - New notes to display
-   */
+  */
   const setNotesWithCreation = useCallback((notes: Note[]) => {
     const preparedNotes = prepareNotesForDisplay(notes);
     const notesWithCreation = triggerCreationAnimation(preparedNotes);
     setAnimatedNotes(notesWithCreation);
+  }, []);
+
+  /**
+   * Sets new notes without triggering creation animations
+   * @param notes - New notes to display
+   */
+  const setNotesStatic = useCallback((notes: Note[]) => {
+    const preparedNotes = prepareNotesForDisplay(notes);
+    const idleNotes = resetNotesToIdle(preparedNotes);
+    setAnimatedNotes(idleNotes);
   }, []);
 
   /**
@@ -130,6 +142,7 @@ export function useNoteAnimations(): UseNoteAnimationsReturn {
   return {
     animatedNotes,
     setNotesWithCreation,
+    setNotesStatic,
     triggerDestruction,
     triggerSequenceNoteFeedback,
     highlightNoteAtIndex,

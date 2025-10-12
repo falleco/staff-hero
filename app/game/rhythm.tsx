@@ -1,30 +1,28 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Animated, Easing, View } from 'react-native';
 import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
-import { AnswerButtons, ScoreDisplay } from '~/features/game';
+import {
+  AnswerButtons,
+  GameScreenLayout,
+  useGameContext,
+  useGameExitPrompt,
+} from '~/features/game';
 import { MusicStaff } from '~/shared/components/music-staff';
 import { ThemedText } from '~/shared/components/themed-text';
-import { ThemedView } from '~/shared/components/themed-view';
-import { useGameContext } from '~/features/game';
 import { useNoteAnimations } from '~/features/game';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
-import type { Note, Notes } from '~/shared/types/music';
+import type { Note } from '~/shared/types/music';
 import { getStreakLevel, triggerGameHaptics } from '~/features/game';
-import {
-  convertDisplayNamesToNotes,
-  generateRandomNote,
-  getNoteDisplayName,
-} from '~/shared/utils/music-utils';
+import { convertDisplayNamesToNotes, generateRandomNote } from '~/shared/utils/music-utils';
 
-// Configuration
 const COUNTDOWN_SECONDS = 3;
-const NOTE_COUNT = 10;
-const LINE_SPEED = 5000; // Time in ms for line to cross the staff (slower = easier)
-const HIT_WINDOW = 150; // Time window in ms to hit the note (larger = easier)
-const STAFF_WIDTH = 350; // Should match MusicStaff width
+const NOTE_COUNT = 20;
+const LINE_SPEED = 5000;
+const STAFF_WIDTH = 350;
+const STAFF_HEIGHT = 180;
+const STAFF_SPACING = 24;
+const NOTES_PER_STAFF = 10;
 
 interface NoteStatus {
   note: Note;
@@ -33,57 +31,317 @@ interface NoteStatus {
   answered: boolean;
 }
 
+const NOTE_WINDOW = STAFF_WIDTH / NOTES_PER_STAFF;
+
 export default function RhythmGame() {
   const { gameLogic, gameSettings } = useGameContext();
-  const {
-    animatedNotes,
-    setNotesWithCreation,
-    highlightNoteAtIndex,
-    handleNoteAnimationComplete,
-  } = useNoteAnimations();
+  const { animatedNotes, setNotesStatic, highlightNoteAtIndex } =
+    useNoteAnimations();
 
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [showResults, setShowResults] = useState(false); // Show results screen after all notes
+  const [showResults, setShowResults] = useState(false);
   const [noteStatuses, setNoteStatuses] = useState<NoteStatus[]>([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
-  const [linePosition] = useState(new Animated.Value(0));
-  const lineAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
-  const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const gameOverRef = useRef(false); // Track game over state to prevent multiple alerts
+  const [activeStaff, setActiveStaff] = useState(0);
 
-  const { top } = useSafeAreaInsets();
+  const linePosition = useRef(new Animated.Value(0)).current;
+  const lineListenerId = useRef<string | null>(null);
+  const lineAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
+  const linePositionValue = useRef(0);
+  const noteStatusesRef = useRef<NoteStatus[]>([]);
+
+  const gameOverRef = useRef(false);
   const textColor = useThemeColor({}, 'text');
 
-  // Initialize game on mount
+  const noteObjects = useMemo(
+    () => animatedNotes,
+    [animatedNotes],
+  );
+
+  const staffGroups = useMemo(() => {
+    const grouped: Note[][] = [];
+    for (let index = 0; index < noteObjects.length; index += NOTES_PER_STAFF) {
+      grouped.push(noteObjects.slice(index, index + NOTES_PER_STAFF));
+    }
+    return grouped;
+  }, [noteObjects]);
+
+  const totalStaffHeight =
+    staffGroups.length * STAFF_HEIGHT +
+    Math.max(0, staffGroups.length - 1) * STAFF_SPACING;
+
+  const stopLineAnimation = () => {
+    if (lineAnimationRef.current) {
+      lineAnimationRef.current.stop();
+      lineAnimationRef.current = null;
+    }
+    if (lineListenerId.current) {
+      linePosition.removeListener(lineListenerId.current);
+      lineListenerId.current = null;
+    }
+  };
+
+  const updateCurrentNoteIndex = (next: number) => {
+    setCurrentNoteIndex(next);
+  };
+
+  const findNextPendingIndex = (start: number, statuses: NoteStatus[]) => {
+    for (let idx = start; idx < statuses.length; idx += 1) {
+      if (!statuses[idx].answered) {
+        return idx;
+      }
+    }
+    return -1;
+  };
+
+  const highlightNextPending = (start: number, statuses: NoteStatus[]) => {
+    const nextPending = findNextPendingIndex(start, statuses);
+    if (nextPending !== -1) {
+      highlightNoteAtIndex(nextPending);
+      updateCurrentNoteIndex(nextPending);
+    } else {
+      updateCurrentNoteIndex(Math.min(statuses.length, start));
+    }
+  };
+
+  const markNoteAs = (
+    index: number,
+    mutate: (note: NoteStatus) => NoteStatus,
+  ) => {
+    let updatedStatuses: NoteStatus[] | null = null;
+    setNoteStatuses((prev) => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = mutate(updated[index]);
+      }
+      updatedStatuses = updated;
+      return updated;
+    });
+
+    if (!updatedStatuses) {
+      return;
+    }
+
+    const statusesArray: NoteStatus[] = updatedStatuses;
+    const allAnswered = statusesArray.every((status) => status.answered);
+    if (allAnswered) {
+      setTimeout(() => {
+        setShowResults(true);
+      }, 400);
+    }
+
+    highlightNextPending(index + 1, statusesArray);
+  };
+
+  const generateRhythmNotes = () => {
+    const statuses: NoteStatus[] = [];
+    const totalNotes = Math.max(
+      NOTES_PER_STAFF,
+      Math.ceil(NOTE_COUNT / NOTES_PER_STAFF) * NOTES_PER_STAFF,
+    );
+
+    for (let index = 0; index < totalNotes; index += 1) {
+      statuses.push({
+        note: generateRandomNote(gameSettings.gameSettings.difficulty),
+        hit: false,
+        missed: false,
+        answered: false,
+      });
+    }
+
+    setNoteStatuses(statuses);
+    setNotesStatic(statuses.map((status) => status.note));
+    setActiveStaff(0);
+    updateCurrentNoteIndex(0);
+    linePosition.setValue(0);
+    setShowResults(false);
+    setGameOver(false);
+    setGameStarted(false);
+    setCountdown(COUNTDOWN_SECONDS);
+    gameOverRef.current = false;
+
+    gameLogic.generateNewQuestion(gameSettings.gameSettings);
+  };
+
+  const checkForMissedNotes = (staffIndex: number, linePos: number) => {
+    if (gameOverRef.current || gameOver) return;
+    const statuses = noteStatusesRef.current;
+    const startIndex = staffIndex * NOTES_PER_STAFF;
+    const staffNoteCount = Math.min(
+      NOTES_PER_STAFF,
+      statuses.length - startIndex,
+    );
+    if (staffNoteCount <= 0) {
+      return;
+    }
+
+    const expectedLocal = Math.min(
+      Math.floor(linePos / NOTE_WINDOW),
+      staffNoteCount,
+    );
+    const expectedGlobal = startIndex + expectedLocal;
+
+    for (
+      let index = currentNoteIndex;
+      index < expectedGlobal;
+      index += 1
+    ) {
+      const status = statuses[index];
+      if (status && !status.answered) {
+        markNoteAs(index, (note) => ({ ...note, missed: true, answered: true }));
+      }
+    }
+  };
+
+  const startStaffAnimation = (staffIndex: number) => {
+    if (staffIndex >= staffGroups.length) {
+      setTimeout(() => setShowResults(true), 400);
+      return;
+    }
+
+    stopLineAnimation();
+
+    setActiveStaff(staffIndex);
+    linePosition.setValue(0);
+    linePositionValue.current = 0;
+    highlightNextPending(
+      staffIndex * NOTES_PER_STAFF,
+      noteStatusesRef.current,
+    );
+
+    lineListenerId.current = linePosition.addListener(({ value }) => {
+      linePositionValue.current = value;
+      checkForMissedNotes(staffIndex, value);
+    });
+
+    lineAnimationRef.current = Animated.timing(linePosition, {
+      toValue: STAFF_WIDTH,
+      duration: LINE_SPEED,
+      useNativeDriver: false,
+    });
+
+    lineAnimationRef.current.start(({ finished }) => {
+      if (!finished) return;
+
+      // Ensure any remaining notes on this staff are processed
+      checkForMissedNotes(staffIndex, STAFF_WIDTH + NOTE_WINDOW);
+
+      if (staffIndex + 1 < staffGroups.length) {
+        startStaffAnimation(staffIndex + 1);
+      } else if (!showResults) {
+        setTimeout(() => {
+          setShowResults(true);
+        }, 400);
+      }
+    });
+  };
+
+  const startLineAnimation = () => {
+    setGameStarted(true);
+    startStaffAnimation(0);
+  };
+
+  const handleCorrectAnswer = (index: number) => {
+    markNoteAs(index, (note) => ({
+      ...note,
+      hit: true,
+      answered: true,
+    }));
+    triggerGameHaptics(true);
+    gameLogic.submitAnswer([noteStatusesRef.current[index].note.name]);
+  };
+
+  const handleWrongAnswer = (index: number) => {
+    markNoteAs(index, (note) => ({
+      ...note,
+      missed: true,
+      answered: true,
+    }));
+    triggerGameHaptics(false);
+  };
+
+  const handleAnswerSubmit = (answer: string) => {
+    if (gameOver || !gameStarted || showResults) return;
+
+    const staffIndex = activeStaff;
+    const currentPos = linePositionValue.current;
+    const noteWidth = NOTE_WINDOW;
+    const localIndex = Math.round(currentPos / noteWidth);
+
+    const noteCenter = localIndex * noteWidth + noteWidth / 2;
+    const distance = Math.abs(currentPos - noteCenter);
+    if (distance > noteWidth / 2) {
+      return;
+    }
+
+    const globalIndex = Math.min(
+      staffIndex * NOTES_PER_STAFF + localIndex,
+      noteStatusesRef.current.length - 1,
+    );
+    const noteStatus = noteStatusesRef.current[globalIndex];
+    if (!noteStatus || noteStatus.answered) {
+      return;
+    }
+
+    const normalizedAnswer = convertDisplayNamesToNotes(
+      [answer],
+      gameSettings.gameSettings.notationSystem,
+    )[0];
+
+    if (normalizedAnswer === noteStatus.note.name) {
+      handleCorrectAnswer(globalIndex);
+    } else {
+      handleWrongAnswer(globalIndex);
+    }
+  };
+
+  const handleMissedNote = (index: number) => {
+    markNoteAs(index, (note) => ({
+      ...note,
+      missed: true,
+      answered: true,
+    }));
+    triggerGameHaptics(false);
+  };
+
+  const handleGameEnd = useGameExitPrompt(gameLogic, gameSettings, {
+    onExit: () => {
+      stopLineAnimation();
+      router.back();
+    },
+  });
+
+  const handleExitGame = async () => {
+    stopLineAnimation();
+    await gameLogic.endGame(gameSettings.gameSettings);
+    router.back();
+  };
+
+  const answeredCount = noteStatuses.filter((status) => status.answered).length;
+  const hitCount = noteStatuses.filter((status) => status.hit).length;
+
   useEffect(() => {
-    // Ensure game is active
+    noteStatusesRef.current = noteStatuses;
+  }, [noteStatuses]);
+
+  useEffect(() => {
     if (!gameLogic.gameState.isGameActive) {
       gameLogic.startGame(gameSettings.gameSettings);
     }
-  }, []);
+  }, [gameLogic, gameSettings]);
 
-  // Generate 10 notes when game starts
   useEffect(() => {
     if (gameLogic.gameState.isGameActive && noteStatuses.length === 0) {
       generateRhythmNotes();
     }
   }, [gameLogic.gameState.isGameActive, noteStatuses.length]);
 
-  // Update animated notes when noteStatuses change
-  useEffect(() => {
-    if (noteStatuses.length > 0) {
-      const notes = noteStatuses.map((status) => status.note);
-      setNotesWithCreation(notes);
-    }
-  }, [noteStatuses, setNotesWithCreation]);
-
-  // Countdown timer
   useEffect(() => {
     if (countdown > 0 && noteStatuses.length > 0 && !gameStarted) {
       const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
+        setCountdown((prev) => prev - 1);
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -93,335 +351,40 @@ export default function RhythmGame() {
     }
   }, [countdown, gameStarted, noteStatuses.length]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       gameOverRef.current = true;
-
-      if (lineAnimationRef.current) {
-        lineAnimationRef.current.stop();
-      }
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
-
-      // Remove all listeners from animated value
-      linePosition.removeAllListeners();
+      stopLineAnimation();
     };
   }, []);
 
-  const generateRhythmNotes = () => {
-    // Generate 10 different notes directly
-    const notes: NoteStatus[] = [];
+  const exitPrompt = useGameExitPrompt(gameLogic, gameSettings, {
+    onExit: () => {
+      stopLineAnimation();
+      router.back();
+    },
+  });
 
-    for (let i = 0; i < NOTE_COUNT; i++) {
-      const note = generateRandomNote(gameSettings.gameSettings.difficulty);
-      notes.push({
-        note,
-        hit: false,
-        missed: false,
-        answered: false,
-      });
-    }
-
-    setNoteStatuses(notes);
-
-    // Generate a question to populate the answer options
-    gameLogic.generateNewQuestion(gameSettings.gameSettings);
+  const handleEndGamePressed = () => {
+    exitPrompt();
   };
 
-  const startLineAnimation = () => {
-    setGameStarted(true);
-
-    // Animate line from 0 to STAFF_WIDTH
-    lineAnimationRef.current = Animated.timing(linePosition, {
-      toValue: STAFF_WIDTH,
-      duration: LINE_SPEED,
-      useNativeDriver: false,
-    });
-
-    lineAnimationRef.current.start(({ finished }) => {
-      if (finished) {
-        // Line animation finished - results will show automatically if all notes answered
-        // Any unanswered notes will be marked as missed by the checker
-      }
-    });
-
-    // Start checking for missed notes
-    startMissedNoteChecker();
-  };
-
-  const startMissedNoteChecker = () => {
-    // Add a single listener to check for missed notes as line moves
-    const listenerId = linePosition.addListener(({ value }) => {
-      if (!gameOverRef.current) {
-        checkForMissedNotes(value);
-      }
-    });
-
-    // Store the listener ID for cleanup
-    return listenerId;
-  };
-
-  const checkForMissedNotes = (linePos: number) => {
-    if (gameOverRef.current || gameOver) return;
-
-    // Calculate which note should be at this position
-    const noteWidth = STAFF_WIDTH / NOTE_COUNT;
-    const expectedIndex = Math.floor(linePos / noteWidth);
-
-    // Check if we've passed a note that wasn't answered
-    if (expectedIndex > currentNoteIndex) {
-      const missedNote = noteStatuses[currentNoteIndex];
-      if (missedNote && !missedNote.answered) {
-        handleMissedNote(currentNoteIndex);
-      }
-      setCurrentNoteIndex(expectedIndex);
-    }
-  };
-
-  const handleMissedNote = (index: number) => {
-    // Mark note as missed
-    setNoteStatuses((prev) => {
-      const updated = [...prev];
-      if (updated[index]) {
-        updated[index] = { ...updated[index], missed: true, answered: true };
-      }
-
-      // Check if all notes completed
-      const allAnswered = updated.every((n) => n.answered);
-      if (allAnswered) {
-        // Show results after a short delay
-        setTimeout(() => {
-          setShowResults(true);
-        }, 500);
-      }
-
-      return updated;
-    });
-
-    // Trigger feedback (red animation)
-    highlightNoteAtIndex(index);
-    triggerGameHaptics(false);
-
-    // Don't end game - let it continue
-  };
-
-  const handleAnswerSubmit = (answer: string) => {
-    if (gameOver || !gameStarted || showResults) return;
-
-    // Get current line position
-    const currentPos = (linePosition as any)._value;
-    const noteWidth = STAFF_WIDTH / NOTE_COUNT;
-
-    // Find which note the line is closest to
-    let closestNoteIndex = Math.round(currentPos / noteWidth);
-
-    // Clamp to valid range
-    closestNoteIndex = Math.max(0, Math.min(NOTE_COUNT - 1, closestNoteIndex));
-
-    // Calculate distance to that note's center
-    const noteCenter = closestNoteIndex * noteWidth + noteWidth / 2;
-    const distance = Math.abs(currentPos - noteCenter);
-
-    // Check if we're within the hit window
-    if (distance > noteWidth / 2) {
-      // Too far from any note - ignore input
-      return;
-    }
-
-    // Check if this note was already answered
-    const currentNote = noteStatuses[closestNoteIndex];
-    if (!currentNote || currentNote.answered) {
-      return; // Note already answered
-    }
-
-    // Convert display name to Notes enum value
-    const notesAnswer = convertDisplayNamesToNotes(
-      [answer],
-      gameSettings.gameSettings.notationSystem,
-    );
-
-    // Check if answer matches the note
-    const isCorrect = notesAnswer[0] === currentNote.note.name;
-
-    if (isCorrect) {
-      handleCorrectAnswer(closestNoteIndex);
-    } else {
-      handleWrongAnswer(closestNoteIndex);
-    }
-  };
-
-  const handleCorrectAnswer = (index: number) => {
-    // Mark note as hit
-    setNoteStatuses((prev) => {
-      const updated = [...prev];
-      if (updated[index]) {
-        updated[index] = { ...updated[index], hit: true, answered: true };
-      }
-
-      // Check if all notes completed
-      const allAnswered = updated.every((n) => n.answered);
-      if (allAnswered) {
-        // Show results after a short delay
-        setTimeout(() => {
-          setShowResults(true);
-        }, 500);
-      }
-
-      return updated;
-    });
-
-    // Trigger feedback (green animation)
-    highlightNoteAtIndex(index);
-    triggerGameHaptics(true);
-
-    // Update score
-    gameLogic.submitAnswer([noteStatuses[index].note.name]);
-  };
-
-  const handleWrongAnswer = (index: number) => {
-    // Mark note as missed
-    setNoteStatuses((prev) => {
-      const updated = [...prev];
-      if (updated[index]) {
-        updated[index] = { ...updated[index], missed: true, answered: true };
-      }
-
-      // Check if all notes completed
-      const allAnswered = updated.every((n) => n.answered);
-      if (allAnswered) {
-        // Show results after a short delay
-        setTimeout(() => {
-          setShowResults(true);
-        }, 500);
-      }
-
-      return updated;
-    });
-
-    // Trigger feedback (red animation)
-    highlightNoteAtIndex(index);
-    triggerGameHaptics(false);
-
-    // Don't end game - let it continue
-  };
-
-  const handleExitGame = async () => {
-    // End the game and navigate back
-    await gameLogic.endGame(gameSettings.gameSettings);
-    router.back();
-  };
-
-  const handleGameEnd = (success: boolean) => {
-    // Prevent multiple calls
-    if (gameOverRef.current) return;
-    gameOverRef.current = true;
-
-    // Stop animations
-    if (lineAnimationRef.current) {
-      lineAnimationRef.current.stop();
-    }
-    if (checkIntervalRef.current) {
-      clearInterval(checkIntervalRef.current);
-    }
-
-    setGameOver(true);
-
-    const message = success
-      ? 'Great job! You completed all notes!'
-      : 'Game Over! You missed a note.';
-
-    Alert.alert(
-      success ? 'Success!' : 'Game Over',
-      `${message}\nScore: ${gameLogic.gameState.score}`,
-      [
-        {
-          text: 'OK',
-          onPress: async () => {
-            await gameLogic.endGame(gameSettings.gameSettings);
-            router.back();
-          },
-        },
-      ],
-    );
-  };
-
-  const handleEndGame = () => {
-    Alert.alert('End Game', 'Are you sure you want to end the current game?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'End Game',
-        style: 'destructive',
-        onPress: async () => {
-          if (lineAnimationRef.current) {
-            lineAnimationRef.current.stop();
-          }
-          if (checkIntervalRef.current) {
-            clearInterval(checkIntervalRef.current);
-          }
-          await gameLogic.endGame(gameSettings.gameSettings);
-          router.back();
-        },
-      },
-    ]);
-  };
-
-  if (!gameLogic.gameState.isGameActive) {
-    return (
-      <ThemedView className="flex-1 items-center justify-center">
-        <ThemedText className="text-2xl font-bold">Game Not Active</ThemedText>
-        <ThemedText className="text-sm opacity-70">
-          Please start a new game to continue
-        </ThemedText>
-      </ThemedView>
-    );
-  }
 
   return (
-    <>
-      <LinearGradient
-        colors={['#FF6B6B', '#FF8E53']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          flex: 1,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-      />
-
-      {/* Header with score and controls */}
-      <View
-        className="flex-row justify-between items-center px-4 py-3 bg-black/30 backdrop-blur-sm border-b border-white/10"
-        style={{ paddingTop: top }}
-      >
-        <ScoreDisplay
-          score={gameLogic.gameState.score}
-          streak={gameLogic.gameState.streak}
-          maxStreak={gameLogic.gameState.maxStreak}
-          totalQuestions={noteStatuses.filter((n) => n.answered).length}
-          correctAnswers={noteStatuses.filter((n) => n.hit).length}
-          animateStreak={false}
-        />
-
-        <FlatButton
-          size="sm"
-          onPress={handleEndGame}
-          className="rounded-xl px-4 py-2 border-red-400 bg-red-800 text-[#ffffff] border-2"
-        >
-          <FlatButtonText className="text-sm font-bold text-white">
-            END GAME
-          </FlatButtonText>
-        </FlatButton>
-      </View>
-
-      {/* Game content */}
+    <GameScreenLayout
+      isGameActive={gameLogic.gameState.isGameActive}
+      onEndGame={handleEndGamePressed}
+      gradientColors={['#FF6B6B', '#FF8E53']}
+      scoreboard={{
+        score: gameLogic.gameState.score,
+        streak: gameLogic.gameState.streak,
+        maxStreak: gameLogic.gameState.maxStreak,
+        totalQuestions: noteStatuses.length,
+        correctAnswers: hitCount,
+        animateStreak: false,
+      }}
+    >
       <View className="flex-1">
-        {/* Instructions / Countdown / Results */}
         <View className="px-6 py-4">
           {!gameStarted ? (
             <View className="items-center">
@@ -441,7 +404,7 @@ export default function RhythmGame() {
                 className="text-sm text-center opacity-70 mt-2"
                 style={{ color: textColor }}
               >
-                Press the correct note when the red line is over it
+                Tap the matching note when the red line crosses it.
               </ThemedText>
             </View>
           ) : showResults ? (
@@ -455,7 +418,7 @@ export default function RhythmGame() {
               <View className="flex-row gap-6">
                 <View className="items-center">
                   <ThemedText className="text-3xl font-bold text-green-400">
-                    {noteStatuses.filter((n) => n.hit).length}
+                    {hitCount}
                   </ThemedText>
                   <ThemedText
                     className="text-sm opacity-70"
@@ -466,7 +429,7 @@ export default function RhythmGame() {
                 </View>
                 <View className="items-center">
                   <ThemedText className="text-3xl font-bold text-red-400">
-                    {noteStatuses.filter((n) => n.missed).length}
+                    {noteStatuses.filter((status) => status.missed).length}
                   </ThemedText>
                   <ThemedText
                     className="text-sm opacity-70"
@@ -503,35 +466,69 @@ export default function RhythmGame() {
                 className="text-sm text-center opacity-70 mt-1"
                 style={{ color: textColor }}
               >
-                {noteStatuses.filter((n) => n.hit).length} / {NOTE_COUNT} notes
-                hit
+                {hitCount} / {noteStatuses.length} notes hit
               </ThemedText>
             </View>
           )}
         </View>
 
-        {/* Music Staff with moving line */}
-        <View className="flex-1 justify-center items-center px-4">
-          <View style={{ position: 'relative', width: STAFF_WIDTH }}>
-            <MusicStaff
-              notes={animatedNotes}
-              showFeedback={false}
-              isCorrect={false}
-              showNoteLabels={gameSettings.gameSettings.showNoteLabels}
-              notationSystem={gameSettings.gameSettings.notationSystem}
-              streakLevel={getStreakLevel(gameLogic.gameState.streak)}
-              width={STAFF_WIDTH}
-              height={180}
-              onNoteAnimationComplete={handleNoteAnimationComplete}
-            />
+        <View className="flex-1 items-center px-4">
+          <View
+            style={{
+              position: 'relative',
+              width: STAFF_WIDTH,
+              height: totalStaffHeight,
+            }}
+          >
+            {staffGroups.map((notes, index) => {
+              const startIndex = index * NOTES_PER_STAFF;
+              const key =
+                notes
+                  .map((note) =>
+                    note.noteId
+                      ? note.noteId
+                      : `${note.name}-${note.staffPosition}`,
+                  )
+                  .join('|') || `staff-${index}`;
 
-            {/* Moving red line */}
+              return (
+                <View
+                  key={key}
+                  style={{
+                    position: 'absolute',
+                    top: index * (STAFF_HEIGHT + STAFF_SPACING),
+                    left: 0,
+                  }}
+                  className={index === activeStaff ? '' : 'opacity-70'}
+                >
+                  <MusicStaff
+                    notes={notes}
+                    showFeedback={false}
+                    isCorrect={false}
+                    showNoteLabels={
+                      index === activeStaff &&
+                      gameSettings.gameSettings.showNoteLabels
+                    }
+                    showClef={index === 0}
+                    notationSystem={gameSettings.gameSettings.notationSystem}
+                    streakLevel={
+                      index === activeStaff
+                        ? getStreakLevel(gameLogic.gameState.streak)
+                        : 0
+                    }
+                    width={STAFF_WIDTH}
+                    height={STAFF_HEIGHT}
+                  />
+                </View>
+              );
+            })}
+
             <Animated.View
               style={{
                 position: 'absolute',
                 left: linePosition,
-                top: 0,
-                bottom: 0,
+                top: activeStaff * (STAFF_HEIGHT + STAFF_SPACING),
+                height: STAFF_HEIGHT,
                 width: 3,
                 backgroundColor: '#FF0000',
                 zIndex: 100,
@@ -544,7 +541,6 @@ export default function RhythmGame() {
           </View>
         </View>
 
-        {/* Answer Options or Exit Button */}
         <View className="pb-8 px-6">
           {!showResults ? (
             <AnswerButtons
@@ -565,6 +561,6 @@ export default function RhythmGame() {
           )}
         </View>
       </View>
-    </>
+    </GameScreenLayout>
   );
 }

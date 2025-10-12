@@ -1,15 +1,12 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
-import { AnswerButtons, ScoreDisplay } from '~/features/game';
+import { View } from 'react-native';
+import { AnswerButtons, GameScreenLayout } from '~/features/game';
+import { useGameExitPrompt } from '~/features/game';
+import { useNoteRoundController } from '~/features/game';
 import { MusicStaff } from '~/shared/components/music-staff';
 import { ThemedText } from '~/shared/components/themed-text';
-import { ThemedView } from '~/shared/components/themed-view';
 import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
-import { useGameContext } from '~/features/game';
 import { useNoteAnimations } from '~/features/game';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { GameMode } from '~/shared/types/music';
@@ -17,20 +14,14 @@ import {
   getAutoAdvanceDelay,
   getStreakLevel,
   triggerGameHaptics,
-  validateAnswer,
 } from '~/features/game/utils/game-logic';
-import {
-  convertDisplayNamesToNotes,
-  getNoteDisplayName,
-  isAnswerCorrect,
-} from '~/shared/utils/music-utils';
+import { getNoteDisplayName, isAnswerCorrect } from '~/shared/utils/music-utils';
 
 interface GameScreenProps {
   onGameEnd?: () => void;
 }
 
 export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
-  const { gameLogic, gameSettings } = useGameContext();
   const {
     animatedNotes,
     setNotesWithCreation,
@@ -39,45 +30,36 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
     isAnimating,
   } = useNoteAnimations();
 
+  const {
+    gameLogic,
+    gameSettings,
+    currentQuestion,
+    advanceToNextQuestion,
+    evaluateAnswer,
+  } = useNoteRoundController({
+    onNotesReady: setNotesWithCreation,
+  });
+
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackTimeout, setFeedbackTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
-  const { top } = useSafeAreaInsets();
 
   const textColor = useThemeColor({}, 'text');
 
-  // Generate new question when game starts or after answering
   useEffect(() => {
-    if (
-      gameLogic.gameState.isGameActive &&
-      !gameLogic.gameState.currentQuestion.notes.length
-    ) {
-      gameLogic.generateNewQuestion(gameSettings.gameSettings);
+    if (!gameLogic.gameState.isGameActive) {
+      gameLogic.startGame(gameSettings.gameSettings);
     }
   }, [gameLogic, gameSettings.gameSettings]);
 
-  // Update animated notes when question changes
-  useEffect(() => {
-    if (gameLogic.gameState.currentQuestion.notes.length > 0) {
-      setNotesWithCreation(gameLogic.gameState.currentQuestion.notes);
-    }
-  }, [gameLogic.gameState.currentQuestion.notes, setNotesWithCreation]);
-
   const handleAnswerSubmit = (answers: string) => {
-    // Convert display name to Notes enum value
-    const notesAnswer = convertDisplayNamesToNotes(
-      [answers],
-      gameSettings.gameSettings.notationSystem,
+    const { normalizedAnswer, correctNotes, isCorrect } = evaluateAnswer(
+      answers,
     );
-    gameLogic.submitAnswer(notesAnswer);
+    gameLogic.submitAnswer(normalizedAnswer);
     setShowFeedback(true);
 
-    // Use extracted business logic - compare with actual notes
-    const correctNotes = gameLogic.gameState.currentQuestion.notes.map(
-      (note) => note.name,
-    );
-    const isCorrect = validateAnswer(notesAnswer, correctNotes);
     triggerGameHaptics(isCorrect);
 
     // Auto-advance timing based on game mode and correctness
@@ -90,16 +72,14 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
     triggerDestruction(isCorrect, () => {
       // Animation complete - proceed to next question
       setShowFeedback(false);
-      gameLogic.nextQuestion();
-      gameLogic.generateNewQuestion(gameSettings.gameSettings);
+      advanceToNextQuestion();
     });
 
     const timeout = setTimeout(() => {
       // Fallback in case animation doesn't complete
       if (!isAnimating) {
         setShowFeedback(false);
-        gameLogic.nextQuestion();
-        gameLogic.generateNewQuestion(gameSettings.gameSettings);
+        advanceToNextQuestion();
       }
     }, delay);
 
@@ -111,78 +91,30 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
       clearTimeout(feedbackTimeout);
     }
     setShowFeedback(false);
-    gameLogic.nextQuestion();
-    gameLogic.generateNewQuestion(gameSettings.gameSettings);
+    advanceToNextQuestion();
   };
 
-  const handleEndGame = () => {
-    Alert.alert('End Game', 'Are you sure you want to end the current game?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'End Game',
-        style: 'destructive',
-        onPress: async () => {
-          await gameLogic.endGame(gameSettings.gameSettings);
-          router.back();
-        },
-      },
-    ]);
-  };
-
-  if (!gameLogic.gameState.isGameActive) {
-    return (
-      <ThemedView className="flex-1 items-center justify-center">
-        <ThemedText className="text-2xl font-bold">Game Not Active</ThemedText>
-        <ThemedText className="text-sm opacity-70">
-          Please start a new game to continue
-        </ThemedText>
-      </ThemedView>
-    );
-  }
+  const handleEndGame = useGameExitPrompt(gameLogic, gameSettings, {
+    onExit: () => {
+      onGameEnd?.();
+      router.back();
+    },
+  });
 
   return (
-    <>
-      <LinearGradient
-        colors={['#9F7FFF', '#8055FE']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          flex: 1,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-      />
-      {/* Header with score and controls */}
-      <View
-        className="flex-row justify-between items-center px-4 py-3 bg-black/30 backdrop-blur-sm border-b border-white/10"
-        style={{ paddingTop: top }}
-      >
-        <ScoreDisplay
-          score={gameLogic.gameState.score}
-          streak={gameLogic.gameState.streak}
-          maxStreak={gameLogic.gameState.maxStreak}
-          totalQuestions={gameLogic.gameState.totalQuestions}
-          correctAnswers={gameLogic.gameState.correctAnswers}
-          animateStreak={
-            showFeedback && isAnswerCorrect(gameLogic.gameState.currentQuestion)
-          }
-        />
-
-        <FlatButton
-          size="sm"
-          onPress={handleEndGame}
-          className="rounded-md px-4 py-0 border-red-400 bg-red-800 text-[#ffffff] border-2"
-        >
-          <FlatButtonText className="text-lg font-bold text-white font-pixelpurl-medium">
-            END GAME
-          </FlatButtonText>
-        </FlatButton>
-      </View>
-
-      {/* Game content */}
+    <GameScreenLayout
+      isGameActive={gameLogic.gameState.isGameActive}
+      onEndGame={handleEndGame}
+      scoreboard={{
+        score: gameLogic.gameState.score,
+        streak: gameLogic.gameState.streak,
+        maxStreak: gameLogic.gameState.maxStreak,
+        totalQuestions: gameLogic.gameState.totalQuestions,
+        correctAnswers: gameLogic.gameState.correctAnswers,
+        animateStreak:
+          showFeedback && isAnswerCorrect(gameLogic.gameState.currentQuestion),
+      }}
+    >
       <View className="flex-1">
         {/* Music Staff */}
         <View className="flex-1 justify-center items-center px-4">
@@ -253,7 +185,7 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
                 style={{ color: textColor }}
               >
                 Correct answer:{' '}
-                {gameLogic.gameState.currentQuestion.notes
+                {currentQuestion.notes
                   .map((note) =>
                     getNoteDisplayName(
                       note.name,
@@ -282,6 +214,6 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
           </View>
         )}
       </View>
-    </>
+    </GameScreenLayout>
   );
 }
