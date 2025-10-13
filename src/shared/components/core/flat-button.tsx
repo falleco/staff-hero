@@ -1,10 +1,11 @@
 import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import type React from 'react';
-import { Pressable, type StyleProp, Text, type TextStyle } from 'react-native';
+import { Pressable, type StyleProp, type TextStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useAnimatedBounce } from '~/shared/hooks/animations/use-animated-bounce';
 import { cn } from '~/shared/lib/cn';
+import { ThemedText } from '~/shared/components/themed-text';
 
 const audioSource = require('@/assets/sfx/interface-click-1-1.wav');
 
@@ -23,6 +24,7 @@ interface FlatButtonTextProps {
   children: React.ReactNode;
   className?: string;
   style?: StyleProp<TextStyle>;
+  tone?: "default" | "muted" | "accent" | "secondary" | "success" | "danger" | "warning";
 }
 
 const getSizeStyles = (size: FlatButtonSize) => {
@@ -93,10 +95,16 @@ export function FlatButtonText({
   children,
   className,
   style,
+  tone = 'secondary',
 }: FlatButtonTextProps) {
   return (
-    <Text className={cn('text-center', className)} style={style}>
+    <ThemedText
+      type="button"
+      tone={tone}
+      className={cn('text-center tracking-wide', className)}
+      style={style}
+    >
       {children}
-    </Text>
+    </ThemedText>
   );
 }

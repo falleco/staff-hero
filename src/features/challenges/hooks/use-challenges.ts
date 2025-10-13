@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { GameContext } from '~/features/game/state/game-context';
-import type { Challenge, ChallengeType } from '~/shared/types/music';
+import type { Challenge } from '~/shared/types/music';
 import { useAuth } from '~/data/supabase';
 import { currencyService } from '~/features/currency/services/currency-service';
 import { challengeService } from '~/features/challenges/services/challenge-service';
@@ -12,13 +12,6 @@ export interface UseChallengesReturn {
   isLoading: boolean;
   /** Refresh challenges data */
   refresh: () => Promise<void>;
-  /** Start a challenge (mark as in progress) */
-  startChallenge: (challengeId: string) => Promise<void>;
-  /** Update challenge progress */
-  updateChallengeProgress: (
-    type: ChallengeType,
-    amount: number,
-  ) => Promise<void>;
   /** Redeem completed challenge rewards */
   redeemChallenge: (challengeId: string) => Promise<void>;
   /** Reset all challenges (for testing) */
@@ -46,16 +39,8 @@ export interface UseChallengesReturn {
  * const {
  *   challenges,
  *   isLoading,
- *   startChallenge,
- *   updateChallengeProgress,
  *   redeemChallenge
  * } = useChallenges();
- *
- * // Start a challenge
- * await startChallenge('dominate-violin-notes');
- *
- * // Update progress
- * await updateChallengeProgress(ChallengeType.SCORE_POINTS, 100);
  *
  * // Redeem rewards
  * await redeemChallenge('score-master');
@@ -86,48 +71,12 @@ export function useChallenges(): UseChallengesReturn {
 
     try {
       setChallengesLoading(true);
-      const fetchedChallenges = await challengeService.getUserChallenges(user.id);
-      setChallenges(fetchedChallenges);
+      const syncedChallenges = await challengeService.syncWithActivity(user.id);
+      setChallenges(syncedChallenges);
     } catch (error) {
       console.error('Error refreshing challenges:', error);
     } finally {
       setChallengesLoading(false);
-    }
-  };
-
-  /**
-   * Starts a challenge by marking it as in progress
-   * @param challengeId - ID of the challenge to start
-   */
-  const startChallenge = async (challengeId: string) => {
-    if (!user) return;
-
-    try {
-      await challengeService.start(user.id, challengeId);
-      await refresh();
-    } catch (error) {
-      console.error('Error starting challenge:', error);
-      throw error;
-    }
-  };
-
-  /**
-   * Updates progress for challenges of a specific type
-   * @param type - Type of challenge to update
-   * @param amount - Amount to add to progress
-   */
-  const updateChallengeProgress = async (
-    type: ChallengeType,
-    amount: number,
-  ) => {
-    if (!user) return;
-
-    try {
-      await challengeService.updateProgress(user.id, type, amount);
-      await refresh();
-    } catch (error) {
-      console.error('Error updating challenge progress:', error);
-      throw error;
     }
   };
 
@@ -184,8 +133,6 @@ export function useChallenges(): UseChallengesReturn {
     challenges,
     isLoading: challengesLoading,
     refresh,
-    startChallenge,
-    updateChallengeProgress,
     redeemChallenge,
     resetChallenges,
   };

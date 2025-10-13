@@ -1,48 +1,30 @@
 import type React from 'react';
 import { View } from 'react-native';
+import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
 import { ThemedText } from '~/shared/components/themed-text';
-import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { cn } from '~/shared/lib/cn';
 import type { Challenge } from '~/shared/types/music';
 import { ChallengeStatus } from '~/shared/types/music';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
 
 interface ChallengeCardProps {
   challenge: Challenge;
-  onStart: (challengeId: string) => void;
   onRedeem: (challengeId: string) => void;
 }
 
-/**
- * Challenge card component that displays challenge information and actions
- *
- * Shows challenge details, progress, and appropriate action buttons based on status.
- * Handles navigation to target routes and challenge state management.
- *
- * @param challenge - The challenge data to display
- * @param onStart - Callback when user starts a challenge
- * @param onRedeem - Callback when user redeems a completed challenge
- */
-export function ChallengeCard({
-  challenge,
-  onStart,
-  onRedeem,
-}: ChallengeCardProps) {
-  const textColor = useThemeColor({}, 'text');
-  const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
-  const primaryColor = useThemeColor({}, 'tint');
+export function ChallengeCard({ challenge, onRedeem }: ChallengeCardProps) {
+  const borderColor = useThemeColor({}, 'outline');
 
   const getStatusColor = () => {
     switch (challenge.status) {
       case ChallengeStatus.AVAILABLE:
-        return '#6B7280'; // Gray
+        return '#6B7280';
       case ChallengeStatus.IN_PROGRESS:
-        return '#3B82F6'; // Blue
+        return '#5EF2FF';
       case ChallengeStatus.COMPLETED:
-        return '#10B981'; // Green
+        return '#7CFFB2';
       case ChallengeStatus.REDEEMED:
-        return '#8B5CF6'; // Purple
+        return '#FF5DA2';
       default:
         return '#6B7280';
     }
@@ -51,7 +33,7 @@ export function ChallengeCard({
   const getStatusText = () => {
     switch (challenge.status) {
       case ChallengeStatus.AVAILABLE:
-        return 'Available';
+        return 'Tracking';
       case ChallengeStatus.IN_PROGRESS:
         return 'In Progress';
       case ChallengeStatus.COMPLETED:
@@ -63,107 +45,68 @@ export function ChallengeCard({
     }
   };
 
+  const isRedeemable = challenge.status === ChallengeStatus.COMPLETED;
+
   const handleActionPress = () => {
-    if (challenge.status === ChallengeStatus.AVAILABLE) {
-      onStart(challenge.id);
-      // Note: Navigation handled by parent component or user manually
-    } else if (challenge.status === ChallengeStatus.COMPLETED) {
+    if (isRedeemable) {
       onRedeem(challenge.id);
-    } else if (
-      challenge.status === ChallengeStatus.IN_PROGRESS &&
-      challenge.targetRoute
-    ) {
-      // Note: Navigation handled by parent component or user manually
     }
   };
-
-  const getActionButtonText = () => {
-    switch (challenge.status) {
-      case ChallengeStatus.AVAILABLE:
-        return 'Go';
-      case ChallengeStatus.IN_PROGRESS:
-        return 'Continue';
-      case ChallengeStatus.COMPLETED:
-        return 'Redeem';
-      case ChallengeStatus.REDEEMED:
-        return 'Completed';
-      default:
-        return 'Go';
-    }
-  };
-
-  const isActionDisabled = challenge.status === ChallengeStatus.REDEEMED;
 
   return (
-    <View className="mb-8 p-4 rounded-2xl border-2 border-gray-200 bg-white">
-      <View className="absolute top-0 right-5 left-40">
-        <View className="bg-red-400 rounded-3xl border-2 px-2 border-black/20 -mt-4 w-[150px] text-center items-center self-end">
-          <ThemedText className="text-lg font-pixelpurl-medium text-white">
-            Progress: {challenge.progress}/{challenge.requirement}
-          </ThemedText>
-        </View>
+    <View
+      className="mb-6 p-5 rounded-3xl bg-[#140F2A] border"
+      style={{ borderColor }}
+    >
+      <View className="absolute -top-4 right-6 px-4 py-2 rounded-full bg-[#31224F] border border-white/10 shadow-lg">
+        <ThemedText type="label" tone="secondary">
+          {challenge.progress}/{challenge.requirement} Complete
+        </ThemedText>
       </View>
-      {/* Header */}
-      <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center flex-1">
-          <ThemedText className="text-2xl mr-3">{challenge.icon}</ThemedText>
-          <View className="flex-1">
-            <ThemedText className="text-xl font-semibold">
-              {challenge.title}
-            </ThemedText>
-            <View className="flex-row items-center mt-1">
-              <View
-                className="px-2 py-1 rounded-full"
-                style={{ backgroundColor: `${getStatusColor()}20` }}
-              >
-                <ThemedText
-                  className="text-xs font-medium"
-                  style={{ color: getStatusColor() }}
-                >
-                  {getStatusText()}
-                </ThemedText>
-              </View>
+
+      <View className="flex-row items-start justify-between">
+        <View className="flex-row items-start mr-4">
+          <ThemedText type="heading" tone="accent" className="mr-3 text-3xl">
+            {challenge.icon}
+          </ThemedText>
+          <View>
+            <ThemedText type="heading">{challenge.title}</ThemedText>
+            <View
+              className="mt-2 px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${getStatusColor()}1A` }}
+            >
+              <ThemedText type="label" style={{ color: getStatusColor() }}>
+                {getStatusText()}
+              </ThemedText>
             </View>
           </View>
         </View>
 
-        {/* Reward */}
         <View className="items-end">
-          <View className="flex-row items-center">
-            <ThemedText className="text-lg mr-1">✨</ThemedText>
-            <ThemedText
-              className="text-lg font-bold"
-              style={{ color: primaryColor }}
-            >
-              {challenge.reward}
-            </ThemedText>
-          </View>
-          <ThemedText className="text-sm" style={{ color: secondaryTextColor }}>
-            Golden Shards
+          <ThemedText type="label" tone="muted">
+            Reward
+          </ThemedText>
+          <ThemedText type="heading" tone="secondary">
+            ✨ {challenge.reward}
           </ThemedText>
         </View>
       </View>
 
-      {/* Description */}
-      <ThemedText
-        className="text-md mb-3"
-        style={{ color: secondaryTextColor }}
-      >
+      <ThemedText type="body" tone="muted" className="mt-3">
         {challenge.description}
       </ThemedText>
 
-      {/* Action Button */}
       <FlatButton
-        size="sm"
+        size="md"
         className={cn(
-          'w-full rounded-2xl px-2 py-1 border-purple-400 bg-purple-800 text-[#ffffff] border-4',
-          challenge.status === ChallengeStatus.COMPLETED ? 'border-green' : '',
+          'mt-5 w-full rounded-2xl border-4 shadow-[0_10px_0_#080616]',
+          isRedeemable ? 'bg-[#372155] border-[#7CFFB2]' : 'bg-[#1B152C] border-[#35295D]',
         )}
         onPress={handleActionPress}
-        isDisabled={isActionDisabled}
+        isDisabled={!isRedeemable}
       >
-        <FlatButtonText className="text-2xl text-[#ffffff] font-boldpixels-medium">
-          {getActionButtonText()}
+        <FlatButtonText tone={isRedeemable ? 'secondary' : 'muted'}>
+          {isRedeemable ? 'Redeem Reward' : 'Keep Playing'}
         </FlatButtonText>
       </FlatButton>
     </View>

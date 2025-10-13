@@ -12,20 +12,12 @@ import { useThemeColor } from '~/shared/hooks/use-theme-color';
 export default function ChallengesScreen() {
   const textColor = useThemeColor({}, 'text');
 
-  const { challenges, startChallenge, redeemChallenge } = useChallenges();
+  const { challenges, redeemChallenge } = useChallenges();
 
   const [refreshing, setRefreshing] = useState(false);
 
   const handleClose = () => {
     router.back();
-  };
-
-  const handleStartChallenge = async (challengeId: string) => {
-    try {
-      await startChallenge(challengeId);
-    } catch (error) {
-      console.error('Error starting challenge:', error);
-    }
   };
 
   const handleRedeemChallenge = async (challengeId: string) => {
@@ -58,10 +50,7 @@ export default function ChallengesScreen() {
         }}
       />
       <SafeAreaView className="flex-1">
-        <ThemedText
-          className="text-6xl font-bold mb-4 self-center font-boldpixels-medium"
-          style={{ color: textColor }}
-        >
+        <ThemedText type="display" tone="accent" className="self-center mb-6">
           Challenges
         </ThemedText>
         <ScrollView
@@ -77,7 +66,6 @@ export default function ChallengesScreen() {
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                onStart={handleStartChallenge}
                 onRedeem={handleRedeemChallenge}
               />
             ))}

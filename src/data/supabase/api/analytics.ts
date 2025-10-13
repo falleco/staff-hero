@@ -182,6 +182,37 @@ export async function getRecentSessions(
 }
 
 /**
+ * Gets aggregated totals from all stored game sessions for a user.
+ */
+export async function getGameSessionTotals(userId: string): Promise<{
+  totalQuestions: number;
+  totalCorrectAnswers: number;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('game_sessions')
+      .select('total_questions, correct_answers')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    const sessions = (data as any[] | null) ?? [];
+
+    return sessions.reduce(
+      (acc, session) => {
+        acc.totalQuestions += session.total_questions ?? 0;
+        acc.totalCorrectAnswers += session.correct_answers ?? 0;
+        return acc;
+      },
+      { totalQuestions: 0, totalCorrectAnswers: 0 },
+    );
+  } catch (error) {
+    console.error('Error getting game session totals:', error);
+    throw error;
+  }
+}
+
+/**
  * Gets user achievements with unlock status
  */
 export async function getUserAchievements(

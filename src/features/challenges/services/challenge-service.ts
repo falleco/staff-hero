@@ -5,7 +5,10 @@ import {
   resetUserChallenges,
   startChallenge,
   updateChallengeProgress,
+  setChallengeProgress,
 } from '~/data/supabase';
+import { getUserAnalytics, getGameSessionTotals } from '~/data/supabase/api/analytics';
+import { ChallengeStatus, ChallengeType as ChallengeTypeEnum } from '~/shared/types/music';
 
 /**
  * Challenge service keeps Supabase details isolated from UI hooks.
@@ -30,6 +33,75 @@ export const challengeService = {
    */
   async updateProgress(userId: string, type: ChallengeType, amount: number) {
     return updateChallengeProgress(userId, type, amount);
+  },
+
+  /**
+   * Synchronize challenge progress with user's overall activity.
+   */
+  async syncWithActivity(userId: string): Promise<Challenge[]> {
+    const [challenges, analytics, totals] = await Promise.all([
+      fetchUserChallenges(userId),
+      getUserAnalytics(userId),
+      getGameSessionTotals(userId),
+    ]);
+
+    const totalScore = analytics.totalScore ?? 0;
+    const totalGames = analytics.totalGamesPlayed ?? 0;
+    const totalNotes = totals.totalQuestions ?? 0;
+
+    for (const challenge of challenges) {
+      if (challenge.status === ChallengeStatus.REDEEMED) {
+        continue;
+      }
+
+      let metric = 0;
+      switch (challenge.type) {
+        case ChallengeTypeEnum.SCORE_POINTS:
+          metric = totalScore;
+          break;
+        case ChallengeTypeEnum.BATTLE_COUNT:
+          metric = totalGames;
+          break;
+        case ChallengeTypeEnum.DOMINATE_NOTES:
+          metric = totalNotes;
+          break;
+        default:
+          metric = 0;
+      }
+
+      const desiredProgress = Math.min(
+        challenge.requirement,
+        Math.max(challenge.progress, metric),
+      );
+
+      let desiredStatus: ChallengeStatus;
+      if (challenge.status === ChallengeStatus.COMPLETED && desiredProgress < challenge.requirement) {
+        desiredStatus = ChallengeStatus.COMPLETED;
+      } else if (desiredProgress >= challenge.requirement) {
+        desiredStatus = ChallengeStatus.COMPLETED;
+      } else {
+        desiredStatus = ChallengeStatus.IN_PROGRESS;
+      }
+
+      if (challenge.status === ChallengeStatus.AVAILABLE && desiredProgress === 0) {
+        desiredStatus = ChallengeStatus.IN_PROGRESS;
+      }
+
+      if (
+        challenge.progress !== desiredProgress ||
+        challenge.status !== desiredStatus
+      ) {
+        await setChallengeProgress(
+          userId,
+          challenge.id,
+          desiredProgress,
+          challenge.requirement,
+          desiredStatus,
+        );
+      }
+    }
+
+    return fetchUserChallenges(userId);
   },
 
   /**

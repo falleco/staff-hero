@@ -9,12 +9,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
-import { ThemedText } from '~/shared/components/themed-text';
-import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
+import { useCurrency } from '~/features/currency';
 import { InstrumentGridCard } from '~/features/instruments';
 import { LuthierCard, useLuthier } from '~/features/luthier';
-import { useCurrency } from '~/features/currency';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
+import { ThemedText } from '~/shared/components/themed-text';
+import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { cn } from '~/shared/lib/cn';
 
@@ -119,7 +122,11 @@ export default function LuthierTab() {
         }}
       />
       <SafeAreaView className="flex-1">
-        <ThemedText className="text-6xl mb-4  font-bold self-center font-boldpixels-medium text-white">
+        <ThemedText
+          type="title"
+          tone="secondary"
+          className="text-6xl mb-4  font-bold self-center font-boldpixels-medium text-white"
+        >
           Luthier
         </ThemedText>
         <ScrollView

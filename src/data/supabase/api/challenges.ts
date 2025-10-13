@@ -119,46 +119,114 @@ export async function updateChallengeProgress(
     if (challengesError) throw challengesError;
     if (!challenges || challenges.length === 0) return;
 
-    // Get user's progress on these challenges
+    const challengeIds = (challenges as any[]).map((c: any) => c.id);
+
     const { data: userChallenges, error: userChallengesError } = await supabase
       .from('user_challenges')
-      .select('*')
+      .select('challenge_id, progress, status')
       .eq('user_id', userId)
-      .eq('status', 'in-progress')
-      .in(
-        'challenge_id',
-        (challenges as any[]).map((c: any) => c.id),
-      );
+      .in('challenge_id', challengeIds);
 
     if (userChallengesError) throw userChallengesError;
-    if (!userChallenges || userChallenges.length === 0) return;
 
-    // Update progress for each in-progress challenge
-    for (const userChallenge of userChallenges as any[]) {
-      const challenge = (challenges as any[]).find(
-        (c: any) => c.id === userChallenge.challenge_id,
-      );
-      if (!challenge) continue;
+    const existingMap = new Map<string, any>();
+    (userChallenges as any[] | null)?.forEach((uc: any) => {
+      existingMap.set(uc.challenge_id, uc);
+    });
 
+    const rowsToUpsert: any[] = [];
+
+    for (const challenge of challenges as any[]) {
+      const existing = existingMap.get(challenge.id);
+
+      if (existing?.status === 'redeemed') {
+        continue;
+      }
+
+      const currentProgress = existing?.progress ?? 0;
       const newProgress = Math.min(
-        userChallenge.progress + amount,
+        currentProgress + amount,
         challenge.requirement,
       );
+
       const newStatus =
         newProgress >= challenge.requirement ? 'completed' : 'in-progress';
 
+      if (
+        newProgress === currentProgress &&
+        existing &&
+        existing.status === newStatus
+      ) {
+        continue;
+      }
+
+      rowsToUpsert.push({
+        user_id: userId,
+        challenge_id: challenge.id,
+        progress: newProgress,
+        status: newStatus,
+      });
+    }
+
+    if (rowsToUpsert.length > 0) {
       const { error } = await supabase
         .from('user_challenges')
-        .update({
-          progress: newProgress,
-          status: newStatus,
-        } as any)
-        .eq('id', userChallenge.id);
+        .upsert(rowsToUpsert, { onConflict: 'user_id,challenge_id' });
 
       if (error) throw error;
     }
   } catch (error) {
     console.error('Error updating challenge progress:', error);
+    throw error;
+  }
+}
+
+/**
+ * Sets challenge progress to a specific value (auto-sync helper).
+ */
+export async function setChallengeProgress(
+  userId: string,
+  challengeId: string,
+  progress: number,
+  requirement: number,
+  status: ChallengeStatus,
+): Promise<void> {
+  try {
+    const clampedProgress = Math.min(Math.max(progress, 0), requirement);
+
+    const { data: existing, error: existingError } = await supabase
+      .from('user_challenges')
+      .select('id, status')
+      .eq('user_id', userId)
+      .eq('challenge_id', challengeId)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    if (existing?.status === 'redeemed') {
+      return;
+    }
+
+    const payload = {
+      user_id: userId,
+      challenge_id: challengeId,
+      progress: clampedProgress,
+      status,
+    } as any;
+
+    if (existing) {
+      const { error } = await supabase
+        .from('user_challenges')
+        .update(payload)
+        .eq('id', existing.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from('user_challenges').insert(payload);
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error('Error setting challenge progress:', error);
     throw error;
   }
 }

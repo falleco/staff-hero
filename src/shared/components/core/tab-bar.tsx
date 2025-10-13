@@ -55,7 +55,7 @@ export const TabBar = ({ state, descriptors, navigation }: TabBarProps) => {
   const selectedX = useSharedValue(0);
   const selectedScale = useSharedValue(1);
 
-  const size = 132;
+  const size = 146;
   const moveTo = useCallback(
     async (position: number) => {
       await animate({

@@ -1,20 +1,27 @@
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Easing, View } from 'react-native';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
 import {
   AnswerButtons,
   GameScreenLayout,
+  getStreakLevel,
+  triggerGameHaptics,
   useGameContext,
   useGameExitPrompt,
+  useNoteAnimations,
 } from '~/features/game';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
 import { MusicStaff } from '~/shared/components/music-staff';
 import { ThemedText } from '~/shared/components/themed-text';
-import { useNoteAnimations } from '~/features/game';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import type { Note } from '~/shared/types/music';
-import { getStreakLevel, triggerGameHaptics } from '~/features/game';
-import { convertDisplayNamesToNotes, generateRandomNote } from '~/shared/utils/music-utils';
+import {
+  convertDisplayNamesToNotes,
+  generateRandomNote,
+} from '~/shared/utils/music-utils';
 
 const COUNTDOWN_SECONDS = 3;
 const NOTE_COUNT = 20;
@@ -51,14 +58,12 @@ export default function RhythmGame() {
   const lineAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
   const linePositionValue = useRef(0);
   const noteStatusesRef = useRef<NoteStatus[]>([]);
+  const highlightedIndexRef = useRef<number>(-1);
 
   const gameOverRef = useRef(false);
   const textColor = useThemeColor({}, 'text');
 
-  const noteObjects = useMemo(
-    () => animatedNotes,
-    [animatedNotes],
-  );
+  const noteObjects = useMemo(() => animatedNotes, [animatedNotes]);
 
   const staffGroups = useMemo(() => {
     const grouped: Note[][] = [];
@@ -96,10 +101,18 @@ export default function RhythmGame() {
     return -1;
   };
 
+  const setHighlightedIndex = (index: number) => {
+    if (index < 0 || index === highlightedIndexRef.current) {
+      return;
+    }
+    highlightedIndexRef.current = index;
+    highlightNoteAtIndex(index);
+  };
+
   const highlightNextPending = (start: number, statuses: NoteStatus[]) => {
     const nextPending = findNextPendingIndex(start, statuses);
     if (nextPending !== -1) {
-      highlightNoteAtIndex(nextPending);
+      setHighlightedIndex(nextPending);
       updateCurrentNoteIndex(nextPending);
     } else {
       updateCurrentNoteIndex(Math.min(statuses.length, start));
@@ -155,6 +168,7 @@ export default function RhythmGame() {
     setNotesStatic(statuses.map((status) => status.note));
     setActiveStaff(0);
     updateCurrentNoteIndex(0);
+    highlightedIndexRef.current = -1;
     linePosition.setValue(0);
     setShowResults(false);
     setGameOver(false);
@@ -183,14 +197,14 @@ export default function RhythmGame() {
     );
     const expectedGlobal = startIndex + expectedLocal;
 
-    for (
-      let index = currentNoteIndex;
-      index < expectedGlobal;
-      index += 1
-    ) {
+    for (let index = currentNoteIndex; index < expectedGlobal; index += 1) {
       const status = statuses[index];
       if (status && !status.answered) {
-        markNoteAs(index, (note) => ({ ...note, missed: true, answered: true }));
+        markNoteAs(index, (note) => ({
+          ...note,
+          missed: true,
+          answered: true,
+        }));
       }
     }
   };
@@ -206,14 +220,38 @@ export default function RhythmGame() {
     setActiveStaff(staffIndex);
     linePosition.setValue(0);
     linePositionValue.current = 0;
-    highlightNextPending(
-      staffIndex * NOTES_PER_STAFF,
-      noteStatusesRef.current,
-    );
+    highlightedIndexRef.current = -1;
+    highlightNextPending(staffIndex * NOTES_PER_STAFF, noteStatusesRef.current);
 
     lineListenerId.current = linePosition.addListener(({ value }) => {
       linePositionValue.current = value;
       checkForMissedNotes(staffIndex, value);
+
+      const statuses = noteStatusesRef.current;
+      const startIndex = staffIndex * NOTES_PER_STAFF;
+      const staffNoteCount = Math.min(
+        NOTES_PER_STAFF,
+        statuses.length - startIndex,
+      );
+
+      if (staffNoteCount > 0) {
+        const localIndex = Math.min(
+          Math.max(Math.floor(value / NOTE_WINDOW), 0),
+          staffNoteCount - 1,
+        );
+
+        let absoluteIndex = startIndex + localIndex;
+        while (
+          absoluteIndex < startIndex + staffNoteCount &&
+          statuses[absoluteIndex]?.answered
+        ) {
+          absoluteIndex += 1;
+        }
+
+        if (absoluteIndex < startIndex + staffNoteCount) {
+          setHighlightedIndex(absoluteIndex);
+        }
+      }
     });
 
     lineAnimationRef.current = Animated.timing(linePosition, {
@@ -368,7 +406,6 @@ export default function RhythmGame() {
   const handleEndGamePressed = () => {
     exitPrompt();
   };
-
 
   return (
     <GameScreenLayout

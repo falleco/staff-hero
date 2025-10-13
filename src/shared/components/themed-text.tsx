@@ -1,60 +1,101 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { Text, type TextProps, type TextStyle } from 'react-native';
+import { Colors, Typography } from '~/shared/constants/theme';
+import { useColorScheme } from '~/shared/hooks/use-color-scheme';
 
-import { useThemeColor } from '~/shared/hooks/use-theme-color';
+export type ThemedTextVariant =
+  | 'display'
+  | 'title'
+  | 'heading'
+  | 'subtitle'
+  | 'body'
+  | 'label'
+  | 'caption'
+  | 'mono'
+  | 'button'
+  | 'link';
+
+type LegacyVariant = 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+
+type Tone =
+  | 'default'
+  | 'muted'
+  | 'accent'
+  | 'secondary'
+  | 'success'
+  | 'danger'
+  | 'warning';
+
+const variantAliases: Record<LegacyVariant, ThemedTextVariant> = {
+  default: 'body',
+  title: 'title',
+  defaultSemiBold: 'heading',
+  subtitle: 'subtitle',
+  link: 'link',
+};
+
+const toneToColorKey: Record<Tone, keyof (typeof Colors)['light']> = {
+  default: 'text',
+  muted: 'muted',
+  accent: 'accent',
+  secondary: 'secondary',
+  success: 'success',
+  danger: 'danger',
+  warning: 'warning',
+};
+
+const variantStyles: Record<ThemedTextVariant, TextStyle> = {
+  display: { ...Typography.display },
+  title: { ...Typography.title },
+  heading: { ...Typography.heading },
+  subtitle: { ...Typography.subtitle },
+  body: { ...Typography.body },
+  label: { ...Typography.label },
+  caption: { ...Typography.caption },
+  mono: { ...Typography.mono },
+  button: { ...Typography.button },
+  link: { ...Typography.link, textDecorationLine: 'underline' },
+};
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+  type?: ThemedTextVariant | LegacyVariant;
+  tone?: Tone;
 };
 
 export function ThemedText({
   style,
   lightColor,
   darkColor,
-  type = 'default',
+  type = 'body',
+  tone = 'default',
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const colorScheme = useColorScheme() ?? 'light';
+  const resolvedVariant = variantAliases[type as LegacyVariant] ?? (type as ThemedTextVariant);
+  const variantStyle = variantStyles[resolvedVariant] ?? variantStyles.body;
+
+  const fallbackColorKey = toneToColorKey[tone];
+  const palette = Colors[colorScheme];
+  const manualColor = colorScheme === 'light' ? lightColor : darkColor;
+  const defaultColor = manualColor ?? (palette[fallbackColorKey] as string) ?? palette.text;
+
+  const hasColorOverride = (() => {
+    if (Array.isArray(style)) {
+      return style.some(
+        (entry) => entry && typeof entry === 'object' && 'color' in entry && entry.color != null,
+      );
+    }
+
+    return Boolean(style && typeof style === 'object' && 'color' in style && style.color != null);
+  })();
+
+  const baseStyle = hasColorOverride ? undefined : { color: defaultColor };
 
   return (
     <Text
-      style={[
-        // { color },
-        // type === 'default' ? styles.default : undefined,
-        // type === 'title' ? styles.title : undefined,
-        // type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
-        // type === 'subtitle' ? styles.subtitle : undefined,
-        // type === 'link' ? styles.link : undefined,
-        style,
-      ]}
+      style={[variantStyle, baseStyle, style]}
       {...rest}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  default: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  defaultSemiBold: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  link: {
-    lineHeight: 30,
-    fontSize: 16,
-    color: '#0a7ea4',
-  },
-});

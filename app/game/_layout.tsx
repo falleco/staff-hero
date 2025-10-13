@@ -5,21 +5,21 @@ export default function GameLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
-        name="/game/single-note"
+        name="/single-note"
         options={{
           presentation: 'fullScreenModal',
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="/game/sequence"
+        name="/sequence"
         options={{
           presentation: 'fullScreenModal',
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="/game/rhythm"
+        name="/rhythm"
         options={{
           presentation: 'fullScreenModal',
           headerShown: false,

@@ -100,10 +100,6 @@ export interface UseGameLogicReturn {
   resetStreak: () => void;
   /** Generate and set a new question based on current settings */
   generateNewQuestion: (gameSettings: GameSettings) => void;
-  /** Set callback for challenge progress updates */
-  setChallengeProgressCallback: (
-    callback: (type: ChallengeType, amount: number) => void,
-  ) => void;
 }
 
 /**
@@ -149,9 +145,21 @@ export function useGameLogic(): UseGameLogicReturn {
   }
 
   const { gameState, setGameState, setChallenges } = context;
-  let challengeProgressCallback:
-    | ((type: ChallengeType, amount: number) => void)
-    | null = null;
+
+  const trackChallengeProgress = async (
+    type: ChallengeType,
+    amount: number,
+  ) => {
+    if (!user) return;
+
+    try {
+      await challengeService.updateProgress(user.id, type, amount);
+      const updatedChallenges = await challengeService.getUserChallenges(user.id);
+      setChallenges(updatedChallenges);
+    } catch (error) {
+      console.error('Error tracking challenge progress:', error);
+    }
+  };
 
   /**
    * Starts a new game session with the provided settings
@@ -164,9 +172,7 @@ export function useGameLogic(): UseGameLogicReturn {
     setGameState((prev) => ({ ...prev, ...startGameState() }));
 
     // Update challenge progress for battle count
-    if (challengeProgressCallback) {
-      challengeProgressCallback(ChallengeType.BATTLE_COUNT, 1);
-    }
+    void trackChallengeProgress(ChallengeType.BATTLE_COUNT, 1);
   };
 
   /**
@@ -228,17 +234,9 @@ export function useGameLogic(): UseGameLogicReturn {
     setGameState((prev) => ({ ...prev, ...submitAnswerState(prev, answer) }));
 
     // Update challenge progress for score points
-    if (challengeProgressCallback) {
-      const correctNotes = gameState.currentQuestion.notes.map(
-        (note) => note.name,
-      );
-      const isCorrect =
-        JSON.stringify(answer.sort()) === JSON.stringify(correctNotes.sort());
-
-      if (isCorrect) {
-        const points = 10 + gameState.streak * 2;
-        challengeProgressCallback(ChallengeType.SCORE_POINTS, points);
-      }
+    if (isCorrect) {
+      const points = 10 + gameState.streak * 2;
+      void trackChallengeProgress(ChallengeType.SCORE_POINTS, points);
     }
   };
 
@@ -269,34 +267,7 @@ export function useGameLogic(): UseGameLogicReturn {
     setGameState((prev) => ({ ...prev, ...setQuestionState(newQuestion) }));
 
     // Update challenge progress for dominate notes (simplified - just playing counts)
-    if (challengeProgressCallback) {
-      challengeProgressCallback(ChallengeType.DOMINATE_NOTES, 1);
-    }
-  };
-
-  /**
-   * Sets the callback function for challenge progress updates
-   * This is automatically connected to update challenges in the database
-   * @param callback - Function to call when challenge progress should be updated
-   */
-  const setChallengeProgressCallback = (
-    callback: (type: ChallengeType, amount: number) => void,
-  ) => {
-    challengeProgressCallback = async (type: ChallengeType, amount: number) => {
-      // Call the provided callback first
-      callback(type, amount);
-
-      // Then update database and refresh challenges
-      if (!user) return;
-
-      try {
-        await challengeService.updateProgress(user.id, type, amount);
-        const fetchedChallenges = await challengeService.getUserChallenges(user.id);
-        setChallenges(fetchedChallenges);
-      } catch (error) {
-        console.error('Error tracking challenge progress:', error);
-      }
-    };
+    void trackChallengeProgress(ChallengeType.DOMINATE_NOTES, 1);
   };
 
   return {
@@ -307,6 +278,5 @@ export function useGameLogic(): UseGameLogicReturn {
     nextQuestion,
     resetStreak,
     generateNewQuestion,
-    setChallengeProgressCallback,
   };
 }

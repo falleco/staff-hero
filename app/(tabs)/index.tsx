@@ -4,10 +4,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
 import { ParallaxBg } from '~/shared/components/parallax-bg';
+import { ThemedText } from '~/shared/components/themed-text';
 
 export default function HomeTab() {
   const { top } = useSafeAreaInsets();
@@ -44,9 +45,13 @@ export default function HomeTab() {
               style={{ width: 72, height: 72, marginLeft: -16, marginTop: -12 }}
               source={require('@/assets/images/hud/settings.png')}
             />
-            <Text className="text-center text-xl text-white -mt-4 font-pixelpurl-medium -ml-4">
+            <ThemedText
+              type="label"
+              tone="secondary"
+              className="-mt-4 -ml-4 uppercase tracking-widest"
+            >
               settings
-            </Text>
+            </ThemedText>
           </FlatButton>
           <FlatButton
             size="lg"
@@ -57,9 +62,9 @@ export default function HomeTab() {
               style={{ width: 48, height: 48, marginTop: 6 }}
               source={require('@/assets/images/hud/book.png')}
             />
-            <Text className="text-center text-xl text-white font-pixelpurl-medium">
+            <ThemedText type="label" tone="secondary">
               challenges
-            </Text>
+            </ThemedText>
           </FlatButton>
         </View>
         <View className="flex-grow" />
@@ -69,7 +74,7 @@ export default function HomeTab() {
             onPress={handleStartGamePress}
             className="w-full max-w-sm -mb-6 rounded-2xl px-4 py-2 border-red-400 bg-red-800 text-[#ffffff] border-4"
           >
-            <FlatButtonText className="text-2xl text-[#ffffff] font-boldpixels-medium">
+            <FlatButtonText tone="secondary">
               START PLAYING
             </FlatButtonText>
           </FlatButton>
