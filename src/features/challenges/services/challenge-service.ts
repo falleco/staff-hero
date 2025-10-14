@@ -1,14 +1,20 @@
-import type { Challenge, ChallengeType } from '~/shared/types/music';
 import {
   fetchUserChallenges,
   redeemChallenge,
   resetUserChallenges,
+  setChallengeProgress,
   startChallenge,
   updateChallengeProgress,
-  setChallengeProgress,
 } from '~/data/supabase';
-import { getUserAnalytics, getGameSessionTotals } from '~/data/supabase/api/analytics';
-import { ChallengeStatus, ChallengeType as ChallengeTypeEnum } from '~/shared/types/music';
+import {
+  getGameSessionTotals,
+  getUserAnalytics,
+} from '~/data/supabase/api/analytics';
+import type { Challenge, ChallengeType } from '~/shared/types/music';
+import {
+  ChallengeStatus,
+  ChallengeType as ChallengeTypeEnum,
+} from '~/shared/types/music';
 
 /**
  * Challenge service keeps Supabase details isolated from UI hooks.
@@ -75,7 +81,10 @@ export const challengeService = {
       );
 
       let desiredStatus: ChallengeStatus;
-      if (challenge.status === ChallengeStatus.COMPLETED && desiredProgress < challenge.requirement) {
+      if (
+        challenge.status === ChallengeStatus.COMPLETED &&
+        desiredProgress < challenge.requirement
+      ) {
         desiredStatus = ChallengeStatus.COMPLETED;
       } else if (desiredProgress >= challenge.requirement) {
         desiredStatus = ChallengeStatus.COMPLETED;
@@ -83,7 +92,10 @@ export const challengeService = {
         desiredStatus = ChallengeStatus.IN_PROGRESS;
       }
 
-      if (challenge.status === ChallengeStatus.AVAILABLE && desiredProgress === 0) {
+      if (
+        challenge.status === ChallengeStatus.AVAILABLE &&
+        desiredProgress === 0
+      ) {
         desiredStatus = ChallengeStatus.IN_PROGRESS;
       }
 

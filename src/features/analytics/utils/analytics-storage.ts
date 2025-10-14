@@ -1,10 +1,10 @@
+import { analyticsService } from '~/features/analytics/services/analytics-service';
 import {
   ACHIEVEMENTS,
   type GameSession,
   type UserAnalytics,
 } from '~/shared/types/analytics';
 import { Difficulty, GameMode, NotationSystem } from '~/shared/types/music';
-import { analyticsService } from '~/features/analytics/services/analytics-service';
 
 const defaultAnalytics: UserAnalytics = {
   totalGamesPlayed: 0,

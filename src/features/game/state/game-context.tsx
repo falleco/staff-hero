@@ -6,6 +6,12 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { useAuth } from '~/data/supabase';
+import { analyticsService } from '~/features/analytics/services/analytics-service';
+import { challengeService } from '~/features/challenges/services/challenge-service';
+import { currencyService } from '~/features/currency/services/currency-service';
+import { equipmentService } from '~/features/equipment/services/equipment-service';
+import { luthierService } from '~/features/luthier/services/luthier-service';
 import type { UserAnalytics } from '~/shared/types/analytics';
 import type {
   Challenge,
@@ -16,12 +22,6 @@ import type {
   UserCurrency,
 } from '~/shared/types/music';
 import { Difficulty, GameMode, NotationSystem } from '~/shared/types/music';
-import { useAuth } from '~/data/supabase';
-import { analyticsService } from '~/features/analytics/services/analytics-service';
-import { challengeService } from '~/features/challenges/services/challenge-service';
-import { currencyService } from '~/features/currency/services/currency-service';
-import { equipmentService } from '~/features/equipment/services/equipment-service';
-import { luthierService } from '~/features/luthier/services/luthier-service';
 
 // Initial game state
 const initialGameState: GameState = {
@@ -189,7 +189,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       // Load challenges
       setChallengesLoading(true);
-      const fetchedChallenges = await challengeService.getUserChallenges(user.id);
+      const fetchedChallenges = await challengeService.getUserChallenges(
+        user.id,
+      );
       setChallenges(fetchedChallenges);
       setChallengesLoading(false);
 
@@ -201,7 +203,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       // Load instruments
       setInstrumentsLoading(true);
-      const fetchedInstruments = await luthierService.getUserInstruments(user.id);
+      const fetchedInstruments = await luthierService.getUserInstruments(
+        user.id,
+      );
       setInstruments(fetchedInstruments);
       setInstrumentsLoading(false);
 

@@ -1,12 +1,17 @@
 import { useContext } from 'react';
+import { useAuth } from '~/data/supabase';
+import { addGameSession } from '~/features/analytics/utils/analytics-storage';
+import { challengeService } from '~/features/challenges/services/challenge-service';
 import { GameContext } from '~/features/game/state/game-context';
 import type { GameSession } from '~/shared/types/analytics';
-import type { GameSettings, GameState, Notes, Question } from '~/shared/types/music';
+import type {
+  GameSettings,
+  GameState,
+  Notes,
+  Question,
+} from '~/shared/types/music';
 import { ChallengeType } from '~/shared/types/music';
-import { addGameSession } from '~/features/analytics/utils/analytics-storage';
 import { generateQuestion } from '~/shared/utils/music-utils';
-import { useAuth } from '~/data/supabase';
-import { challengeService } from '~/features/challenges/services/challenge-service';
 
 // Track game session for analytics
 let gameStartTime = 0;
@@ -154,7 +159,9 @@ export function useGameLogic(): UseGameLogicReturn {
 
     try {
       await challengeService.updateProgress(user.id, type, amount);
-      const updatedChallenges = await challengeService.getUserChallenges(user.id);
+      const updatedChallenges = await challengeService.getUserChallenges(
+        user.id,
+      );
       setChallenges(updatedChallenges);
     } catch (error) {
       console.error('Error tracking challenge progress:', error);

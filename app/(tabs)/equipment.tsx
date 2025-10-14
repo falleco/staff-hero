@@ -3,9 +3,9 @@ import type React from 'react';
 import { useState } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '~/shared/components/themed-text';
-import { EquipmentGridCard, useEquipment } from '~/features/equipment';
 import { useCurrency } from '~/features/currency';
+import { EquipmentGridCard, useEquipment } from '~/features/equipment';
+import { ThemedText } from '~/shared/components/themed-text';
 import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { EquipmentCategory } from '~/shared/types/music';
@@ -47,12 +47,8 @@ export default function EquipmentTab() {
 
   // Get equipment for each category
   const mantles = getEquipmentByCategory(EquipmentCategory.MANTLE);
-  const adornments = getEquipmentByCategory(
-    EquipmentCategory.ADORNMENTS,
-  );
-  const instruments = getEquipmentByCategory(
-    EquipmentCategory.INSTRUMENTS,
-  );
+  const adornments = getEquipmentByCategory(EquipmentCategory.ADORNMENTS);
+  const instruments = getEquipmentByCategory(EquipmentCategory.INSTRUMENTS);
 
   return (
     <>

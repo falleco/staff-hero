@@ -2,11 +2,13 @@ import { router } from 'expo-router';
 import type React from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ModalHeader,
+  SettingOption,
+  SettingsList,
+  useAppSettings,
+} from '~/features/settings';
 import { ThemedText } from '~/shared/components/themed-text';
-import { ModalHeader } from '~/features/settings';
-import { SettingOption } from '~/features/settings';
-import { SettingsList } from '~/features/settings';
-import { useAppSettings } from '~/features/settings';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import type { SettingSection } from '~/shared/types/music';
 import { SettingActionType } from '~/shared/types/music';

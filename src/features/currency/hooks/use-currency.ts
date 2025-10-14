@@ -1,8 +1,11 @@
 import { useContext } from 'react';
+import { useAuth } from '~/data/supabase';
+import {
+  type CurrencyTransaction,
+  currencyService,
+} from '~/features/currency/services/currency-service';
 import { GameContext } from '~/features/game/state/game-context';
 import type { UserCurrency } from '~/shared/types/music';
-import { useAuth } from '~/data/supabase';
-import { currencyService, type CurrencyTransaction } from '~/features/currency/services/currency-service';
 
 export interface UseCurrencyReturn {
   /** User's current currency */

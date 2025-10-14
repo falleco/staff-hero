@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
 import React from 'react';
 import { View } from 'react-native';
+import { FlatButton } from '~/shared/components/core/flat-button';
 import { ThemedText } from '~/shared/components/themed-text';
 import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
-import { FlatButton } from '~/shared/components/core/flat-button';
 
 interface ModalHeaderProps {
   title: string;

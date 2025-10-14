@@ -1,6 +1,9 @@
 import type React from 'react';
 import { View } from 'react-native';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
 import { ThemedText } from '~/shared/components/themed-text';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { cn } from '~/shared/lib/cn';
@@ -87,7 +90,9 @@ export function ChallengeCard({ challenge, onRedeem }: ChallengeCardProps) {
             <ThemedText type="heading" tone="secondary">
               {challenge.title}
             </ThemedText>
-            <View className={cn('mt-3 px-3 py-1 rounded-full', statusStyle.pill)}>
+            <View
+              className={cn('mt-3 px-3 py-1 rounded-full', statusStyle.pill)}
+            >
               <ThemedText type="label" className={statusStyle.label}>
                 {STATUS_LABEL[challenge.status]}
               </ThemedText>
@@ -99,7 +104,10 @@ export function ChallengeCard({ challenge, onRedeem }: ChallengeCardProps) {
           <ThemedText type="caption" tone="muted">
             Reward
           </ThemedText>
-          <ThemedText type="heading" className={cn(statusStyle.accent, 'flex-row items-center mt-1')}>
+          <ThemedText
+            type="heading"
+            className={cn(statusStyle.accent, 'flex-row items-center mt-1')}
+          >
             <ThemedText type="heading" tone="secondary" className="mr-1">
               ✨
             </ThemedText>
@@ -116,7 +124,9 @@ export function ChallengeCard({ challenge, onRedeem }: ChallengeCardProps) {
         size="md"
         className={cn(
           'mt-5 w-full rounded-2xl border-4 shadow-[0_12px_0_#080616]',
-          isRedeemable ? 'bg-[#372155] border-[#7CFFB2]' : 'bg-[#1B152C] border-[#35295D]',
+          isRedeemable
+            ? 'bg-[#372155] border-[#7CFFB2]'
+            : 'bg-[#1B152C] border-[#35295D]',
         )}
         onPress={handleActionPress}
         isDisabled={!isRedeemable}

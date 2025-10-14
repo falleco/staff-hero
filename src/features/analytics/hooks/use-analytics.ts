@@ -1,8 +1,8 @@
 import { useCallback, useContext } from 'react';
-import { GameContext } from '~/features/game/state/game-context';
-import type { GameSession, UserAnalytics } from '~/shared/types/analytics';
 import { useAuth } from '~/data/supabase';
 import { analyticsService } from '~/features/analytics/services/analytics-service';
+import { GameContext } from '~/features/game/state/game-context';
+import type { GameSession, UserAnalytics } from '~/shared/types/analytics';
 
 export interface UseAnalyticsReturn {
   analytics: UserAnalytics | null;

@@ -1,4 +1,7 @@
 import { useContext } from 'react';
+import { useAuth } from '~/data/supabase';
+import { currencyService } from '~/features/currency/services/currency-service';
+import { equipmentService } from '~/features/equipment/services/equipment-service';
 import { GameContext } from '~/features/game/state/game-context';
 import type {
   Equipment,
@@ -6,9 +9,6 @@ import type {
   UserCurrency,
   UserEquipment,
 } from '~/shared/types/music';
-import { currencyService } from '~/features/currency/services/currency-service';
-import { equipmentService } from '~/features/equipment/services/equipment-service';
-import { useAuth } from '~/data/supabase';
 
 export interface UseEquipmentReturn {
   /** All available equipment */
@@ -106,9 +106,7 @@ export function useEquipment(): UseEquipmentReturn {
 
     try {
       setEquipmentLoading(true);
-      const fetchedEquipment = await equipmentService.getUserEquipment(
-        user.id,
-      );
+      const fetchedEquipment = await equipmentService.getUserEquipment(user.id);
       setEquipment(fetchedEquipment);
     } catch (error) {
       console.error('Error refreshing equipment:', error);

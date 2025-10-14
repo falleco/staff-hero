@@ -1,7 +1,10 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { View } from 'react-native';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
 
 interface AnswerButtonsProps {
   options: string[];

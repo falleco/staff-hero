@@ -9,6 +9,9 @@ export interface Database {
           username: string | null;
           is_anonymous: boolean;
           golden_note_shards: number;
+          preferred_instrument: string | null;
+          skill_level: string | null;
+          onboarding_completed: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -17,6 +20,9 @@ export interface Database {
           username?: string | null;
           is_anonymous?: boolean;
           golden_note_shards?: number;
+          preferred_instrument?: string | null;
+          skill_level?: string | null;
+          onboarding_completed?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -25,6 +31,9 @@ export interface Database {
           username?: string | null;
           is_anonymous?: boolean;
           golden_note_shards?: number;
+          preferred_instrument?: string | null;
+          skill_level?: string | null;
+          onboarding_completed?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };

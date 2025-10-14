@@ -3,24 +3,30 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
 import {
   AnswerButtons,
   GameScreenLayout,
   useGameExitPrompt,
+  useNoteAnimations,
   useNoteRoundController,
 } from '~/features/game';
-import { MusicStaff } from '~/shared/components/music-staff';
-import { ThemedText } from '~/shared/components/themed-text';
-import { useNoteAnimations } from '~/features/game';
-import { useThemeColor } from '~/shared/hooks/use-theme-color';
-import { cn } from '~/shared/lib/cn';
 import {
   getAutoAdvanceDelay,
   getStreakLevel,
   triggerGameHaptics,
 } from '~/features/game/utils/game-logic';
-import { getNoteDisplayName, isAnswerCorrect } from '~/shared/utils/music-utils';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
+import { MusicStaff } from '~/shared/components/music-staff';
+import { ThemedText } from '~/shared/components/themed-text';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { cn } from '~/shared/lib/cn';
+import {
+  getNoteDisplayName,
+  isAnswerCorrect,
+} from '~/shared/utils/music-utils';
 
 export default function SequenceGame() {
   const {
@@ -59,10 +65,7 @@ export default function SequenceGame() {
   useEffect(() => {
     setUserSequence([]);
     setCurrentNoteIndex(0);
-  }, [
-    currentQuestion.id,
-    currentQuestion.notes,
-  ]);
+  }, [currentQuestion.id, currentQuestion.notes]);
 
   useEffect(() => {
     if (!showFeedback && currentQuestion.notes.length > 0) {

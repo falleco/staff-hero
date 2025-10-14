@@ -23,11 +23,7 @@ export const currencyService = {
   /**
    * Apply a credit/debit operation for the user.
    */
-  async modifyBalance(
-    userId: string,
-    amount: number,
-    description?: string,
-  ) {
+  async modifyBalance(userId: string, amount: number, description?: string) {
     return addGoldenShards(userId, amount, description);
   },
 

@@ -1,4 +1,9 @@
-import type { Note, NoteAnimation, NoteState, Notes } from '~/shared/types/music';
+import type {
+  Note,
+  NoteAnimation,
+  NoteState,
+  Notes,
+} from '~/shared/types/music';
 import { NoteAnimationType, NoteState as State } from '~/shared/types/music';
 
 /**

@@ -1,11 +1,14 @@
 import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '~/shared/components/themed-text';
 import { useAnalytics } from '~/features/analytics';
+import {
+  formatPlayTime,
+  getStreakEmoji,
+} from '~/features/analytics/utils/analytics-storage';
+import { ThemedText } from '~/shared/components/themed-text';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import type { UserAnalytics } from '~/shared/types/analytics';
-import { formatPlayTime, getStreakEmoji } from '~/features/analytics/utils/analytics-storage';
 
 export function AnalyticsScreen() {
   const { analytics, isLoading, clearData } = useAnalytics();

@@ -12,9 +12,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { useEffect } from 'react';
+import { AuthProvider, useAuth } from '~/data/supabase';
 import { GameProvider } from '~/features/game';
+import { OnboardingGate } from '~/features/onboarding/onboarding-gate';
 import { useColorScheme } from '~/shared/hooks/use-color-scheme';
-import { AuthProvider } from '~/data/supabase';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -50,6 +51,7 @@ export default function RootLayout() {
           <ThemeProvider
             value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
           >
+            <OnboardingGate />
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen
@@ -90,6 +92,10 @@ export default function RootLayout() {
                   presentation: 'card',
                   headerShown: false,
                 }}
+              />
+              <Stack.Screen
+                name="onboarding"
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="modal"

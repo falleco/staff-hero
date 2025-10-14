@@ -1,4 +1,3 @@
-import type { Equipment } from '~/shared/types/music';
 import {
   equipItem,
   fetchUserEquipment,
@@ -7,6 +6,7 @@ import {
   unequipItem,
   upgradeEquipment,
 } from '~/data/supabase';
+import type { Equipment } from '~/shared/types/music';
 
 /**
  * Equipment service responsible for coordinating Supabase operations.

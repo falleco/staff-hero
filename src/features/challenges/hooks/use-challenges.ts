@@ -1,9 +1,9 @@
 import { useContext } from 'react';
+import { useAuth } from '~/data/supabase';
+import { challengeService } from '~/features/challenges/services/challenge-service';
+import { currencyService } from '~/features/currency/services/currency-service';
 import { GameContext } from '~/features/game/state/game-context';
 import type { Challenge } from '~/shared/types/music';
-import { useAuth } from '~/data/supabase';
-import { currencyService } from '~/features/currency/services/currency-service';
-import { challengeService } from '~/features/challenges/services/challenge-service';
 
 export interface UseChallengesReturn {
   /** Current list of challenges */

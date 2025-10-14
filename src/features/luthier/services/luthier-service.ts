@@ -1,4 +1,3 @@
-import type { Instrument } from '~/shared/types/music';
 import {
   equipInstrument,
   fetchUserInstruments,
@@ -8,6 +7,7 @@ import {
   unequipInstrument,
   upgradeInstrument,
 } from '~/data/supabase';
+import type { Instrument } from '~/shared/types/music';
 
 /**
  * Luthier service centralises instrument persistence logic.

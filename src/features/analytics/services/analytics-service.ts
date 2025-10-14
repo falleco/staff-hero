@@ -1,4 +1,3 @@
-import type { GameSession, UserAnalytics } from '~/shared/types/analytics';
 import {
   addGameSession,
   clearUserAnalytics,
@@ -7,6 +6,7 @@ import {
   getUserAnalytics,
   unlockAchievement,
 } from '~/data/supabase';
+import type { GameSession, UserAnalytics } from '~/shared/types/analytics';
 
 /**
  * Centralised analytics data access layer.

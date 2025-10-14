@@ -1,4 +1,8 @@
-import type { Challenge, ChallengeStatus, ChallengeType } from '~/shared/types/music';
+import type {
+  Challenge,
+  ChallengeStatus,
+  ChallengeType,
+} from '~/shared/types/music';
 import { supabase } from '../client';
 import { addCurrencyTransaction, getUserBalance } from './currency';
 import { getUserProfile } from './user-profile';

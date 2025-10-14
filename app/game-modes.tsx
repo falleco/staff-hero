@@ -7,8 +7,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
 import { useGameContext } from '~/features/game';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
 import type { GameSettings } from '~/shared/types/music';
 import { GameMode } from '~/shared/types/music';
 

@@ -139,6 +139,14 @@ export interface Challenge {
   targetRoute?: string; // Where to navigate when user clicks "Go"
 }
 
+export type OnboardingInstrument =
+  | 'violin'
+  | 'viola'
+  | 'acoustic_guitar'
+  | 'electric_guitar'
+  | 'bass';
+
+export type SkillLevel = 'beginner' | 'intermediate' | 'pro';
 export interface UserCurrency {
   goldenNoteShards: number;
 }

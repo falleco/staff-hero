@@ -25,6 +25,7 @@ export async function getUserProfile(
             id: userId,
             is_anonymous: true,
             golden_note_shards: 0,
+            onboarding_completed: false,
           } as any)
           .select()
           .single();
@@ -35,7 +36,13 @@ export async function getUserProfile(
       throw error;
     }
 
-    return data as UserProfile;
+    if (!data) {
+      throw new Error('Profile update failed');
+    }
+    return {
+      ...(data as UserProfile),
+      onboarding_completed: (data as any).onboarding_completed ?? false,
+    } as UserProfile;
   } catch (error) {
     console.error('Error getting user profile:', error);
     throw error;
@@ -59,7 +66,13 @@ export async function updateUserProfile(
 
     if (error) throw error;
 
-    return data as UserProfile;
+    if (!data) {
+      throw new Error('Profile update failed');
+    }
+    return {
+      ...(data as UserProfile),
+      onboarding_completed: (data as any).onboarding_completed ?? false,
+    } as UserProfile;
   } catch (error) {
     console.error('Error updating user profile:', error);
     throw error;

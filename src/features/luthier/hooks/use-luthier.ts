@@ -1,9 +1,9 @@
 import { useContext } from 'react';
-import { GameContext } from '~/features/game/state/game-context';
-import type { Instrument, UserCurrency } from '~/shared/types/music';
 import { useAuth } from '~/data/supabase';
 import { currencyService } from '~/features/currency/services/currency-service';
+import { GameContext } from '~/features/game/state/game-context';
 import { luthierService } from '~/features/luthier/services/luthier-service';
+import type { Instrument, UserCurrency } from '~/shared/types/music';
 
 export interface UseLuthierReturn {
   /** Available instruments in the shop */
@@ -100,7 +100,9 @@ export function useLuthier(): UseLuthierReturn {
 
     try {
       setInstrumentsLoading(true);
-      const fetchedInstruments = await luthierService.getUserInstruments(user.id);
+      const fetchedInstruments = await luthierService.getUserInstruments(
+        user.id,
+      );
       setInstruments(fetchedInstruments);
     } catch (error) {
       console.error('Error refreshing instruments:', error);

@@ -15,7 +15,12 @@ export type ThemedTextVariant =
   | 'button'
   | 'link';
 
-type LegacyVariant = 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+type LegacyVariant =
+  | 'default'
+  | 'title'
+  | 'defaultSemiBold'
+  | 'subtitle'
+  | 'link';
 
 type Tone =
   | 'default'
@@ -45,12 +50,10 @@ const toneToColorKey: Record<Tone, keyof (typeof Colors)['light']> = {
 };
 
 const variantClasses: Record<ThemedTextVariant, string> = {
-  display:
-    'font-boldpixels-medium text-[44px] leading-[48px] tracking-[2px]',
+  display: 'font-boldpixels-medium text-[44px] leading-[48px] tracking-[2px]',
   title: 'font-pixelpurl-medium text-[34px] leading-[40px] tracking-[1px]',
   heading: 'font-pcsenior-medium text-[26px] leading-[32px] tracking-[0.8px]',
-  subtitle:
-    'font-november-medium text-[18px] leading-[24px] tracking-[0.5px]',
+  subtitle: 'font-november-medium text-[18px] leading-[24px] tracking-[0.5px]',
   body: 'font-manaspace-medium text-[16px] leading-[22px] tracking-[0.3px]',
   label:
     'font-pixelpurl-medium uppercase text-[12px] leading-[16px] tracking-[2.2px]',
@@ -59,8 +62,7 @@ const variantClasses: Record<ThemedTextVariant, string> = {
   mono: 'font-manaspace-medium text-[15px] leading-[20px] tracking-[0.4px]',
   button:
     'font-pixelpurl-medium uppercase text-[20px] leading-[26px] tracking-[2.4px]',
-  link:
-    'font-pixelpurl-medium text-[18px] leading-[22px] tracking-[0.5px] underline',
+  link: 'font-pixelpurl-medium text-[18px] leading-[22px] tracking-[0.5px] underline',
 };
 
 export type ThemedTextProps = TextProps & {
@@ -79,26 +81,37 @@ export function ThemedText({
   ...rest
 }: ThemedTextProps) {
   const colorScheme = useColorScheme() ?? 'light';
-  const resolvedVariant = variantAliases[type as LegacyVariant] ?? (type as ThemedTextVariant);
+  const resolvedVariant =
+    variantAliases[type as LegacyVariant] ?? (type as ThemedTextVariant);
   const variantClass = variantClasses[resolvedVariant] ?? variantClasses.body;
 
   const fallbackColorKey = toneToColorKey[tone];
   const palette = Colors[colorScheme];
   const manualColor = colorScheme === 'light' ? lightColor : darkColor;
-  const defaultColor = manualColor ?? (palette[fallbackColorKey] as string) ?? palette.text;
+  const defaultColor =
+    manualColor ?? (palette[fallbackColorKey] as string) ?? palette.text;
 
   const hasColorOverride = (() => {
     if (Array.isArray(style)) {
       return style.some(
         (entry) =>
-          entry && typeof entry === 'object' && 'color' in entry && entry.color != null,
+          entry &&
+          typeof entry === 'object' &&
+          'color' in entry &&
+          entry.color != null,
       );
     }
 
-    return Boolean(style && typeof style === 'object' && 'color' in style && style.color != null);
+    return Boolean(
+      style &&
+        typeof style === 'object' &&
+        'color' in style &&
+        style.color != null,
+    );
   })();
 
-  const colorClass = manualColor || hasColorOverride ? undefined : `[color:${defaultColor}]`;
+  const colorClass =
+    manualColor || hasColorOverride ? undefined : `[color:${defaultColor}]`;
   const inlineColor = manualColor ? { color: manualColor } : undefined;
 
   return (

@@ -1,21 +1,27 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { AnswerButtons, GameScreenLayout } from '~/features/game';
-import { useGameExitPrompt } from '~/features/game';
-import { useNoteRoundController } from '~/features/game';
-import { MusicStaff } from '~/shared/components/music-staff';
-import { ThemedText } from '~/shared/components/themed-text';
-import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
-import { useNoteAnimations } from '~/features/game';
-import { useThemeColor } from '~/shared/hooks/use-theme-color';
-import { GameMode } from '~/shared/types/music';
+import {
+  AnswerButtons,
+  GameScreenLayout,
+  useGameExitPrompt,
+  useNoteAnimations,
+  useNoteRoundController,
+} from '~/features/game';
 import {
   getAutoAdvanceDelay,
   getStreakLevel,
   triggerGameHaptics,
 } from '~/features/game/utils/game-logic';
-import { getNoteDisplayName, isAnswerCorrect } from '~/shared/utils/music-utils';
+import { MusicStaff } from '~/shared/components/music-staff';
+import { ThemedText } from '~/shared/components/themed-text';
+import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
+import { useThemeColor } from '~/shared/hooks/use-theme-color';
+import { GameMode } from '~/shared/types/music';
+import {
+  getNoteDisplayName,
+  isAnswerCorrect,
+} from '~/shared/utils/music-utils';
 
 interface GameScreenProps {
   onGameEnd?: () => void;
@@ -54,9 +60,8 @@ export default function SingleNoteGame({ onGameEnd }: GameScreenProps) {
   }, [gameLogic, gameSettings.gameSettings]);
 
   const handleAnswerSubmit = (answers: string) => {
-    const { normalizedAnswer, correctNotes, isCorrect } = evaluateAnswer(
-      answers,
-    );
+    const { normalizedAnswer, correctNotes, isCorrect } =
+      evaluateAnswer(answers);
     gameLogic.submitAnswer(normalizedAnswer);
     setShowFeedback(true);
 

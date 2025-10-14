@@ -1,6 +1,4 @@
 import { useCallback, useState } from 'react';
-import type { Note, Notes } from '~/shared/types/music';
-import { GameMode } from '~/shared/types/music';
 import {
   areNotesAnimating,
   highlightNote,
@@ -10,6 +8,8 @@ import {
   triggerDestructionAnimation,
   triggerSequenceFeedback,
 } from '~/features/game/utils/note-manager';
+import type { Note, Notes } from '~/shared/types/music';
+import { GameMode } from '~/shared/types/music';
 
 export interface UseNoteAnimationsReturn {
   /** Current notes with animation states */
@@ -69,7 +69,7 @@ export function useNoteAnimations(): UseNoteAnimationsReturn {
   /**
    * Sets new notes and triggers creation animation
    * @param notes - New notes to display
-  */
+   */
   const setNotesWithCreation = useCallback((notes: Note[]) => {
     const preparedNotes = prepareNotesForDisplay(notes);
     const notesWithCreation = triggerCreationAnimation(preparedNotes);

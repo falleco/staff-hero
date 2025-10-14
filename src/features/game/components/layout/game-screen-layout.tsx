@@ -2,7 +2,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlatButton, FlatButtonText } from '~/shared/components/core/flat-button';
+import {
+  FlatButton,
+  FlatButtonText,
+} from '~/shared/components/core/flat-button';
 import { ThemedText } from '~/shared/components/themed-text';
 import { ThemedView } from '~/shared/components/themed-view';
 import type { ScoreDisplayProps } from '../game/score-display';

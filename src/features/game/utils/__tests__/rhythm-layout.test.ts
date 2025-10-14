@@ -15,7 +15,10 @@ describe('chunkNoteStatuses', () => {
   it('leaves a shorter chunk when items do not divide evenly', () => {
     const items = ['a', 'b', 'c', 'd', 'e'];
     const result = chunkNoteStatuses(items, 3);
-    expect(result).toEqual([['a', 'b', 'c'], ['d', 'e']]);
+    expect(result).toEqual([
+      ['a', 'b', 'c'],
+      ['d', 'e'],
+    ]);
   });
 
   it('throws when size is zero or negative', () => {
