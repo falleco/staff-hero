@@ -1,11 +1,11 @@
-import type { CurrencyTransaction } from '~/data/supabase';
+import type { CurrencyTransaction } from '~/data/supabase/types';
 import {
   addGoldenShards,
   getTransactionHistory,
   getTransactionSummary,
   getUserBalance,
   hasSufficientBalance,
-} from '~/data/supabase';
+} from '~/domain/currency';
 
 const CURRENCY_COLUMN = 'golden_note_shards';
 

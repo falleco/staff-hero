@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { useAuth } from '~/data/supabase';
+import { useAuth } from '~/shared/hooks/use-auth';
 import { addGameSession } from '~/features/analytics/utils/analytics-storage';
 import { challengeService } from '~/features/challenges/services/challenge-service';
 import { GameContext } from '~/features/game/state/game-context';

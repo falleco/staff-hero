@@ -1,7 +1,7 @@
 import { useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useAuth } from '~/data/supabase';
-import { getUserProfile } from '~/data/supabase/api/user-profile';
+import { useAuth } from '~/shared/hooks/use-auth';
+import { getUserProfile } from '~/domain/user';
 
 export function OnboardingGate() {
   const { user, isLoading } = useAuth();

@@ -5,11 +5,11 @@ import {
   setChallengeProgress,
   startChallenge,
   updateChallengeProgress,
-} from '~/data/supabase';
+} from '~/domain/challenges';
 import {
   getGameSessionTotals,
   getUserAnalytics,
-} from '~/data/supabase/api/analytics';
+} from '~/domain/analytics';
 import type { Challenge, ChallengeType } from '~/shared/types/music';
 import {
   ChallengeStatus,

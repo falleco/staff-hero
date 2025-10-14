@@ -3,9 +3,12 @@ import type {
   ChallengeStatus,
   ChallengeType,
 } from '~/shared/types/music';
-import { supabase } from '../client';
-import { addCurrencyTransaction, getUserBalance } from './currency';
-import { getUserProfile } from './user-profile';
+import { supabase } from '~/data/supabase/client';
+import {
+  addCurrencyTransaction,
+  getUserBalance,
+} from '../currency/currency-repository';
+import { getUserProfile } from '../user/user-profile-repository';
 
 /**
  * Fetches all available challenges and the user's progress on them

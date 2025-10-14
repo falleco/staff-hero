@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { useAuth } from '~/data/supabase';
+import { useAuth } from '~/shared/hooks/use-auth';
 import { analyticsService } from '~/features/analytics/services/analytics-service';
 import { challengeService } from '~/features/challenges/services/challenge-service';
 import { currencyService } from '~/features/currency/services/currency-service';

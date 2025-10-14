@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { useAuth } from '~/data/supabase';
+import { useAuth } from '~/shared/hooks/use-auth';
 import {
   type CurrencyTransaction,
   currencyService,

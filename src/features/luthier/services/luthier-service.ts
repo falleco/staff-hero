@@ -6,7 +6,7 @@ import {
   tuneInstrument,
   unequipInstrument,
   upgradeInstrument,
-} from '~/data/supabase';
+} from '~/domain/instruments';
 import type { Instrument } from '~/shared/types/music';
 
 /**
