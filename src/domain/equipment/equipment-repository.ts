@@ -3,8 +3,8 @@ import type {
   EquipmentCategory,
   EquipmentRarity,
 } from '~/shared/types/music';
-import { supabase } from '../client';
-import { getUserProfile } from './user-profile';
+import { supabase } from '~/data/supabase/client';
+import { getUserProfile } from '../user/user-profile-repository';
 
 /**
  * Fetches all available equipment with user ownership data

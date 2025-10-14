@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { useAuth } from '~/data/supabase';
+import { useAuth } from '~/shared/hooks/use-auth';
 import { currencyService } from '~/features/currency/services/currency-service';
 import { GameContext } from '~/features/game/state/game-context';
 import { luthierService } from '~/features/luthier/services/luthier-service';

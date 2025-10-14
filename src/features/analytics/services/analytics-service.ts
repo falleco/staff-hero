@@ -5,7 +5,7 @@ import {
   getUserAchievements,
   getUserAnalytics,
   unlockAchievement,
-} from '~/data/supabase';
+} from '~/domain/analytics';
 import type { GameSession, UserAnalytics } from '~/shared/types/analytics';
 
 /**

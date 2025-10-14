@@ -1,9 +1,9 @@
-import { supabase } from '../client';
+import { supabase } from '~/data/supabase/client';
 import type {
   CurrencyTransaction,
   CurrencyType,
   TransactionSource,
-} from '../types';
+} from '~/data/supabase/types';
 
 /**
  * Gets the current balance for a user

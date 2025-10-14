@@ -3,11 +3,11 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Animated, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '~/data/supabase';
+import { useAuth } from '~/shared/hooks/use-auth';
 import {
   getUserProfile,
   updateUserProfile,
-} from '~/data/supabase/api/user-profile';
+} from '~/domain/user';
 import {
   ONBOARDING_INSTRUMENTS,
   ONBOARDING_LEVELS,

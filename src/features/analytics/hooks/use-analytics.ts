@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react';
-import { useAuth } from '~/data/supabase';
+import { useAuth } from '~/shared/hooks/use-auth';
 import { analyticsService } from '~/features/analytics/services/analytics-service';
 import { GameContext } from '~/features/game/state/game-context';
 import type { GameSession, UserAnalytics } from '~/shared/types/analytics';

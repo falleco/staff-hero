@@ -1,5 +1,5 @@
-import { supabase } from '../client';
-import type { UserProfile } from '../types';
+import { supabase } from '~/data/supabase/client';
+import type { UserProfile } from '~/data/supabase/types';
 
 /**
  * Gets or creates a user profile

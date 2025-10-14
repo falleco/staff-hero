@@ -5,7 +5,7 @@ import {
   resetUserEquipment,
   unequipItem,
   upgradeEquipment,
-} from '~/data/supabase';
+} from '~/domain/equipment';
 import type { Equipment } from '~/shared/types/music';
 
 /**

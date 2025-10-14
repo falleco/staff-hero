@@ -9,10 +9,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import '../global.css';
+import '@/global.css';
 
 import { useEffect } from 'react';
-import { AuthProvider, useAuth } from '~/data/supabase';
+import { AuthProvider } from '~/shared/hooks/use-auth';
 import { GameProvider } from '~/features/game';
 import { OnboardingGate } from '~/features/onboarding/onboarding-gate';
 import { useColorScheme } from '~/shared/hooks/use-color-scheme';

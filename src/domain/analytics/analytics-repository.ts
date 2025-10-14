@@ -4,8 +4,8 @@ import type {
   UserAnalytics,
 } from '~/shared/types/analytics';
 import { Difficulty, GameMode, NotationSystem } from '~/shared/types/music';
-import { supabase } from '../client';
-import { getUserProfile } from './user-profile';
+import { supabase } from '~/data/supabase/client';
+import { getUserProfile } from '../user/user-profile-repository';
 
 /**
  * Adds a game session to the database and checks for achievements

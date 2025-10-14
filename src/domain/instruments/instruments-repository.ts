@@ -3,8 +3,8 @@ import type {
   InstrumentRarity,
   InstrumentType,
 } from '~/shared/types/music';
-import { supabase } from '../client';
-import { getUserProfile } from './user-profile';
+import { supabase } from '~/data/supabase/client';
+import { getUserProfile } from '../user/user-profile-repository';
 
 /**
  * Fetches all available instruments with user ownership data
