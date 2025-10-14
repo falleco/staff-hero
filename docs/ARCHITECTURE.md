@@ -270,9 +270,9 @@ See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 - **State Management**: `docs/STATE_MANAGEMENT.md`
 - **Quick Reference**: `docs/STATE_MANAGEMENT_QUICK_REFERENCE.md`
 - **Supabase Setup**: `docs/SUPABASE_SETUP.md`
-- **Analytics System**: `src/data/supabase/ANALYTICS_SYSTEM.md`
-- **Equipment System**: `src/data/supabase/EQUIPMENT_SYSTEM.md`
-- **Currency System**: `src/data/supabase/CURRENCY_SYSTEM.md`
+- **Analytics System**: `src/supabase/ANALYTICS_SYSTEM.md`
+- **Equipment System**: `src/supabase/EQUIPMENT_SYSTEM.md`
+- **Currency System**: `src/supabase/CURRENCY_SYSTEM.md`
 
 ## 🛠️ Development Commands
 

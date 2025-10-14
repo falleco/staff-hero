@@ -4,7 +4,7 @@ import type {
   UserAnalytics,
 } from '~/shared/types/analytics';
 import { Difficulty, GameMode, NotationSystem } from '~/shared/types/music';
-import { supabase } from '~/data/supabase/client';
+import { supabase } from '~/supabase/client';
 import { getUserProfile } from '../user/user-profile-repository';
 
 /**
