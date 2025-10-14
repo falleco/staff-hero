@@ -3,7 +3,7 @@ import type {
   EquipmentCategory,
   EquipmentRarity,
 } from '~/shared/types/music';
-import { supabase } from '~/data/supabase/client';
+import { supabase } from '~/supabase/client';
 import { getUserProfile } from '../user/user-profile-repository';
 
 /**

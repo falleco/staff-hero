@@ -16,7 +16,7 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "------------- database -------------": "",
-    "db:migration:up": "dotenvx run -f .env -- bunx supabase migration --workdir=src/data up",
+    "db:migration:up": "dotenvx run -f .env -- bunx supabase migration --workdir=src/supabase up",
     "------------- testing -------------": "",
     "test": "vitest --watch false --passWithNoTests",
     "test:dev": "vitest --watch true --passWithNoTests",

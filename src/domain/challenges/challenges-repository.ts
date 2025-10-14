@@ -3,7 +3,7 @@ import type {
   ChallengeStatus,
   ChallengeType,
 } from '~/shared/types/music';
-import { supabase } from '~/data/supabase/client';
+import { supabase } from '~/supabase/client';
 import {
   addCurrencyTransaction,
   getUserBalance,
