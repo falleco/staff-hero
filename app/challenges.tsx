@@ -4,14 +4,11 @@ import type React from 'react';
 import { useState } from 'react';
 import { RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChallengeCard, useChallenges } from '~/features/challenges';
 import { FloatingButton } from '~/shared/components/core/floating-button';
 import { ThemedText } from '~/shared/components/themed-text';
-import { ChallengeCard, useChallenges } from '~/features/challenges';
-import { useThemeColor } from '~/shared/hooks/use-theme-color';
 
 export default function ChallengesScreen() {
-  const textColor = useThemeColor({}, 'text');
-
   const { challenges, redeemChallenge } = useChallenges();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -50,9 +47,14 @@ export default function ChallengesScreen() {
         }}
       />
       <SafeAreaView className="flex-1">
-        <ThemedText type="display" tone="accent" className="self-center mb-6">
-          Challenges
-        </ThemedText>
+        <View className="px-6 mb-4">
+          <ThemedText type="display" tone="accent" className="text-center">
+            Challenges
+          </ThemedText>
+          <ThemedText type="subtitle" tone="muted" className="text-center mt-2">
+            Track your progress and claim shimmering rewards for your practice.
+          </ThemedText>
+        </View>
         <ScrollView
           className="flex-1 pt-6"
           contentContainerClassName="pb-20"

@@ -48,7 +48,7 @@ export default function HomeTab() {
             <ThemedText
               type="label"
               tone="secondary"
-              className="-mt-4 -ml-4 uppercase tracking-widest"
+              className="-mt-4 -ml-4 text-[#ffffff] font-pixelpurl-medium text-xl"
             >
               settings
             </ThemedText>
@@ -62,7 +62,7 @@ export default function HomeTab() {
               style={{ width: 48, height: 48, marginTop: 6 }}
               source={require('@/assets/images/hud/book.png')}
             />
-            <ThemedText type="label" tone="secondary">
+            <ThemedText type="label" tone="secondary" className="text-[#ffffff] font-pixelpurl-medium text-xl">
               challenges
             </ThemedText>
           </FlatButton>
@@ -72,9 +72,9 @@ export default function HomeTab() {
           <FlatButton
             size="xl"
             onPress={handleStartGamePress}
-            className="w-full max-w-sm -mb-6 rounded-2xl px-4 py-2 border-red-400 bg-red-800 text-[#ffffff] border-4"
+            className="w-full max-w-sm -mb-6 rounded-2xl px-4 py-2 border-red-400 bg-red-800  border-4"
           >
-            <FlatButtonText tone="secondary">
+            <FlatButtonText tone="secondary" className="text-[#ffffff] font-pixelpurl-medium text-2xl">
               START PLAYING
             </FlatButtonText>
           </FlatButton>

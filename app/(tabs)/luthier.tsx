@@ -124,8 +124,7 @@ export default function LuthierTab() {
       <SafeAreaView className="flex-1">
         <ThemedText
           type="title"
-          tone="secondary"
-          className="text-6xl mb-4  font-bold self-center font-boldpixels-medium text-white"
+          className="text-6xl mb-4 font-bold self-center font-boldpixels-medium text-white"
         >
           Luthier
         </ThemedText>
@@ -167,7 +166,7 @@ export default function LuthierTab() {
               >
                 <FlatButtonText
                   className={cn(
-                    'text-xl text-center font-boldpixels-medium text-white',
+                    'text-center font-boldpixels-medium text-white',
                     activeTab === 'shop' ? 'color-orange-400' : '',
                   )}
                 >
@@ -181,10 +180,6 @@ export default function LuthierTab() {
           <View className="mx-5 px-4 my-0 bg-[#2a0f3d] rounded-2xl rounded-tl-none z-0 border-2 border-white/20 pt-4 pb-4 justify-center items-center relative">
             {activeTab === 'inventory' && (
               <View className="w-full">
-                <ThemedText className="text-lg font-bold mb-3 text-white">
-                  🎒 Your Collection ({ownedInstruments.length})
-                </ThemedText>
-
                 {ownedInstruments.length === 0 ? (
                   <View className="py-8 items-center">
                     <ThemedText className="text-6xl mb-4">🎻</ThemedText>
