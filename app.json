@@ -33,12 +33,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "appDir": "src/app"
-        }
-      ],
+      "expo-router",
       [
         "expo-splash-screen",
         {
