@@ -8,6 +8,7 @@ create table if not exists public.equipments (
   name text not null,
   category text not null, -- 'mantle', 'adornments', 'instruments'
   rarity text not null, -- 'common', 'rare', 'epic', 'legendary'
+  instrument_type text,
   base_level integer not null default 1,
   base_score_bonus integer not null default 0,
   base_accuracy_bonus integer not null default 0,
@@ -93,6 +94,7 @@ returns table (
   name text,
   category text,
   rarity text,
+  instrument_type text,
   level integer,
   score_bonus integer,
   accuracy_bonus integer,
@@ -108,13 +110,26 @@ returns table (
 language plpgsql
 security definer
 as $$
+declare
+  v_preferred_instrument text;
+  v_effective_type text := 'violin';
 begin
+  select preferred_instrument
+  into v_preferred_instrument
+  from public.user_profiles
+  where id = p_user_id;
+
+  if v_preferred_instrument is not null then
+    v_effective_type := v_preferred_instrument;
+  end if;
+
   return query
-  select 
+  select
     e.id,
     e.name,
     e.category,
     e.rarity,
+    e.instrument_type,
     coalesce(ue.level, e.base_level) as level,
     -- Calculate bonuses based on level (each level adds 25 score, 2 accuracy, 1 streak)
     e.base_score_bonus + (coalesce(ue.level, e.base_level) - 1) * 25 as score_bonus,
@@ -129,9 +144,10 @@ begin
     (ue.equipment_id is not null) as is_owned,
     coalesce(ue.is_equipped, false) as is_equipped
   from public.equipments e
-  left join public.user_equipments ue 
+  left join public.user_equipments ue
     on e.id = ue.equipment_id and ue.user_id = p_user_id
-  order by 
+  where e.instrument_type is null or e.instrument_type = v_effective_type
+  order by
     e.category,
     case e.rarity
       when 'common' then 1
@@ -320,11 +336,34 @@ returns void
 language plpgsql
 security definer
 as $$
+declare
+  v_preferred_instrument text;
+  v_effective_type text := 'violin';
+  v_starter_equipment_id text;
 begin
-  -- Give user the novice cloak (starter equipment)
+  select preferred_instrument
+  into v_preferred_instrument
+  from public.user_profiles
+  where id = p_user_id;
+
+  if v_preferred_instrument is not null then
+    v_effective_type := v_preferred_instrument;
+  end if;
+
+  -- Always provide the universal mantle starter
   insert into public.user_equipments (user_id, equipment_id, level, is_equipped)
   values (p_user_id, 'novice-cloak', 1, true)
   on conflict (user_id, equipment_id) do nothing;
+
+  v_starter_equipment_id := 'starter-' || v_effective_type || '-kit';
+
+  if exists (
+    select 1 from public.equipments where id = v_starter_equipment_id
+  ) then
+    insert into public.user_equipments (user_id, equipment_id, level, is_equipped)
+    values (p_user_id, v_starter_equipment_id, 1, true)
+    on conflict (user_id, equipment_id) do nothing;
+  end if;
 end;
 $$;
 

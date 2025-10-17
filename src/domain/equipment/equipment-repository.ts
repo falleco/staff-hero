@@ -2,6 +2,7 @@ import type {
   Equipment,
   EquipmentCategory,
   EquipmentRarity,
+  OnboardingInstrument,
 } from '~/shared/types/music';
 import { supabase } from '~/supabase/client';
 import { getUserProfile } from '../user/user-profile-repository';
@@ -28,6 +29,9 @@ export async function fetchUserEquipment(userId: string): Promise<Equipment[]> {
       name: item.name as string,
       category: item.category as EquipmentCategory,
       rarity: item.rarity as EquipmentRarity,
+      instrumentType: (item.instrument_type as string | null) as
+        | OnboardingInstrument
+        | null,
       level: item.level as number,
       bonuses: {
         scoreBonus: item.score_bonus as number,
