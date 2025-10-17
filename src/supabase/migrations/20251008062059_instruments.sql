@@ -6,8 +6,8 @@
 create table if not exists public.instruments (
   id text primary key,
   name text not null,
-  type text not null, -- 'violin', 'guitar', 'piano', 'flute'
-  rarity text not null, -- 'common', 'rare', 'epic', 'legendary'
+  type text not null, -- 'violin', 'viola', 'acoustic_guitar', 'electric_guitar', 'bass'
+  rarity text not null, -- 'apprentice', 'normal', 'pro', 'epic'
   base_level integer not null default 1,
   base_score_multiplier numeric(3,2) not null default 1.0, -- e.g., 1.0, 1.1, 1.2
   base_accuracy_bonus integer not null default 0,
@@ -111,9 +111,27 @@ returns table (
 language plpgsql
 security definer
 as $$
+declare
+  v_preferred_instrument text;
+  v_effective_type text := 'violin';
 begin
+  select preferred_instrument
+  into v_preferred_instrument
+  from public.user_profiles
+  where id = p_user_id;
+
+  if v_preferred_instrument is not null then
+    v_effective_type := v_preferred_instrument;
+  end if;
+
+  if not exists (
+    select 1 from public.instruments where type = v_effective_type
+  ) then
+    v_effective_type := 'violin';
+  end if;
+
   return query
-  select 
+  select
     i.id,
     i.name,
     i.type,
@@ -135,14 +153,16 @@ begin
     (ui.instrument_id is not null) as is_owned,
     coalesce(ui.is_equipped, false) as is_equipped
   from public.instruments i
-  left join public.user_instruments ui 
+  left join public.user_instruments ui
     on i.id = ui.instrument_id and ui.user_id = p_user_id
-  order by 
+  where i.type = v_effective_type
+  order by
     case i.rarity
-      when 'common' then 1
-      when 'rare' then 2
-      when 'epic' then 3
-      when 'legendary' then 4
+      when 'apprentice' then 1
+      when 'normal' then 2
+      when 'pro' then 3
+      when 'epic' then 4
+      else 5
     end,
     i.price;
 end;
@@ -364,10 +384,36 @@ returns void
 language plpgsql
 security definer
 as $$
+declare
+  v_preferred_instrument text;
+  v_starter_instrument_id text;
+  v_fallback_instrument_id constant text := 'violin-apprentice';
+  v_base_tuning integer := 100;
 begin
-  -- Give user the starter violin (free instrument)
+  select preferred_instrument
+  into v_preferred_instrument
+  from public.user_profiles
+  where id = p_user_id;
+
+  if v_preferred_instrument is null then
+    v_preferred_instrument := 'violin';
+  end if;
+
+  v_starter_instrument_id := v_preferred_instrument || '-apprentice';
+
+  if not exists (
+    select 1 from public.instruments where id = v_starter_instrument_id
+  ) then
+    v_starter_instrument_id := v_fallback_instrument_id;
+  end if;
+
+  select base_tuning
+  into v_base_tuning
+  from public.instruments
+  where id = v_starter_instrument_id;
+
   insert into public.user_instruments (user_id, instrument_id, level, tuning, is_equipped)
-  values (p_user_id, 'starter-violin', 1, 100, true)
+  values (p_user_id, v_starter_instrument_id, 1, coalesce(v_base_tuning, 100), true)
   on conflict (user_id, instrument_id) do nothing;
 end;
 $$;

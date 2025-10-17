@@ -66,14 +66,14 @@ export default function PurchasePage() {
 
   const getRarityColor = () => {
     switch (instrument.rarity) {
-      case InstrumentRarity.COMMON:
-        return '#6B7280'; // Gray
-      case InstrumentRarity.RARE:
-        return '#3B82F6'; // Blue
+      case InstrumentRarity.APPRENTICE:
+        return '#6B7280';
+      case InstrumentRarity.NORMAL:
+        return '#3B82F6';
+      case InstrumentRarity.PRO:
+        return '#8B5CF6';
       case InstrumentRarity.EPIC:
-        return '#8B5CF6'; // Purple
-      case InstrumentRarity.LEGENDARY:
-        return '#F59E0B'; // Gold
+        return '#F59E0B';
       default:
         return '#6B7280';
     }
@@ -81,13 +81,13 @@ export default function PurchasePage() {
 
   const getRarityGradient = (): [string, string] => {
     switch (instrument.rarity) {
-      case InstrumentRarity.COMMON:
+      case InstrumentRarity.APPRENTICE:
         return ['#4B5563', '#6B7280'];
-      case InstrumentRarity.RARE:
+      case InstrumentRarity.NORMAL:
         return ['#2563EB', '#3B82F6'];
-      case InstrumentRarity.EPIC:
+      case InstrumentRarity.PRO:
         return ['#7C3AED', '#8B5CF6'];
-      case InstrumentRarity.LEGENDARY:
+      case InstrumentRarity.EPIC:
         return ['#D97706', '#F59E0B'];
       default:
         return ['#4B5563', '#6B7280'];

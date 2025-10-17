@@ -69,10 +69,10 @@ export interface UseLuthierReturn {
  * const success = await buyInstrument('acoustic-guitar', currency, updateCurrency);
  *
  * // Upgrade current instrument
- * await upgradeInstrument('starter-violin', currency, updateCurrency);
+ * await upgradeInstrument('violin-apprentice', currency, updateCurrency);
  *
  * // Tune instrument
- * await tuneInstrument('starter-violin', currency, updateCurrency);
+ * await tuneInstrument('violin-apprentice', currency, updateCurrency);
  * ```
  */
 export function useLuthier(): UseLuthierReturn {

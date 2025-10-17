@@ -154,16 +154,17 @@ export interface UserCurrency {
 // Instrument system types
 export enum InstrumentType {
   VIOLIN = 'violin',
-  GUITAR = 'guitar',
-  PIANO = 'piano',
-  FLUTE = 'flute',
+  VIOLA = 'viola',
+  ACOUSTIC_GUITAR = 'acoustic_guitar',
+  ELECTRIC_GUITAR = 'electric_guitar',
+  BASS = 'bass',
 }
 
 export enum InstrumentRarity {
-  COMMON = 'common',
-  RARE = 'rare',
+  APPRENTICE = 'apprentice',
+  NORMAL = 'normal',
+  PRO = 'pro',
   EPIC = 'epic',
-  LEGENDARY = 'legendary',
 }
 
 export interface Instrument {
@@ -215,6 +216,7 @@ export interface Equipment {
   name: string;
   category: EquipmentCategory;
   rarity: EquipmentRarity;
+  instrumentType: OnboardingInstrument | null;
   level: number;
   bonuses: {
     scoreBonus: number;

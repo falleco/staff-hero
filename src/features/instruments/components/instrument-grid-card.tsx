@@ -25,13 +25,13 @@ export function InstrumentGridCard({
 }: InstrumentGridCardProps) {
   const getRarityColor = () => {
     switch (instrument.rarity) {
-      case InstrumentRarity.COMMON:
+      case InstrumentRarity.APPRENTICE:
         return '#6B7280'; // Gray
-      case InstrumentRarity.RARE:
+      case InstrumentRarity.NORMAL:
         return '#3B82F6'; // Blue
-      case InstrumentRarity.EPIC:
+      case InstrumentRarity.PRO:
         return '#8B5CF6'; // Purple
-      case InstrumentRarity.LEGENDARY:
+      case InstrumentRarity.EPIC:
         return '#F59E0B'; // Gold
       default:
         return '#6B7280';
@@ -40,13 +40,13 @@ export function InstrumentGridCard({
 
   const getRarityBorderColor = () => {
     switch (instrument.rarity) {
-      case InstrumentRarity.COMMON:
+      case InstrumentRarity.APPRENTICE:
         return 'border-gray-400';
-      case InstrumentRarity.RARE:
+      case InstrumentRarity.NORMAL:
         return 'border-blue-400';
-      case InstrumentRarity.EPIC:
+      case InstrumentRarity.PRO:
         return 'border-purple-400';
-      case InstrumentRarity.LEGENDARY:
+      case InstrumentRarity.EPIC:
         return 'border-yellow-400';
       default:
         return 'border-gray-400';
