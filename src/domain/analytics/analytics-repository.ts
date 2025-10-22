@@ -1,184 +1,246 @@
-import type {
-  Achievement,
-  GameSession,
-  UserAnalytics,
-} from '~/shared/types/analytics';
-import { Difficulty, GameMode, NotationSystem } from '~/shared/types/music';
-import { supabase } from '~/supabase/client';
+import type { Achievement, GameSession, UserAnalytics } from '~/shared/types/analytics';
+import {
+  Difficulty,
+  GameMode,
+  NotationSystem,
+} from '~/shared/types/music';
+import { ACHIEVEMENT_SEEDS } from '~/data/seeds';
+import {
+  createId,
+  getUserData,
+  updateUserData,
+} from '~/data/storage/user-data-store';
 import { getUserProfile } from '../user/user-profile-repository';
 
+function initialiseAchievementState(userId: string) {
+  return updateUserData(userId, (data) => {
+    const now = new Date().toISOString();
+    for (const achievement of ACHIEVEMENT_SEEDS) {
+      if (!data.achievements[achievement.id]) {
+        data.achievements[achievement.id] = {
+          isUnlocked: false,
+          unlockedAt: undefined,
+        };
+      } else if (
+        data.achievements[achievement.id].isUnlocked &&
+        !data.achievements[achievement.id].unlockedAt
+      ) {
+        data.achievements[achievement.id].unlockedAt = now;
+      }
+    }
+  });
+}
+
+function buildAchievementList(
+  userData: Awaited<ReturnType<typeof getUserData>>,
+): Achievement[] {
+  return ACHIEVEMENT_SEEDS.map((seed) => {
+    const state = userData.achievements[seed.id];
+    return {
+      id: seed.id,
+      title: seed.title,
+      description: seed.description,
+      icon: seed.icon,
+      isUnlocked: state?.isUnlocked ?? false,
+      unlockedAt: state?.unlockedAt,
+    } satisfies Achievement;
+  });
+}
+
+function calculateFavorite<T extends string>(
+  counts: Record<T, number>,
+  fallback: T,
+): T {
+  let favourite = fallback;
+  let highest = -Infinity;
+  for (const [key, value] of Object.entries(counts) as [T, number][]) {
+    if (value > highest) {
+      favourite = key;
+      highest = value;
+    }
+  }
+  return favourite;
+}
+
+function normaliseSessions(sessions: GameSession[]): GameSession[] {
+  return [...sessions].sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+function unlockAchievementState(
+  userId: string,
+  achievementId: string,
+  unlockedAt = new Date().toISOString(),
+): Promise<boolean> {
+  let unlocked = false;
+  return updateUserData(userId, (data) => {
+    const state = data.achievements[achievementId];
+    if (!state || !state.isUnlocked) {
+      data.achievements[achievementId] = {
+        isUnlocked: true,
+        unlockedAt,
+      };
+      unlocked = true;
+    }
+  }).then(() => unlocked);
+}
+
+function evaluateAutomaticAchievements(
+  userId: string,
+  session: GameSession,
+  totalGames: number,
+  sessions: GameSession[],
+): Promise<void> {
+  const notationSet = new Set(sessions.map((item) => item.notationSystem));
+
+  const unlocks: Array<() => Promise<boolean>> = [];
+
+  if (totalGames === 1) {
+    unlocks.push(() => unlockAchievementState(userId, 'first_game', session.date));
+  }
+
+  if (session.maxStreak >= 5) {
+    unlocks.push(() => unlockAchievementState(userId, 'streak_5', session.date));
+  }
+
+  if (session.maxStreak >= 10) {
+    unlocks.push(() => unlockAchievementState(userId, 'streak_10', session.date));
+  }
+
+  if (session.accuracy >= 100) {
+    unlocks.push(() => unlockAchievementState(userId, 'perfect_game', session.date));
+  }
+
+  if (
+    notationSet.has(NotationSystem.LETTER) &&
+    notationSet.has(NotationSystem.SOLFEGE)
+  ) {
+    unlocks.push(() => unlockAchievementState(userId, 'notation_master', session.date));
+  }
+
+  if (totalGames >= 50) {
+    unlocks.push(() => unlockAchievementState(userId, 'dedicated_player', session.date));
+  }
+
+  return unlocks.reduce<Promise<void>>(async (chain, unlock) => {
+    await chain;
+    await unlock();
+  }, Promise.resolve());
+}
+
 /**
- * Adds a game session to the database and checks for achievements
+ * Adds a game session to the local store and checks for achievements.
  */
 export async function addGameSession(
   userId: string,
   session: Omit<GameSession, 'id' | 'date'>,
 ): Promise<string> {
-  try {
-    const { data, error } = await supabase.rpc('add_game_session', {
-      p_user_id: userId,
-      p_game_mode: session.gameMode,
-      p_difficulty: session.difficulty,
-      p_notation_system: session.notationSystem,
-      p_score: session.score,
-      p_streak: session.streak,
-      p_max_streak: session.maxStreak,
-      p_total_questions: session.totalQuestions,
-      p_correct_answers: session.correctAnswers,
-      p_accuracy: session.accuracy,
-      p_duration: session.duration,
-    });
+  await initialiseAchievementState(userId);
 
-    if (error) throw error;
-    return data as string;
-  } catch (error) {
-    console.error('Error adding game session:', error);
-    throw error;
-  }
+  const newSession: GameSession = {
+    id: createId('session'),
+    date: new Date().toISOString(),
+    ...session,
+  };
+
+  let totalGames = 0;
+  let allSessions: GameSession[] = [];
+
+  await updateUserData(userId, (data) => {
+    data.analytics.sessions = [newSession, ...data.analytics.sessions];
+    totalGames = data.analytics.sessions.length;
+    allSessions = data.analytics.sessions;
+  });
+
+  await evaluateAutomaticAchievements(userId, newSession, totalGames, allSessions);
+
+  return newSession.id;
 }
 
 /**
- * Gets aggregated analytics for a user
+ * Gets aggregated analytics for a user.
  */
 export async function getUserAnalytics(userId: string): Promise<UserAnalytics> {
-  try {
-    // Ensure user profile exists
-    await getUserProfile(userId);
+  await getUserProfile(userId);
+  const data = await getUserData(userId);
+  await initialiseAchievementState(userId);
 
-    // Get aggregated analytics
-    const { data: analyticsData, error: analyticsError } = await supabase.rpc(
-      'get_user_analytics',
-      {
-        p_user_id: userId,
-      },
-    );
+  const sessions = normaliseSessions(data.analytics.sessions);
 
-    if (analyticsError) throw analyticsError;
+  const totalGamesPlayed = sessions.length;
+  const totalScore = sessions.reduce((sum, item) => sum + item.score, 0);
+  const bestStreak = sessions.reduce(
+    (max, item) => Math.max(max, item.maxStreak),
+    0,
+  );
+  const totalPlayTime = sessions.reduce((sum, item) => sum + item.duration, 0);
+  const totalAccuracy = sessions.reduce((sum, item) => sum + item.accuracy, 0);
+  const averageAccuracy =
+    totalGamesPlayed > 0 ? Math.round(totalAccuracy / totalGamesPlayed) : 0;
 
-    // Get user achievements
-    const { data: achievementsData, error: achievementsError } =
-      await supabase.rpc('get_user_achievements', {
-        p_user_id: userId,
-      });
+  const gamesPerMode: Record<GameMode, number> = {
+    [GameMode.SINGLE_NOTE]: 0,
+    [GameMode.SEQUENCE]: 0,
+    [GameMode.RHYTHM]: 0,
+  };
 
-    if (achievementsError) throw achievementsError;
+  const gamesPerNotation: Record<NotationSystem, number> = {
+    [NotationSystem.LETTER]: 0,
+    [NotationSystem.SOLFEGE]: 0,
+  };
 
-    // Get recent sessions
-    const { data: sessionsData, error: sessionsError } = await supabase.rpc(
-      'get_recent_sessions',
-      {
-        p_user_id: userId,
-        p_limit: 20,
-      },
-    );
+  const gamesPerDifficulty: Record<Difficulty, number> = {
+    [Difficulty.BEGINNER]: 0,
+    [Difficulty.INTERMEDIATE]: 0,
+    [Difficulty.ADVANCED]: 0,
+  };
 
-    if (sessionsError) throw sessionsError;
-
-    // Parse analytics data
-    const analytics = analyticsData as any;
-
-    // Ensure default values for counts if no games played
-    const gamesPerMode = analytics.gamesPerMode || {
-      [GameMode.SINGLE_NOTE]: 0,
-      [GameMode.SEQUENCE]: 0,
-      [GameMode.RHYTHM]: 0,
-    };
-
-    const gamesPerNotation = analytics.gamesPerNotation || {
-      [NotationSystem.LETTER]: 0,
-      [NotationSystem.SOLFEGE]: 0,
-    };
-
-    const gamesPerDifficulty = analytics.gamesPerDifficulty || {
-      [Difficulty.BEGINNER]: 0,
-      [Difficulty.INTERMEDIATE]: 0,
-      [Difficulty.ADVANCED]: 0,
-    };
-
-    // Map database response to UserAnalytics type
-    const userAnalytics: UserAnalytics = {
-      totalGamesPlayed: analytics.totalGamesPlayed || 0,
-      totalScore: analytics.totalScore || 0,
-      bestStreak: analytics.bestStreak || 0,
-      averageAccuracy: analytics.averageAccuracy || 0,
-      totalPlayTime: analytics.totalPlayTime || 0,
-      favoriteGameMode: (analytics.favoriteGameMode ||
-        GameMode.SINGLE_NOTE) as GameMode,
-      favoriteNotation: (analytics.favoriteNotation ||
-        NotationSystem.LETTER) as NotationSystem,
-      favoriteDifficulty: (analytics.favoriteDifficulty ||
-        Difficulty.BEGINNER) as Difficulty,
-      gamesPerMode,
-      gamesPerNotation,
-      gamesPerDifficulty,
-      recentSessions:
-        (sessionsData as any[])?.map((session: any) => ({
-          id: session.id,
-          date: session.created_at,
-          gameMode: session.game_mode as GameMode,
-          difficulty: session.difficulty as Difficulty,
-          notationSystem: session.notation_system as NotationSystem,
-          score: session.score,
-          streak: session.streak,
-          maxStreak: session.max_streak,
-          totalQuestions: session.total_questions,
-          correctAnswers: session.correct_answers,
-          accuracy: session.accuracy,
-          duration: session.duration,
-        })) || [],
-      achievements:
-        (achievementsData as any[])?.map((achievement: any) => ({
-          id: achievement.id,
-          title: achievement.title,
-          description: achievement.description,
-          icon: achievement.icon,
-          isUnlocked: achievement.is_unlocked,
-          unlockedAt: achievement.unlocked_at,
-        })) || [],
-    };
-
-    return userAnalytics;
-  } catch (error) {
-    console.error('Error getting user analytics:', error);
-    throw error;
+  for (const session of sessions) {
+    gamesPerMode[session.gameMode] += 1;
+    gamesPerNotation[session.notationSystem] += 1;
+    gamesPerDifficulty[session.difficulty] += 1;
   }
+
+  const favoriteGameMode = calculateFavorite(
+    gamesPerMode,
+    GameMode.SINGLE_NOTE,
+  );
+  const favoriteNotation = calculateFavorite(
+    gamesPerNotation,
+    NotationSystem.LETTER,
+  );
+  const favoriteDifficulty = calculateFavorite(
+    gamesPerDifficulty,
+    Difficulty.BEGINNER,
+  );
+
+  const achievements = buildAchievementList(data);
+
+  return {
+    totalGamesPlayed,
+    totalScore,
+    bestStreak,
+    averageAccuracy,
+    totalPlayTime,
+    favoriteGameMode,
+    favoriteNotation,
+    favoriteDifficulty,
+    gamesPerMode,
+    gamesPerNotation,
+    gamesPerDifficulty,
+    recentSessions: sessions.slice(0, 20),
+    achievements,
+  };
 }
 
 /**
- * Gets recent game sessions for a user
+ * Gets recent game sessions for a user.
  */
 export async function getRecentSessions(
   userId: string,
   limit = 20,
 ): Promise<GameSession[]> {
-  try {
-    const { data, error } = await supabase.rpc('get_recent_sessions', {
-      p_user_id: userId,
-      p_limit: limit,
-    });
-
-    if (error) throw error;
-
-    return (
-      (data as any[])?.map((session: any) => ({
-        id: session.id,
-        date: session.created_at,
-        gameMode: session.game_mode as GameMode,
-        difficulty: session.difficulty as Difficulty,
-        notationSystem: session.notation_system as NotationSystem,
-        score: session.score,
-        streak: session.streak,
-        maxStreak: session.max_streak,
-        totalQuestions: session.total_questions,
-        correctAnswers: session.correct_answers,
-        accuracy: session.accuracy,
-        duration: session.duration,
-      })) || []
-    );
-  } catch (error) {
-    console.error('Error getting recent sessions:', error);
-    throw error;
-  }
+  const data = await getUserData(userId);
+  return normaliseSessions(data.analytics.sessions).slice(0, limit);
 }
 
 /**
@@ -188,102 +250,54 @@ export async function getGameSessionTotals(userId: string): Promise<{
   totalQuestions: number;
   totalCorrectAnswers: number;
 }> {
-  try {
-    const { data, error } = await supabase
-      .from('game_sessions')
-      .select('total_questions, correct_answers')
-      .eq('user_id', userId);
+  const data = await getUserData(userId);
+  const sessions = data.analytics.sessions;
 
-    if (error) throw error;
-
-    const sessions = (data as any[] | null) ?? [];
-
-    return sessions.reduce(
-      (acc, session) => {
-        acc.totalQuestions += session.total_questions ?? 0;
-        acc.totalCorrectAnswers += session.correct_answers ?? 0;
-        return acc;
-      },
-      { totalQuestions: 0, totalCorrectAnswers: 0 },
-    );
-  } catch (error) {
-    console.error('Error getting game session totals:', error);
-    throw error;
-  }
+  return sessions.reduce(
+    (acc, session) => {
+      acc.totalQuestions += session.totalQuestions ?? 0;
+      acc.totalCorrectAnswers += session.correctAnswers ?? 0;
+      return acc;
+    },
+    { totalQuestions: 0, totalCorrectAnswers: 0 },
+  );
 }
 
 /**
- * Gets user achievements with unlock status
+ * Gets user achievements with unlock status.
  */
-export async function getUserAchievements(
-  userId: string,
-): Promise<Achievement[]> {
-  try {
-    const { data, error } = await supabase.rpc('get_user_achievements', {
-      p_user_id: userId,
-    });
+export async function getUserAchievements(userId: string): Promise<Achievement[]> {
+  const data = await ensureAchievementsInitialised(userId);
+  return buildAchievementList(data);
+}
 
-    if (error) throw error;
-
-    return (
-      (data as any[])?.map((achievement: any) => ({
-        id: achievement.id,
-        title: achievement.title,
-        description: achievement.description,
-        icon: achievement.icon,
-        isUnlocked: achievement.is_unlocked,
-        unlockedAt: achievement.unlocked_at,
-      })) || []
-    );
-  } catch (error) {
-    console.error('Error getting user achievements:', error);
-    throw error;
-  }
+async function ensureAchievementsInitialised(userId: string) {
+  await initialiseAchievementState(userId);
+  return getUserData(userId);
 }
 
 /**
- * Manually unlocks an achievement for a user
+ * Manually unlocks an achievement for a user.
  */
 export async function unlockAchievement(
   userId: string,
   achievementId: string,
 ): Promise<boolean> {
-  try {
-    const { data, error } = await supabase.rpc('unlock_achievement', {
-      p_user_id: userId,
-      p_achievement_id: achievementId,
-    });
-
-    if (error) throw error;
-    return data as boolean;
-  } catch (error) {
-    console.error('Error unlocking achievement:', error);
-    throw error;
-  }
+  await initialiseAchievementState(userId);
+  return unlockAchievementState(userId, achievementId);
 }
 
 /**
- * Clears all analytics data for a user (for testing)
+ * Clears all analytics data for a user (for testing).
  */
 export async function clearUserAnalytics(userId: string): Promise<void> {
-  try {
-    // Delete all game sessions (cascades to achievements)
-    const { error } = await supabase
-      .from('game_sessions')
-      .delete()
-      .eq('user_id', userId);
-
-    if (error) throw error;
-
-    // Delete all user achievements
-    const { error: achievementsError } = await supabase
-      .from('user_achievements')
-      .delete()
-      .eq('user_id', userId);
-
-    if (achievementsError) throw achievementsError;
-  } catch (error) {
-    console.error('Error clearing user analytics:', error);
-    throw error;
-  }
+  await updateUserData(userId, (data) => {
+    data.analytics.sessions = [];
+    for (const achievement of ACHIEVEMENT_SEEDS) {
+      data.achievements[achievement.id] = {
+        isUnlocked: false,
+        unlockedAt: undefined,
+      };
+    }
+  });
 }

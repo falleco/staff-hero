@@ -14,7 +14,7 @@ useGameLogic()      // Game session, scoring, questions
 useGameSettings()   // Notation, difficulty, game mode
 ```
 
-### Supabase-Integrated Hooks
+### Storage-Integrated Hooks
 ```typescript
 useCurrency()       // Golden Note Shards
 useChallenges()     // Challenges system
@@ -70,7 +70,7 @@ gameSettings.toggleNoteLabels();
 const {
   currency,              // Current balance
   isLoading,            // Loading state
-  refresh,              // Reload from DB
+  refresh,              // Reload from AsyncStorage
   addGoldenShards,      // Add/deduct shards
   getHistory,           // Transaction history
   getSummary,           // Transaction summary
@@ -285,12 +285,12 @@ function GameDashboard() {
 - Handle loading states properly
 - Catch errors in try/catch blocks
 - Use appropriate hook for each feature
-- Call `refresh()` to reload data from database
+- Call `refresh()` to reload data from AsyncStorage
 
 ### ❌ DON'T
 - Don't use `useContext(GameContext)` directly in components
 - Don't duplicate state in components
-- Don't call Supabase APIs directly from components
+- Don't bypass storage helpers directly from components
 - Don't forget loading/error states
 - Don't skip error handling
 

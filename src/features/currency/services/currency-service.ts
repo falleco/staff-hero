@@ -1,4 +1,4 @@
-import type { CurrencyTransaction } from '~/supabase/types';
+import type { CurrencyTransaction } from '~/data/types';
 import {
   getTransactionHistory,
   getTransactionSummary,
@@ -10,7 +10,7 @@ import { addGoldenShards } from '~/domain/challenges';
 const CURRENCY_COLUMN = 'golden_note_shards';
 
 /**
- * Currency service keeps Supabase-specific knowledge isolated from hooks/components.
+ * Currency service keeps storage-specific knowledge isolated from hooks/components.
  */
 export const currencyService = {
   /**

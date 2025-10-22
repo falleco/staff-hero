@@ -17,7 +17,7 @@ import {
 } from '~/shared/types/music';
 
 /**
- * Challenge service keeps Supabase details isolated from UI hooks.
+ * Challenge service keeps persistence details isolated from UI hooks.
  */
 export const challengeService = {
   /**

@@ -1,11 +1,16 @@
-import type { Session, User } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '~/supabase/client';
+import { createId, ensureUserData } from '~/data/storage/user-data-store';
+
+interface AuthUser {
+  id: string;
+  is_anonymous: boolean;
+  created_at: string;
+}
 
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
+  user: AuthUser | null;
   isLoading: boolean;
   isAnonymous: boolean;
   signInAnonymously: () => Promise<void>;
@@ -13,58 +18,74 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AUTH_USER_KEY = 'staff-hero:auth:user';
+
+async function createAnonymousUser(): Promise<AuthUser> {
+  const now = new Date().toISOString();
+  const user: AuthUser = {
+    id: createId('user'),
+    is_anonymous: true,
+    created_at: now,
+  };
+
+  await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  await ensureUserData(user.id);
+  return user;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    let isMounted = true;
 
-      // If no session, sign in anonymously
-      if (!session) {
-        signInAnonymously().finally(() => setIsLoading(false));
-      } else {
-        setIsLoading(false);
+    async function loadUser() {
+      try {
+        const stored = await AsyncStorage.getItem(AUTH_USER_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as AuthUser;
+          await ensureUserData(parsed.id);
+          if (isMounted) {
+            setUser(parsed);
+          }
+        } else {
+          const created = await createAnonymousUser();
+          if (isMounted) {
+            setUser(created);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialise auth state', error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    });
+    }
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    });
+    loadUser();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const signInAnonymously = async () => {
     try {
-      const { data, error } = await supabase.auth.signInAnonymously();
-      if (error) throw error;
-
-      setSession(data.session);
-      setUser(data.user);
+      const created = await createAnonymousUser();
+      setUser(created);
     } catch (error) {
-      console.error('Error signing in anonymously:', error);
+      console.error('Error creating anonymous user:', error);
     }
   };
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      setSession(null);
+      await AsyncStorage.removeItem(AUTH_USER_KEY);
       setUser(null);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Error clearing auth state:', error);
     }
   };
 
@@ -73,7 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        session,
         user,
         isLoading,
         isAnonymous,

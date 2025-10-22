@@ -2,7 +2,7 @@
 
 ## 🏗️ Project Overview
 
-Staff Hero is a React Native music learning game built with Expo, featuring note recognition games, a progression system with challenges, equipment, and instruments, all backed by Supabase for data persistence.
+Staff Hero is a React Native music learning game built with Expo, featuring note recognition games, a progression system with challenges, equipment, and instruments, all backed by JSON seed data and React Native AsyncStorage for persistence.
 
 ## Core Architecture Principles
 
@@ -11,7 +11,7 @@ Staff Hero is a React Native music learning game built with Expo, featuring note
 3. **Type Safety** - Comprehensive TypeScript interfaces
 4. **Performance** - Optimized animations using react-native-reanimated
 5. **Testability** - Pure functions for business logic
-6. **Supabase Integration** - Real-time data sync and persistence
+6. **Offline-First Data Layer** - JSON seeds + AsyncStorage persistence
 
 ## 📁 Directory Structure
 
@@ -28,7 +28,9 @@ Staff Hero is a React Native music learning game built with Expo, featuring note
 │   └── _layout.tsx        # Root layout with providers
 ├── src/
 │   ├── data/
-│   │   └── supabase/      # Supabase client, auth provider, migrations & seeds
+│   │   ├── seeds/         # Static JSON datasets (challenges, equipment, instruments)
+│   │   ├── storage/       # AsyncStorage helpers and user data management
+│   │   └── types.ts       # Shared data-layer types
 │   ├── features/          # Domain-centric feature packages
 │   │   ├── analytics/
 │   │   ├── challenges/
@@ -101,10 +103,10 @@ Components (Presentation)
 
 ### Available Hooks
 
-| Hook | Purpose | Supabase |
-|------|---------|----------|
-| `useGameLogic()` | Game session, scoring, questions | No |
-| `useGameSettings()` | Notation, difficulty, game mode | No |
+| Hook | Purpose | Local Data |
+|------|---------|------------|
+| `useGameLogic()` | Game session, scoring, questions | — |
+| `useGameSettings()` | Notation, difficulty, game mode | — |
 | `useCurrency()` | Golden Note Shards | ✅ |
 | `useChallenges()` | Challenges system | ✅ |
 | `useEquipment()` | Equipment management | ✅ |
@@ -113,32 +115,28 @@ Components (Presentation)
 
 See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 
-## 🗄️ Data Persistence (Supabase)
+## 🗄️ Data Persistence (AsyncStorage + JSON Seeds)
 
-### Database Tables
+### Seed Data
 
-1. **user_profiles** - User data
-2. **challenges** - Master list of challenges
-3. **user_challenges** - User progress on challenges
-4. **currency_transactions** - Transaction-based currency system
-5. **equipments** - Master list of equipment
-6. **user_equipments** - User equipment data
-7. **instruments** - Master list of instruments
-8. **user_instruments** - User instrument data
-9. **game_sessions** - Individual game sessions
-10. **achievements** - Master list of achievements
-11. **user_achievements** - User achievement unlocks
+Static JSON files under `src/data/seeds` define the master data for:
+
+1. **Challenges** – baseline requirements, rewards, and icons
+2. **Achievements** – unlock conditions and presentation metadata
+3. **Equipment** – store inventory across mantles/adornments/instruments
+4. **Instruments** – luthier shop catalogue by instrument path
+
+### User Storage
+
+- **AsyncStorage** is used for all per-user state via helpers in `src/data/storage`
+- **User Profiles** are created on first launch and cached locally
+- **Transactions, sessions, and unlocks** are stored in structured JSON objects
+- **Currency balance** is derived from the transaction ledger to maintain an audit trail
 
 ### Authentication
-- **Anonymous Sign-ins**: Users start playing immediately
-- **No Registration Required**: Seamless onboarding
-- **Auto-Profile Creation**: Database trigger creates profile on signup
-
-### Transaction-Based Currency
-- All currency movements stored as individual transactions
-- Current balance = SUM of all transactions
-- Audit trail for all currency changes
-- Prevents balance manipulation
+- **Anonymous identities** are generated locally and persisted
+- **No registration** or remote services are required
+- **User data** is bootstraped on first run to ensure consistent defaults
 
 ## 🎨 Styling
 
@@ -160,7 +158,7 @@ See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 ### Challenges
 - Track various achievements (score points, win games, use equipment)
 - Reward Golden Note Shards on completion
-- Progress stored in Supabase
+- Progress stored locally via AsyncStorage
 - Real-time updates across the app
 
 ### Equipment System
@@ -187,7 +185,7 @@ See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 ### Game Sessions
 - Automatically recorded after each game
 - Tracks: score, accuracy, streak, duration
-- Stored in Supabase for analysis
+- Stored locally for analysis
 
 ### Achievements
 - Auto-unlock on meeting conditions
@@ -269,10 +267,8 @@ See `docs/STATE_MANAGEMENT.md` for detailed architecture.
 
 - **State Management**: `docs/STATE_MANAGEMENT.md`
 - **Quick Reference**: `docs/STATE_MANAGEMENT_QUICK_REFERENCE.md`
-- **Supabase Setup**: `docs/SUPABASE_SETUP.md`
-- **Analytics System**: `src/supabase/ANALYTICS_SYSTEM.md`
-- **Equipment System**: `src/supabase/EQUIPMENT_SYSTEM.md`
-- **Currency System**: `src/supabase/CURRENCY_SYSTEM.md`
+- **Data Layer Overview**: `src/data/types.ts`
+- **Storage Helpers**: `src/data/storage/user-data-store.ts`
 
 ## 🛠️ Development Commands
 
@@ -301,7 +297,7 @@ bunx expo install <package>
 - **Expo**: React Native framework
 - **React Native Reanimated**: Animations
 - **NativeWind**: Tailwind CSS for RN
-- **Supabase**: Backend and database
+- **AsyncStorage**: Local persistence
 - **Expo Router**: File-based routing
 - **TypeScript**: Type safety
 
@@ -315,7 +311,7 @@ bunx expo install <package>
 
 ### 2. Scalability
 - Easy to add new features
-- Database-backed persistence
+- Local persistence with JSON + AsyncStorage
 - Modular hook system
 - Type-safe APIs
 
@@ -343,7 +339,7 @@ Staff Hero is built with a modern, scalable architecture that prioritizes:
 - **Clean Code**: Separation of concerns, DRY principles
 - **Type Safety**: Comprehensive TypeScript coverage
 - **State Management**: Centralized state with dedicated hooks
-- **Data Persistence**: Supabase for reliable backend
+- **Data Persistence**: AsyncStorage + JSON seeds for reliable local storage
 - **Performance**: Optimized animations and rendering
 - **UX**: Smooth, intuitive gameplay with progression systems
 
