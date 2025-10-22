@@ -3,191 +3,301 @@ import type {
   InstrumentRarity,
   InstrumentType,
 } from '~/shared/types/music';
-import { supabase } from '~/supabase/client';
+import { INSTRUMENT_SEEDS } from '~/data/seeds';
+import { getUserData, updateUserData } from '~/data/storage/user-data-store';
+import { addCurrencyTransaction, getUserBalance } from '../currency/currency-repository';
 import { getUserProfile } from '../user/user-profile-repository';
 
-/**
- * Fetches all available instruments with user ownership data
- */
-export async function fetchUserInstruments(
-  userId: string,
-): Promise<Instrument[]> {
-  try {
-    // Ensure user profile exists
-    await getUserProfile(userId);
+const MAX_LEVEL = 10;
+const MAX_TUNING = 100;
+const TUNING_INCREMENT = 15;
 
-    // Call the database function to get instruments with user data
-    const { data, error } = await supabase.rpc('get_user_instruments', {
-      p_user_id: userId,
-    });
-
-    if (error) throw error;
-    if (!data) return [];
-
-    // Map database response to Instrument type
-    const instruments: Instrument[] = (data as any[]).map((item: any) => ({
-      id: item.id as string,
-      name: item.name as string,
-      type: item.type as InstrumentType,
-      rarity: item.rarity as InstrumentRarity,
-      level: item.level as number,
-      tuning: item.tuning as number,
-      bonuses: {
-        scoreMultiplier: Number(item.score_multiplier),
-        accuracyBonus: item.accuracy_bonus as number,
-        streakBonus: item.streak_bonus as number,
-      },
-      price: item.price as number,
-      upgradePrice: item.upgrade_price as number,
-      tunePrice: item.tune_price as number,
-      icon: item.icon as string,
-      description: item.description as string,
-      isOwned: item.is_owned as boolean,
-      isEquipped: item.is_equipped as boolean,
-    }));
-
-    return instruments;
-  } catch (error) {
-    console.error('Error fetching user instruments:', error);
-    throw error;
+function getInstrumentSeed(instrumentId: string) {
+  const seed = INSTRUMENT_SEEDS.find((item) => item.id === instrumentId);
+  if (!seed) {
+    throw new Error(`Instrument with id "${instrumentId}" not found`);
   }
+  return seed;
+}
+
+function calculateInstrumentStats(seed: (typeof INSTRUMENT_SEEDS)[number], level: number) {
+  const levelOffset = Math.max(0, level - 1);
+  return {
+    scoreMultiplier: Number(
+      (seed.baseScoreMultiplier + levelOffset * 0.1).toFixed(2),
+    ),
+    accuracyBonus: seed.baseAccuracyBonus + levelOffset * 2,
+    streakBonus: seed.baseStreakBonus + levelOffset,
+    upgradePrice: Math.floor(seed.upgradePrice * Math.pow(1.5, levelOffset)),
+  };
+}
+
+function determineInstrumentType(preferred?: InstrumentType | null): InstrumentType {
+  const fallback: InstrumentType = 'violin';
+  const type = preferred ?? fallback;
+  const exists = INSTRUMENT_SEEDS.some((seed) => seed.type === type);
+  return exists ? type : fallback;
 }
 
 /**
- * Purchases instrument for a user
+ * Fetches instruments available for the user's preferred path.
+ */
+export async function fetchUserInstruments(userId: string): Promise<Instrument[]> {
+  const profile = await getUserProfile(userId);
+  let userData = await getUserData(userId);
+  const instrumentType = determineInstrumentType(
+    profile.preferred_instrument as InstrumentType | null,
+  );
+
+  const starterId = `${instrumentType}-apprentice`;
+  const starterSeed =
+    INSTRUMENT_SEEDS.find((item) => item.id === starterId) ||
+    INSTRUMENT_SEEDS.find((item) => item.id === 'violin-apprentice');
+
+  if (starterSeed && !userData.instruments[starterSeed.id]?.isOwned) {
+    await updateUserData(userId, (data) => {
+      data.instruments[starterSeed.id] = {
+        level: starterSeed.baseLevel,
+        tuning: starterSeed.baseTuning,
+        isOwned: true,
+        isEquipped: true,
+      };
+    });
+    userData = await getUserData(userId);
+  }
+
+  return INSTRUMENT_SEEDS.filter((seed) => seed.type === instrumentType).map(
+    (seed) => {
+      const state = userData.instruments[seed.id];
+      const level = state?.level ?? seed.baseLevel;
+      const stats = calculateInstrumentStats(seed, level);
+      const tuning = state?.tuning ?? seed.baseTuning;
+
+      return {
+        id: seed.id,
+        name: seed.name,
+        type: seed.type as InstrumentType,
+        rarity: seed.rarity as InstrumentRarity,
+        level,
+        tuning,
+        bonuses: {
+          scoreMultiplier: stats.scoreMultiplier,
+          accuracyBonus: stats.accuracyBonus,
+          streakBonus: stats.streakBonus,
+        },
+        price: seed.price,
+        upgradePrice: stats.upgradePrice,
+        tunePrice: seed.tunePrice,
+        icon: seed.icon,
+        description: seed.description,
+        isOwned: state?.isOwned ?? false,
+        isEquipped: state?.isEquipped ?? false,
+      } satisfies Instrument;
+    },
+  );
+}
+
+/**
+ * Purchases an instrument for the user.
  */
 export async function purchaseInstrument(
   userId: string,
   instrumentId: string,
 ): Promise<void> {
-  try {
-    const { error } = await supabase.rpc('purchase_instrument', {
-      p_user_id: userId,
-      p_instrument_id: instrumentId,
-    });
+  const seed = getInstrumentSeed(instrumentId);
+  const userData = await getUserData(userId);
+  const state = userData.instruments[instrumentId];
 
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error purchasing instrument:', error);
-    throw error;
+  if (state?.isOwned) {
+    throw new Error('Instrument already owned');
   }
+
+  const balance = await getUserBalance(userId);
+  if (balance < seed.price) {
+    throw new Error('Insufficient balance');
+  }
+
+  await addCurrencyTransaction(userId, -seed.price, 'purchase', {
+    sourceId: instrumentId,
+    description: `Purchased instrument: ${seed.name}`,
+    metadata: { instrumentId, price: seed.price },
+  });
+
+  await updateUserData(userId, (data) => {
+    data.instruments[instrumentId] = {
+      level: seed.baseLevel,
+      tuning: seed.baseTuning,
+      isOwned: true,
+      isEquipped: false,
+    };
+  });
 }
 
 /**
- * Upgrades owned instrument
+ * Upgrades an owned instrument.
  */
 export async function upgradeInstrument(
   userId: string,
   instrumentId: string,
 ): Promise<void> {
-  try {
-    const { error } = await supabase.rpc('upgrade_instrument', {
-      p_user_id: userId,
-      p_instrument_id: instrumentId,
-    });
+  const seed = getInstrumentSeed(instrumentId);
+  const userData = await getUserData(userId);
+  const state = userData.instruments[instrumentId];
 
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error upgrading instrument:', error);
-    throw error;
+  if (!state?.isOwned) {
+    throw new Error('Instrument not owned');
   }
+
+  if (state.level >= MAX_LEVEL) {
+    throw new Error('Instrument already at max level');
+  }
+
+  const stats = calculateInstrumentStats(seed, state.level);
+  const upgradePrice = stats.upgradePrice;
+  const balance = await getUserBalance(userId);
+
+  if (balance < upgradePrice) {
+    throw new Error('Insufficient balance');
+  }
+
+  await addCurrencyTransaction(userId, -upgradePrice, 'purchase', {
+    sourceId: instrumentId,
+    description: `Upgraded instrument: ${seed.name} to level ${state.level + 1}`,
+    metadata: {
+      instrumentId,
+      fromLevel: state.level,
+      toLevel: state.level + 1,
+      price: upgradePrice,
+    },
+  });
+
+  await updateUserData(userId, (data) => {
+    const current = data.instruments[instrumentId];
+    if (current) {
+      current.level += 1;
+    }
+  });
 }
 
 /**
- * Tunes owned instrument
+ * Tunes an owned instrument.
  */
 export async function tuneInstrument(
   userId: string,
   instrumentId: string,
 ): Promise<void> {
-  try {
-    const { error } = await supabase.rpc('tune_instrument', {
-      p_user_id: userId,
-      p_instrument_id: instrumentId,
-    });
+  const seed = getInstrumentSeed(instrumentId);
+  const userData = await getUserData(userId);
+  const state = userData.instruments[instrumentId];
 
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error tuning instrument:', error);
-    throw error;
+  if (!state?.isOwned) {
+    throw new Error('Instrument not owned');
   }
+
+  if (state.tuning >= MAX_TUNING) {
+    throw new Error('Instrument already perfectly tuned');
+  }
+
+  const balance = await getUserBalance(userId);
+  if (balance < seed.tunePrice) {
+    throw new Error('Insufficient balance');
+  }
+
+  await addCurrencyTransaction(userId, -seed.tunePrice, 'purchase', {
+    sourceId: instrumentId,
+    description: `Tuned instrument: ${seed.name}`,
+    metadata: {
+      instrumentId,
+      fromTuning: state.tuning,
+      price: seed.tunePrice,
+    },
+  });
+
+  await updateUserData(userId, (data) => {
+    const current = data.instruments[instrumentId];
+    if (current) {
+      current.tuning = Math.min(MAX_TUNING, current.tuning + TUNING_INCREMENT);
+    }
+  });
+}
+
+function toggleInstrumentState(
+  userId: string,
+  instrumentId: string,
+  equip: boolean,
+) {
+  return updateUserData(userId, (data) => {
+    const current = data.instruments[instrumentId];
+    if (!current?.isOwned) {
+      throw new Error('Instrument not owned');
+    }
+
+    if (equip) {
+      for (const state of Object.values(data.instruments)) {
+        state.isEquipped = false;
+      }
+      current.isEquipped = true;
+    } else {
+      current.isEquipped = false;
+    }
+  });
 }
 
 /**
- * Equips an instrument
+ * Equips an instrument.
  */
 export async function equipInstrument(
   userId: string,
   instrumentId: string,
 ): Promise<void> {
-  try {
-    const { error } = await supabase.rpc('toggle_instrument', {
-      p_user_id: userId,
-      p_instrument_id: instrumentId,
-      p_equip: true,
-    });
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error equipping instrument:', error);
-    throw error;
-  }
+  await toggleInstrumentState(userId, instrumentId, true);
 }
 
 /**
- * Unequips an instrument
+ * Unequips an instrument.
  */
 export async function unequipInstrument(
   userId: string,
   instrumentId: string,
 ): Promise<void> {
-  try {
-    const { error } = await supabase.rpc('toggle_instrument', {
-      p_user_id: userId,
-      p_instrument_id: instrumentId,
-      p_equip: false,
-    });
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error unequipping instrument:', error);
-    throw error;
-  }
+  await toggleInstrumentState(userId, instrumentId, false);
 }
 
 /**
- * Initializes instruments for a new user (gives starter instrument)
+ * Initializes instrument for a new user (gives starter instrument).
  */
 export async function initializeUserInstrument(userId: string): Promise<void> {
-  try {
-    const { error } = await supabase.rpc('initialize_user_instrument', {
-      p_user_id: userId,
-    });
+  const profile = await getUserProfile(userId);
+  const instrumentType = determineInstrumentType(
+    profile.preferred_instrument as InstrumentType | null,
+  );
 
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error initializing user instrument:', error);
-    throw error;
+  const starterId = `${instrumentType}-apprentice`;
+  const seed =
+    INSTRUMENT_SEEDS.find((item) => item.id === starterId) ||
+    INSTRUMENT_SEEDS.find((item) => item.id === 'violin-apprentice');
+
+  if (!seed) {
+    return;
   }
+
+  await updateUserData(userId, (data) => {
+    data.instruments[seed.id] = {
+      level: seed.baseLevel,
+      tuning: seed.baseTuning,
+      isOwned: true,
+      isEquipped: true,
+    };
+  });
 }
 
 /**
- * Resets all user instruments (for testing)
+ * Resets all user instruments (for testing).
  */
-export async function resetUserInstruments(userId: string): Promise<void> {
-  try {
-    // Delete all user instruments
-    const { error } = await supabase
-      .from('user_instruments')
-      .delete()
-      .eq('user_id', userId);
+export async function resetUserInstrument(userId: string): Promise<void> {
+  await updateUserData(userId, (data) => {
+    data.instruments = {};
+  });
 
-    if (error) throw error;
-
-    // Reinitialize with starter instrument
-    await initializeUserInstrument(userId);
-  } catch (error) {
-    console.error('Error resetting user instruments:', error);
-    throw error;
-  }
+  await initializeUserInstrument(userId);
 }

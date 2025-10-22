@@ -9,8 +9,8 @@ import {
 import type { Equipment } from '~/shared/types/music';
 
 /**
- * Equipment service responsible for coordinating Supabase operations.
- * Keeping data access in one place makes it easy to replace Supabase or
+ * Equipment service responsible for coordinating persistence operations.
+ * Keeping data access in one place makes it easy to evolve storage or
  * introduce caching without touching UI logic.
  */
 export const equipmentService = {

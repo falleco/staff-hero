@@ -1,33 +1,38 @@
-import { supabase } from '~/supabase/client';
 import type {
   CurrencyTransaction,
   CurrencyType,
   TransactionSource,
-} from '~/supabase/types';
+} from '~/data/types';
+import {
+  createId,
+  getUserData,
+  updateUserData,
+} from '~/data/storage/user-data-store';
 
-/**
- * Gets the current balance for a user
- */
-export async function getUserBalance(
-  userId: string,
-  currencyType: CurrencyType = 'golden_note_shards',
-): Promise<number> {
-  try {
-    const { data, error } = await supabase.rpc('get_user_balance', {
-      p_user_id: userId,
-      p_currency_type: currencyType,
-    });
+const DEFAULT_CURRENCY: CurrencyType = 'golden_note_shards';
 
-    if (error) throw error;
-    return data as number;
-  } catch (error) {
-    console.error('Error getting user balance:', error);
-    return 0;
-  }
+function calculateBalance(
+  transactions: CurrencyTransaction[],
+  currencyType: CurrencyType,
+): number {
+  return transactions
+    .filter((transaction) => transaction.currencyType === currencyType)
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
 }
 
 /**
- * Adds a currency transaction
+ * Gets the current balance for a user.
+ */
+export async function getUserBalance(
+  userId: string,
+  currencyType: CurrencyType = DEFAULT_CURRENCY,
+): Promise<number> {
+  const data = await getUserData(userId);
+  return calculateBalance(data.currency.transactions, currencyType);
+}
+
+/**
+ * Adds a currency transaction.
  */
 export async function addCurrencyTransaction(
   userId: string,
@@ -40,27 +45,35 @@ export async function addCurrencyTransaction(
     currencyType?: CurrencyType;
   },
 ): Promise<string | null> {
-  try {
-    const { data, error } = await supabase.rpc('add_currency_transaction', {
-      p_user_id: userId,
-      p_amount: amount,
-      p_source: source,
-      p_source_id: options?.sourceId || null,
-      p_description: options?.description || null,
-      p_metadata: options?.metadata || null,
-      p_currency_type: options?.currencyType || 'golden_note_shards',
-    });
+  let newTransactionId: string | null = null;
+  const currencyType = options?.currencyType ?? DEFAULT_CURRENCY;
 
-    if (error) throw error;
-    return data as string;
-  } catch (error) {
-    console.error('Error adding currency transaction:', error);
-    throw error;
-  }
+  await updateUserData(userId, (data) => {
+    const transaction: CurrencyTransaction = {
+      id: createId('txn'),
+      userId,
+      currencyType,
+      amount,
+      source,
+      sourceId: options?.sourceId,
+      description: options?.description,
+      metadata: options?.metadata ?? null,
+      createdAt: new Date().toISOString(),
+    };
+
+    data.currency.transactions = [transaction, ...data.currency.transactions];
+
+    const balance = calculateBalance(data.currency.transactions, currencyType);
+    data.profile.golden_note_shards = Math.max(balance, 0);
+
+    newTransactionId = transaction.id;
+  });
+
+  return newTransactionId;
 }
 
 /**
- * Gets transaction history for a user
+ * Gets transaction history for a user.
  */
 export async function getTransactionHistory(
   userId: string,
@@ -70,94 +83,63 @@ export async function getTransactionHistory(
     offset?: number;
   },
 ): Promise<CurrencyTransaction[]> {
-  try {
-    let query = supabase
-      .from('currency_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+  const data = await getUserData(userId);
+  const currencyType = options?.currencyType ?? DEFAULT_CURRENCY;
 
-    if (options?.currencyType) {
-      query = query.eq('currency_type', options.currencyType);
-    }
+  const sorted = [...data.currency.transactions]
+    .filter((transaction) => transaction.currencyType === currencyType)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
-    if (options?.limit) {
-      query = query.limit(options.limit);
-    }
+  const offset = options?.offset ?? 0;
+  const limit = options?.limit ?? sorted.length;
 
-    if (options?.offset) {
-      query = query.range(
-        options.offset,
-        options.offset + (options.limit || 10) - 1,
-      );
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    return (data as any[]) || [];
-  } catch (error) {
-    console.error('Error getting transaction history:', error);
-    return [];
-  }
+  return sorted.slice(offset, offset + limit);
 }
 
 /**
- * Gets transaction summary for a user
+ * Gets transaction summary for a user.
  */
 export async function getTransactionSummary(
   userId: string,
-  currencyType: CurrencyType = 'golden_note_shards',
+  currencyType: CurrencyType = DEFAULT_CURRENCY,
 ): Promise<{
   balance: number;
   totalCredits: number;
   totalDebits: number;
   transactionCount: number;
 }> {
-  try {
-    const { data, error } = await supabase
-      .from('currency_transactions')
-      .select('amount')
-      .eq('user_id', userId)
-      .eq('currency_type', currencyType);
+  const data = await getUserData(userId);
+  const transactions = data.currency.transactions.filter(
+    (transaction) => transaction.currencyType === currencyType,
+  );
 
-    if (error) throw error;
+  const totalCredits = transactions
+    .filter((transaction) => transaction.amount > 0)
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
 
-    const transactions = (data as any[]) || [];
-    const totalCredits = transactions
-      .filter((t: any) => t.amount > 0)
-      .reduce((sum: number, t: any) => sum + t.amount, 0);
-    const totalDebits = Math.abs(
-      transactions
-        .filter((t: any) => t.amount < 0)
-        .reduce((sum: number, t: any) => sum + t.amount, 0),
-    );
-    const balance = totalCredits - totalDebits;
+  const totalDebits = Math.abs(
+    transactions
+      .filter((transaction) => transaction.amount < 0)
+      .reduce((sum, transaction) => sum + transaction.amount, 0),
+  );
 
-    return {
-      balance: Math.max(balance, 0),
-      totalCredits,
-      totalDebits,
-      transactionCount: transactions.length,
-    };
-  } catch (error) {
-    console.error('Error getting transaction summary:', error);
-    return {
-      balance: 0,
-      totalCredits: 0,
-      totalDebits: 0,
-      transactionCount: 0,
-    };
-  }
+  const balance = calculateBalance(transactions, currencyType);
+
+  return {
+    balance,
+    totalCredits,
+    totalDebits,
+    transactionCount: transactions.length,
+  };
 }
 
 /**
- * Checks if user has sufficient balance
+ * Checks if user has sufficient balance.
  */
 export async function hasSufficientBalance(
   userId: string,
   requiredAmount: number,
-  currencyType: CurrencyType = 'golden_note_shards',
+  currencyType: CurrencyType = DEFAULT_CURRENCY,
 ): Promise<boolean> {
   const balance = await getUserBalance(userId, currencyType);
   return balance >= requiredAmount;

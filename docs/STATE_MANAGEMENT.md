@@ -355,9 +355,9 @@ function MyScreen() {
    ↓
    analytics.addSession({ gameMode, score, ... })
    ↓
-   Analytics hook calls Supabase API
+   Analytics hook writes to AsyncStorage (sessions + achievements)
    ↓
-   Achievements are auto-checked in database
+   Achievements are auto-checked locally
    ↓
    Context updates analytics via setAnalytics
    ↓
@@ -367,7 +367,7 @@ function MyScreen() {
    ↓
    challenges.redeemChallenge(id)
    ↓
-   Hook calls Supabase API
+   Hook updates AsyncStorage (challenge + currency state)
    ↓
    Hook updates challenges via setChallenges
    ↓
@@ -379,7 +379,7 @@ function MyScreen() {
    ↓
    equipment.buyEquipment(id)
    ↓
-   Hook calls Supabase API (deducts currency)
+   Hook updates AsyncStorage (currency + equipment state)
    ↓
    Hook updates equipment via setEquipment
    ↓
@@ -455,10 +455,10 @@ expect(mockContext.dispatchGameAction).toHaveBeenCalled();
 
 ## Complete State Overview
 
-| Feature | State | Hook | Supabase |
-|---------|-------|------|----------|
-| Game Logic | gameState (reducer) | useGameLogic() | No |
-| Settings | gameSettings | useGameSettings() | No |
+| Feature | State | Hook | Local Data |
+|---------|-------|------|------------|
+| Game Logic | gameState (reducer) | useGameLogic() | — |
+| Settings | gameSettings | useGameSettings() | — |
 | Currency | currency | useCurrency() | ✅ |
 | Challenges | challenges | useChallenges() | ✅ |
 | Equipment | equipment | useEquipment() | ✅ |
@@ -478,7 +478,7 @@ expect(mockContext.dispatchGameAction).toHaveBeenCalled();
 ### ❌ DON'T
 - Don't duplicate state in hooks or components
 - Don't put business logic in context
-- Don't call Supabase APIs from components
+- Don't bypass AsyncStorage helpers from components
 - Don't forget loading states
 - Don't skip error handling
 
@@ -516,14 +516,11 @@ export function useNewFeature() {
 ### 3. Create API Functions
 ```typescript
 // src/domain/new-feature/new-feature-repository.ts
-export async function fetchNewFeature(userId: string) {
-  const { data, error } = await supabase
-    .from('new_feature')
-    .select('*')
-    .eq('user_id', userId);
+import { getUserData } from '~/data/storage/user-data-store';
 
-  if (error) throw error;
-  return data;
+export async function fetchNewFeature(userId: string) {
+  const userData = await getUserData(userId);
+  return userData.customFeature ?? [];
 }
 ```
 

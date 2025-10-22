@@ -3,189 +3,139 @@ import type {
   ChallengeStatus,
   ChallengeType,
 } from '~/shared/types/music';
-import { supabase } from '~/supabase/client';
-import {
-  addCurrencyTransaction,
-  getUserBalance,
-} from '../currency/currency-repository';
+import { ChallengeStatus as ChallengeStatusEnum } from '~/shared/types/music';
+import { CHALLENGE_SEEDS } from '~/data/seeds';
+import { getUserData, updateUserData } from '~/data/storage/user-data-store';
+import { addCurrencyTransaction, getUserBalance } from '../currency/currency-repository';
 import { getUserProfile } from '../user/user-profile-repository';
 
-/**
- * Fetches all available challenges and the user's progress on them
- */
-export async function fetchUserChallenges(
+function ensureChallengeState(
   userId: string,
-): Promise<Challenge[]> {
-  try {
-    // Ensure user profile exists first
-    await getUserProfile(userId);
+  challengeId: string,
+  defaultStatus: ChallengeStatus = ChallengeStatusEnum.AVAILABLE,
+) {
+  return updateUserData(userId, (data) => {
+    if (!data.challenges[challengeId]) {
+      data.challenges[challengeId] = {
+        progress: 0,
+        status: defaultStatus,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+  });
+}
 
-    // Fetch all challenges
-    const { data: challenges, error: challengesError } = await supabase
-      .from('challenges')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (challengesError) throw challengesError;
-    if (!challenges) return [];
-
-    // Fetch user's progress on challenges
-    const { data: userChallenges, error: userChallengesError } = await supabase
-      .from('user_challenges')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (userChallengesError) throw userChallengesError;
-
-    // Merge challenges with user progress
-    const mergedChallenges: Challenge[] = (challenges as any[]).map(
-      (challenge: any) => {
-        const userChallenge = (userChallenges as any[])?.find(
-          (uc: any) => uc.challenge_id === challenge.id,
-        );
-
-        return {
-          id: challenge.id as string,
-          type: challenge.type as ChallengeType,
-          title: challenge.title as string,
-          description: challenge.description as string,
-          icon: challenge.icon as string,
-          requirement: challenge.requirement as number,
-          reward: challenge.reward as number,
-          progress: (userChallenge?.progress as number) ?? 0,
-          status: (userChallenge?.status as ChallengeStatus) ?? 'available',
-          targetRoute: challenge.target_route as string | undefined,
-        };
-      },
-    );
-
-    return mergedChallenges;
-  } catch (error) {
-    console.error('Error fetching user challenges:', error);
-    throw error;
+function getChallengeSeed(challengeId: string) {
+  const seed = CHALLENGE_SEEDS.find((challenge) => challenge.id === challengeId);
+  if (!seed) {
+    throw new Error(`Challenge with id "${challengeId}" not found`);
   }
+  return seed;
 }
 
 /**
- * Starts a challenge for a user
+ * Fetches all available challenges and the user's progress on them.
+ */
+export async function fetchUserChallenges(userId: string): Promise<Challenge[]> {
+  await getUserProfile(userId);
+
+  const data = await updateUserData(userId, (current) => {
+    const now = new Date().toISOString();
+    for (const challenge of CHALLENGE_SEEDS) {
+      if (!current.challenges[challenge.id]) {
+        current.challenges[challenge.id] = {
+          progress: 0,
+          status: ChallengeStatusEnum.AVAILABLE,
+          updatedAt: now,
+        };
+      }
+    }
+  });
+
+  return CHALLENGE_SEEDS.map((challenge) => {
+    const state = data.challenges[challenge.id];
+
+    return {
+      id: challenge.id,
+      type: challenge.type,
+      title: challenge.title,
+      description: challenge.description,
+      icon: challenge.icon,
+      requirement: challenge.requirement,
+      reward: challenge.reward,
+      progress: state?.progress ?? 0,
+      status: state?.status ?? ChallengeStatusEnum.AVAILABLE,
+      targetRoute: challenge.targetRoute ?? undefined,
+    } satisfies Challenge;
+  });
+}
+
+/**
+ * Starts a challenge for a user.
  */
 export async function startChallenge(
   userId: string,
   challengeId: string,
 ): Promise<void> {
-  try {
-    // Check if user challenge already exists
-    const { data: existing } = await supabase
-      .from('user_challenges')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('challenge_id', challengeId)
-      .maybeSingle();
+  await ensureChallengeState(userId, challengeId, ChallengeStatusEnum.IN_PROGRESS);
 
-    if (existing) {
-      // Update existing challenge
-      const { error } = await supabase
-        .from('user_challenges')
-        .update({ status: 'in-progress' } as any)
-        .eq('user_id', userId)
-        .eq('challenge_id', challengeId);
-
-      if (error) throw error;
-    } else {
-      // Create new user challenge
-      const { error } = await supabase.from('user_challenges').insert({
-        user_id: userId,
-        challenge_id: challengeId,
-        status: 'in-progress',
-        progress: 0,
-      } as any);
-
-      if (error) throw error;
+  await updateUserData(userId, (data) => {
+    const state = data.challenges[challengeId];
+    if (state.status !== ChallengeStatusEnum.REDEEMED) {
+      state.status = ChallengeStatusEnum.IN_PROGRESS;
+      state.updatedAt = new Date().toISOString();
     }
-  } catch (error) {
-    console.error('Error starting challenge:', error);
-    throw error;
-  }
+  });
 }
 
 /**
- * Updates progress for challenges of a specific type
+ * Updates progress for challenges of a specific type.
  */
 export async function updateChallengeProgress(
   userId: string,
   type: ChallengeType,
   amount: number,
 ): Promise<void> {
-  try {
-    // Get all challenges of this type
-    const { data: challenges, error: challengesError } = await supabase
-      .from('challenges')
-      .select('id, requirement')
-      .eq('type', type);
+  const relevantChallenges = CHALLENGE_SEEDS.filter(
+    (challenge) => challenge.type === type,
+  );
 
-    if (challengesError) throw challengesError;
-    if (!challenges || challenges.length === 0) return;
+  if (relevantChallenges.length === 0) {
+    return;
+  }
 
-    const challengeIds = (challenges as any[]).map((c: any) => c.id);
+  await updateUserData(userId, (data) => {
+    const now = new Date().toISOString();
+    for (const challenge of relevantChallenges) {
+      const state =
+        data.challenges[challenge.id] ?? {
+          progress: 0,
+          status: ChallengeStatusEnum.AVAILABLE,
+          updatedAt: now,
+        };
 
-    const { data: userChallenges, error: userChallengesError } = await supabase
-      .from('user_challenges')
-      .select('challenge_id, progress, status')
-      .eq('user_id', userId)
-      .in('challenge_id', challengeIds);
-
-    if (userChallengesError) throw userChallengesError;
-
-    const existingMap = new Map<string, any>();
-    (userChallenges as any[] | null)?.forEach((uc: any) => {
-      existingMap.set(uc.challenge_id, uc);
-    });
-
-    const rowsToUpsert: any[] = [];
-
-    for (const challenge of challenges as any[]) {
-      const existing = existingMap.get(challenge.id);
-
-      if (existing?.status === 'redeemed') {
+      if (state.status === ChallengeStatusEnum.REDEEMED) {
+        data.challenges[challenge.id] = state;
         continue;
       }
 
-      const currentProgress = existing?.progress ?? 0;
       const newProgress = Math.min(
-        currentProgress + amount,
         challenge.requirement,
+        Math.max(0, state.progress + amount),
       );
 
       const newStatus =
-        newProgress >= challenge.requirement ? 'completed' : 'in-progress';
+        newProgress >= challenge.requirement
+          ? ChallengeStatusEnum.COMPLETED
+          : ChallengeStatusEnum.IN_PROGRESS;
 
-      if (
-        newProgress === currentProgress &&
-        existing &&
-        existing.status === newStatus
-      ) {
-        continue;
-      }
-
-      rowsToUpsert.push({
-        user_id: userId,
-        challenge_id: challenge.id,
+      data.challenges[challenge.id] = {
         progress: newProgress,
         status: newStatus,
-      });
+        updatedAt: now,
+      };
     }
-
-    if (rowsToUpsert.length > 0) {
-      const { error } = await supabase
-        .from('user_challenges')
-        .upsert(rowsToUpsert, { onConflict: 'user_id,challenge_id' });
-
-      if (error) throw error;
-    }
-  } catch (error) {
-    console.error('Error updating challenge progress:', error);
-    throw error;
-  }
+  });
 }
 
 /**
@@ -198,167 +148,88 @@ export async function setChallengeProgress(
   requirement: number,
   status: ChallengeStatus,
 ): Promise<void> {
-  try {
-    const clampedProgress = Math.min(Math.max(progress, 0), requirement);
+  const seed = getChallengeSeed(challengeId);
+  const targetRequirement = requirement ?? seed.requirement;
+  const clampedProgress = Math.min(Math.max(progress, 0), targetRequirement);
 
-    const { data: existing, error: existingError } = await supabase
-      .from('user_challenges')
-      .select('id, status')
-      .eq('user_id', userId)
-      .eq('challenge_id', challengeId)
-      .maybeSingle();
+  await ensureChallengeState(userId, challengeId);
 
-    if (existingError) throw existingError;
+  await updateUserData(userId, (data) => {
+    const state = data.challenges[challengeId];
 
-    if (existing?.status === 'redeemed') {
+    if (state.status === ChallengeStatusEnum.REDEEMED) {
       return;
     }
 
-    const payload = {
-      user_id: userId,
-      challenge_id: challengeId,
-      progress: clampedProgress,
-      status,
-    } as any;
-
-    if (existing) {
-      const { error } = await supabase
-        .from('user_challenges')
-        .update(payload)
-        .eq('id', existing.id);
-
-      if (error) throw error;
-    } else {
-      const { error } = await supabase.from('user_challenges').insert(payload);
-      if (error) throw error;
-    }
-  } catch (error) {
-    console.error('Error setting challenge progress:', error);
-    throw error;
-  }
+    state.progress = clampedProgress;
+    state.status = status;
+    state.updatedAt = new Date().toISOString();
+  });
 }
 
 /**
- * Redeems a completed challenge and awards golden note shards
+ * Redeems a completed challenge and awards golden note shards.
  */
 export async function redeemChallenge(
   userId: string,
   challengeId: string,
 ): Promise<void> {
-  try {
-    // Get challenge details
-    const { data: challenge, error: challengeError } = await supabase
-      .from('challenges')
-      .select('reward, title')
-      .eq('id', challengeId)
-      .single();
+  const seed = getChallengeSeed(challengeId);
+  const data = await getUserData(userId);
+  const state = data.challenges[challengeId];
 
-    if (challengeError) throw challengeError;
-    if (!challenge) throw new Error('Challenge not found');
-
-    // Get user challenge
-    const { data: userChallenge, error: userChallengeError } = await supabase
-      .from('user_challenges')
-      .select('status')
-      .eq('user_id', userId)
-      .eq('challenge_id', challengeId)
-      .single();
-
-    if (userChallengeError) throw userChallengeError;
-    if (!userChallenge) throw new Error('User challenge not found');
-
-    if ((userChallenge as any).status !== 'completed') {
-      throw new Error('Challenge must be completed before redeeming');
-    }
-
-    // Add currency transaction for the reward
-    await addCurrencyTransaction(
-      userId,
-      (challenge as any).reward,
-      'challenge_reward',
-      {
-        sourceId: challengeId,
-        description: `Reward for completing "${(challenge as any).title}"`,
-        metadata: {
-          challengeId,
-          challengeTitle: (challenge as any).title,
-          reward: (challenge as any).reward,
-        },
-      },
-    );
-
-    // Mark challenge as redeemed
-    const { error: markError } = await supabase
-      .from('user_challenges')
-      .update({ status: 'redeemed' } as any)
-      .eq('user_id', userId)
-      .eq('challenge_id', challengeId);
-
-    if (markError) throw markError;
-  } catch (error) {
-    console.error('Error redeeming challenge:', error);
-    throw error;
+  if (!state || state.status !== ChallengeStatusEnum.COMPLETED) {
+    throw new Error('Challenge must be completed before redeeming');
   }
+
+  await addCurrencyTransaction(userId, seed.reward, 'challenge_reward', {
+    sourceId: challengeId,
+    description: `Reward for completing "${seed.title}"`,
+    metadata: {
+      challengeId,
+      challengeTitle: seed.title,
+      reward: seed.reward,
+    },
+  });
+
+  await updateUserData(userId, (userData) => {
+    const updated = userData.challenges[challengeId];
+    if (updated) {
+      updated.status = ChallengeStatusEnum.REDEEMED;
+      updated.updatedAt = new Date().toISOString();
+    }
+  });
 }
 
 /**
- * Adds golden note shards directly to user's account
+ * Adds golden note shards directly to user's account.
  */
 export async function addGoldenShards(
   userId: string,
   amount: number,
   description?: string,
 ): Promise<void> {
-  try {
-    await addCurrencyTransaction(userId, amount, 'admin_adjustment', {
-      description: description || `Added ${amount} golden note shards`,
-      metadata: { amount },
-    });
-  } catch (error) {
-    console.error('Error adding golden shards:', error);
-    throw error;
-  }
+  await addCurrencyTransaction(userId, amount, 'admin_adjustment', {
+    description: description ?? `Added ${amount} golden note shards`,
+    metadata: { amount },
+  });
 }
 
 /**
- * Gets user's currency (golden note shards)
- * Creates profile if it doesn't exist
+ * Gets user's currency (golden note shards).
  */
 export async function getUserCurrency(userId: string): Promise<number> {
-  try {
-    // Ensure user profile exists
-    await getUserProfile(userId);
-
-    // Get balance from transactions
-    return await getUserBalance(userId, 'golden_note_shards');
-  } catch (error) {
-    console.error('Error getting user currency:', error);
-    return 0;
-  }
+  await getUserProfile(userId);
+  return getUserBalance(userId, 'golden_note_shards');
 }
 
 /**
- * Resets all user challenges (for testing)
+ * Resets all user challenges (for testing).
  */
 export async function resetUserChallenges(userId: string): Promise<void> {
-  try {
-    // Delete all user challenges
-    const { error: deleteChallengesError } = await supabase
-      .from('user_challenges')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteChallengesError) throw deleteChallengesError;
-
-    // Delete all currency transactions (this resets balance to 0)
-    const { error: deleteTransactionsError } = await supabase
-      .from('currency_transactions')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteTransactionsError) throw deleteTransactionsError;
-  } catch (error) {
-    console.error('Error resetting user challenges:', error);
-    throw error;
-  }
+  await updateUserData(userId, (data) => {
+    data.challenges = {};
+    data.currency.transactions = [];
+    data.profile.golden_note_shards = 0;
+  });
 }

@@ -70,7 +70,7 @@ export function useAnalytics(): UseAnalyticsReturn {
     context;
 
   /**
-   * Refreshes analytics data from Supabase
+   * Refreshes analytics data from local storage
    */
   const refresh = useCallback(async () => {
     if (!user) return;
@@ -88,7 +88,7 @@ export function useAnalytics(): UseAnalyticsReturn {
   }, [user, setAnalytics, setAnalyticsLoading]);
 
   /**
-   * Adds a game session to Supabase
+   * Adds a game session to local storage
    * Automatically checks for achievement unlocks
    * Refreshes analytics after adding
    *

@@ -34,7 +34,7 @@ const defaultAnalytics: UserAnalytics = {
 };
 
 /**
- * Gets user analytics from Supabase
+ * Gets user analytics from local storage
  * @param userId - User ID to get analytics for
  */
 export async function getAnalytics(userId?: string): Promise<UserAnalytics> {
@@ -52,19 +52,19 @@ export async function getAnalytics(userId?: string): Promise<UserAnalytics> {
 }
 
 /**
- * Note: saveAnalytics is not needed with Supabase as analytics are automatically
+ * Note: saveAnalytics is not needed with AsyncStorage as analytics are automatically
  * calculated from game sessions. This function exists for backward compatibility.
  */
 export async function saveAnalytics(analytics: UserAnalytics): Promise<void> {
-  // Analytics are automatically calculated from sessions in Supabase
+  // Analytics are automatically calculated from sessions stored locally
   // This function is kept for backward compatibility but does nothing
   console.warn(
-    'saveAnalytics is deprecated with Supabase. Analytics are automatically calculated.',
+    'saveAnalytics is deprecated with the local analytics pipeline. Analytics are automatically calculated.',
   );
 }
 
 /**
- * Adds a game session to Supabase
+ * Adds a game session to local storage
  * @param session - Game session data
  * @param userId - User ID to add session for
  */
@@ -77,7 +77,7 @@ export async function addGameSession(
   }
 
   try {
-    // Add session to Supabase (automatically checks for achievements)
+    // Add session to storage (automatically checks for achievements)
     await analyticsService.addSession(userId, {
       gameMode: session.gameMode,
       difficulty: session.difficulty,

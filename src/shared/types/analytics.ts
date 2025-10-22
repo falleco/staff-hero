@@ -1,3 +1,4 @@
+import { ACHIEVEMENT_SEEDS } from '~/data/seeds';
 import { Difficulty, GameMode, NotationSystem } from './music';
 
 export interface GameSession {
@@ -51,47 +52,10 @@ export interface Achievement {
   isUnlocked: boolean;
 }
 
-export const ACHIEVEMENTS: Achievement[] = [
-  {
-    id: 'first_game',
-    title: 'First Steps',
-    description: 'Complete your first game',
-    icon: '🎵',
-    isUnlocked: false,
-  },
-  {
-    id: 'streak_5',
-    title: 'Hot Streak',
-    description: 'Get a 5-note streak',
-    icon: '🔥',
-    isUnlocked: false,
-  },
-  {
-    id: 'streak_10',
-    title: 'Blazing Notes',
-    description: 'Get a 10-note streak',
-    icon: '🔥🔥',
-    isUnlocked: false,
-  },
-  {
-    id: 'perfect_game',
-    title: 'Perfect Pitch',
-    description: 'Complete a game with 100% accuracy',
-    icon: '⭐',
-    isUnlocked: false,
-  },
-  {
-    id: 'notation_master',
-    title: 'Notation Master',
-    description: 'Play games in both notation systems',
-    icon: '🎼',
-    isUnlocked: false,
-  },
-  {
-    id: 'dedicated_player',
-    title: 'Dedicated Player',
-    description: 'Play 50 games',
-    icon: '🏆',
-    isUnlocked: false,
-  },
-];
+export const ACHIEVEMENTS: Achievement[] = ACHIEVEMENT_SEEDS.map((seed) => ({
+  id: seed.id,
+  title: seed.title,
+  description: seed.description,
+  icon: seed.icon,
+  isUnlocked: false,
+}));
