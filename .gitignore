@@ -51,3 +51,11 @@ app-example
 .env.local
 .env.*.local
 .env
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

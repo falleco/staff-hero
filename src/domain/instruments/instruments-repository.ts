@@ -1,7 +1,7 @@
-import type {
-  Instrument,
-  InstrumentRarity,
+import {
   InstrumentType,
+  type Instrument,
+  type InstrumentRarity,
 } from '~/shared/types/music';
 import { INSTRUMENT_SEEDS } from '~/data/seeds';
 import { getUserData, updateUserData } from '~/data/storage/user-data-store';
@@ -33,7 +33,7 @@ function calculateInstrumentStats(seed: (typeof INSTRUMENT_SEEDS)[number], level
 }
 
 function determineInstrumentType(preferred?: InstrumentType | null): InstrumentType {
-  const fallback: InstrumentType = 'violin';
+  const fallback: InstrumentType = InstrumentType.VIOLIN;
   const type = preferred ?? fallback;
   const exists = INSTRUMENT_SEEDS.some((seed) => seed.type === type);
   return exists ? type : fallback;

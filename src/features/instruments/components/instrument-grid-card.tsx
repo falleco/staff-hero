@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import type React from 'react';
-import { Pressable, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import { ThemedText } from '~/shared/components/themed-text';
 import { cn } from '~/shared/lib/cn';
 import type { Instrument } from '~/shared/types/music';
 import { InstrumentRarity } from '~/shared/types/music';
+import { getInstrumentArtwork } from '~/features/instruments/utils/get-instrument-artwork';
 
 interface InstrumentGridCardProps {
   className?: string;
@@ -23,6 +24,7 @@ export function InstrumentGridCard({
   className,
   instrument,
 }: InstrumentGridCardProps) {
+  const artwork = getInstrumentArtwork(instrument);
   const getRarityColor = () => {
     switch (instrument.rarity) {
       case InstrumentRarity.APPRENTICE:
@@ -100,7 +102,15 @@ export function InstrumentGridCard({
       <View className="flex-col w-full h-full min-h-[160px] relative">
         {/* Icon Area */}
         <View className="flex-1 justify-center items-center pt-6 pb-2">
-          <ThemedText className="text-6xl">{instrument.icon}</ThemedText>
+          {artwork ? (
+            <Image
+              source={artwork}
+              resizeMode="contain"
+              style={{ width: 96, height: 96 }}
+            />
+          ) : (
+            <ThemedText className="text-6xl">{instrument.icon}</ThemedText>
+          )}
         </View>
 
         {/* Name Area */}

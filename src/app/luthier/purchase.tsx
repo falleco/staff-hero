@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { Alert, Image, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCurrency } from '~/features/currency';
 import { useLuthier } from '~/features/luthier';
@@ -12,6 +12,7 @@ import {
 import { ThemedText } from '~/shared/components/themed-text';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { InstrumentRarity } from '~/shared/types/music';
+import { getInstrumentArtwork } from '~/features/instruments/utils/get-instrument-artwork';
 
 export default function PurchasePage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -63,6 +64,8 @@ export default function PurchasePage() {
       </>
     );
   }
+
+  const artwork = getInstrumentArtwork(instrument);
 
   const getRarityColor = () => {
     switch (instrument.rarity) {
@@ -207,9 +210,17 @@ export default function PurchasePage() {
                 <View className="bg-[#2a0f3d] rounded-2xl p-8 items-center justify-center min-h-[280px]">
                   {/* Instrument Icon */}
                   <View className="mb-4 items-center justify-center bg-white/10 rounded-full w-40 h-40">
-                    <ThemedText className="text-[120px]">
-                      {instrument.icon}
-                    </ThemedText>
+                    {artwork ? (
+                      <Image
+                        source={artwork}
+                        resizeMode="contain"
+                        style={{ width: 128, height: 128 }}
+                      />
+                    ) : (
+                      <ThemedText className="text-[120px]">
+                        {instrument.icon}
+                      </ThemedText>
+                    )}
                   </View>
 
                   {/* Instrument Name */}

@@ -1,11 +1,12 @@
 import type React from 'react';
-import { Alert, type StyleProp, View, type ViewStyle } from 'react-native';
+import { Alert, Image, type StyleProp, View, type ViewStyle } from 'react-native';
 import { ThemedText } from '~/shared/components/themed-text';
 import { Button, ButtonText } from '~/shared/components/ui/gluestack-button';
 import { useThemeColor } from '~/shared/hooks/use-theme-color';
 import { cn } from '~/shared/lib/cn';
 import type { Instrument, UserCurrency } from '~/shared/types/music';
 import { InstrumentRarity } from '~/shared/types/music';
+import { getInstrumentArtwork } from '~/features/instruments/utils/get-instrument-artwork';
 
 interface InstrumentCardProps {
   className?: string;
@@ -45,6 +46,7 @@ export function InstrumentCard({
   const textColor = useThemeColor({}, 'text');
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const primaryColor = useThemeColor({}, 'tint');
+  const artwork = getInstrumentArtwork(instrument);
 
   const getRarityColor = () => {
     switch (instrument.rarity) {
@@ -152,7 +154,17 @@ export function InstrumentCard({
     >
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center flex-1">
-          <ThemedText className="text-3xl mr-3">{instrument.icon}</ThemedText>
+          <View className="mr-3 items-center justify-center">
+            {artwork ? (
+              <Image
+                source={artwork}
+                resizeMode="contain"
+                style={{ width: 52, height: 52 }}
+              />
+            ) : (
+              <ThemedText className="text-3xl">{instrument.icon}</ThemedText>
+            )}
+          </View>
           <View className="flex-1">
             <ThemedText
               className="text-lg font-semibold"

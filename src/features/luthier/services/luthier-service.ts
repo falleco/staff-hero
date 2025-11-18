@@ -2,7 +2,7 @@ import {
   equipInstrument,
   fetchUserInstruments,
   purchaseInstrument,
-  resetUserInstruments,
+  resetUserInstrument,
   tuneInstrument,
   unequipInstrument,
   upgradeInstrument,
@@ -59,7 +59,7 @@ export const luthierService = {
    * Reset instrument ownership (useful for dev/testing).
    */
   async reset(userId: string) {
-    return resetUserInstruments(userId);
+    return resetUserInstrument(userId);
   },
 };
 
